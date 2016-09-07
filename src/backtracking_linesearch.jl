@@ -1,5 +1,4 @@
-function backtracking_linesearch!{T}(d::Union{DifferentiableFunction,
-                                              TwiceDifferentiableFunction},
+function backtracking_linesearch!{T}(df::AbstractDifferentiableFunction,
                                      x::Vector{T},
                                      s::Vector,
                                      x_scratch::Vector,
@@ -23,7 +22,7 @@ function backtracking_linesearch!{T}(d::Union{DifferentiableFunction,
     n = length(x)
 
     # Store f(x) in f_x
-    f_x = d.fg!(x, gr_scratch)
+    f_x = df.fg!(x, gr_scratch)
     f_calls += 1
     g_calls += 1
 
@@ -36,7 +35,7 @@ function backtracking_linesearch!{T}(d::Union{DifferentiableFunction,
     end
 
     # Backtrack until we satisfy sufficient decrease condition
-    f_x_scratch = d.f(x_scratch)
+    f_x_scratch = df.f(x_scratch)
     f_calls += 1
     while f_x_scratch > f_x + c1 * alpha * gxp
         # Increment the number of steps we've had to perform
@@ -56,7 +55,7 @@ function backtracking_linesearch!{T}(d::Union{DifferentiableFunction,
         end
 
         # Evaluate f(x) at proposed position
-        f_x_scratch = d.f(x_scratch)
+        f_x_scratch = df.f(x_scratch)
         f_calls += 1
     end
 

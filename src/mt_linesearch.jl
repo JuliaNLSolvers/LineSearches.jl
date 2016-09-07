@@ -41,19 +41,19 @@
 #
 #     The subroutine statement is
 #
-#        subroutine cvsrch(fcn,n,x,f,g,s,stp,f_tol,gtol,x_tol,
+#        subroutine cvsrch(df,n,x,f,g,s,stp,f_tol,gtol,x_tol,
 #                          stpmin,stpmax,maxfev,info,nfev,wa)
 #
 #     where
 #
-#	fcn is the name of the user-supplied subroutine which
-#    calculates the function and the gradient.  fcn must
+#	df is the name of the user-supplied subroutine which
+#    calculates the function and the gradient.  df must
 #    be declared in an external statement in the user
 #    calling program, and should be written as follows.
 #
-#    function [f,g] = fcn(n,x) (Matlab)
+#    function [f,g] = df(n,x) (Matlab)
 #                     (10/2010 change in documentation)
-#                     (derived from Fortran subroutine fcn(n,x,f,g))
+#                     (derived from Fortran subroutine df(n,x,f,g))
 #    integer n
 #    f
 #    x(n),g(n)
@@ -96,7 +96,7 @@
 #	  specify lower and upper bounds for the step.
 #
 #	maxfev is a positive integer input variable. Termination
-#    occurs when the number of calls to fcn is at least
+#    occurs when the number of calls to df is at least
 #    maxfev by the end of an iteration.
 #
 #	info is an integer output variable set as follows:
@@ -109,7 +109,7 @@
 #	  info = 2  Relative width of the interval of uncertainty
 #		         is at most x_tol.
 #
-#	  info = 3  Number of calls to fcn has reached maxfev.
+#	  info = 3  Number of calls to df has reached maxfev.
 #
 #	  info = 4  The step is at the lower bound stpmin.
 #
@@ -121,7 +121,7 @@
 #              Tolerances may be too small.
 #
 #    nfev is an integer output variable set to the number of
-#         calls to fcn.
+#         calls to df.
 #
 #     Argonne National Laboratory. MINPACK Project. June 1983
 #     Jorge J. More', David J. Thuente
@@ -132,8 +132,7 @@
 # TODO: Decide whether to update x, f, g and info
 #       or just return step and nfev and let existing code do its job
 
-function mt_linesearch!{T}(fcn::Union{DifferentiableFunction,
-                                      TwiceDifferentiableFunction},
+function mt_linesearch!{T}(df::AbstractDifferentiableFunction,
                          x::Vector,
                          s::Vector,
                          new_x::Vector,
@@ -157,7 +156,7 @@ function mt_linesearch!{T}(fcn::Union{DifferentiableFunction,
    f_calls = 0
    g_calls = 0
 
-   f = fcn.fg!(x, g)
+   f = df.fg!(x, g)
    f_calls += 1
    g_calls += 1
 
@@ -252,7 +251,7 @@ function mt_linesearch!{T}(fcn::Union{DifferentiableFunction,
       for i in 1:n
          new_x[i] = x[i] + stp * s[i] # TODO: Use x_new here
       end
-      f = fcn.fg!(new_x, g)
+      f = df.fg!(new_x, g)
       f_calls += 1
       g_calls += 1
       nfev += 1 # This includes calls to f() and g!()

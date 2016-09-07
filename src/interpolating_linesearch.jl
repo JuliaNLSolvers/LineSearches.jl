@@ -1,8 +1,7 @@
 # TODO: Optimize for fg! calls
 # TODO: Implement safeguards
 
-function interpolating_linesearch!{T}(d::Union{DifferentiableFunction,
-                                               TwiceDifferentiableFunction},
+function interpolating_linesearch!{T}(df::AbstractDifferentiableFunction,
                                       x::Vector,
                                       p::Vector,
                                       x_new::Vector,
@@ -27,13 +26,13 @@ function interpolating_linesearch!{T}(d::Union{DifferentiableFunction,
     a_max = 65536.0
 
     # phi(alpha) = f(x + alpha * p)
-    phi_0 = d.f(x)
+    phi_0 = df.f(x)
     f_calls += 1
     phi_a_iminus1 = phi_0
     phi_a_i = NaN
 
     # phi'(alpha) = vecdot(g(x + alpha * p), p)
-    d.g!(x, gr_new)
+    df.g!(x, gr_new)
     g_calls += 1
     phiprime_0 = vecdot(gr_new, p)
     phiprime_a_i = NaN
@@ -48,7 +47,7 @@ function interpolating_linesearch!{T}(d::Union{DifferentiableFunction,
         end
 
         # Evaluate phi(a_i)
-        phi_a_i = d.f(x_new)
+        phi_a_i = df.f(x_new)
         f_calls += 1
 
         # Test Wolfe conditions
@@ -56,12 +55,12 @@ function interpolating_linesearch!{T}(d::Union{DifferentiableFunction,
              (phi_a_i >= phi_a_iminus1 && i > 1)
             a_star, f_up, g_up = zoom(a_iminus1, a_i,
                                       phiprime_0, phi_0,
-                                      d.f, d.g!, x, p, x_new, gr_new)
+                                      df.f, df.g!, x, p, x_new, gr_new)
             return a_star, f_calls + f_up, g_calls + g_up
         end
 
         # Evaluate phi'(a_i)
-        d.g!(x_new, gr_new)
+        df.g!(x_new, gr_new)
         g_calls += 1
         phiprime_a_i = vecdot(gr_new, p)
 
@@ -74,7 +73,7 @@ function interpolating_linesearch!{T}(d::Union{DifferentiableFunction,
         if phiprime_a_i >= 0.0
             a_star, f_up, g_up = zoom(a_i, a_iminus1,
                                       phiprime_0, phi_0,
-                                      d.f, d.g!, x, p, x_new, gr_new)
+                                      df.f, df.g!, x, p, x_new, gr_new)
             return a_star, f_calls + f_up, g_calls + g_up
         end
 
