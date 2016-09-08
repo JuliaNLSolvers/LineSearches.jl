@@ -1,8 +1,9 @@
 using LineSearches
 using Base.Test
 
-lsfunctions = [hz_linesearch!,
-               interpolating_linesearch!, mt_linesearch!, backtracking_linesearch!,]
+lsfunctions = [hz_linesearch!, interpolating_linesearch!,
+               mt_linesearch!, backtracking_linesearch!]
+lsalphas = [0.5,0.5,0.49995,0.9]
 
 f(x) = vecdot(x,x)
 
@@ -12,7 +13,7 @@ end
 
 df = LineSearches.LSDifferentiableFunction(f,g!)
 
-for linesearch! in lsfunctions
+for (i, linesearch!) in enumerate(lsfunctions)
     println("Testing $(string(linesearch!))")
     x = [-1., -1.]
     xtmp = copy(x)
@@ -28,7 +29,7 @@ for linesearch! in lsfunctions
     mayterminate = false
 
     alpha, f_update, g_update = linesearch!(df, x, p, xtmp, grtmp, lsr, alpha, mayterminate)
-    xnew = x + alpha*p
+    #xnew = x + alpha*p
 
-    @test_approx_eq_eps f(xnew) 0. 1e-7
+    @test_approx_eq alpha lsalphas[i]
 end
