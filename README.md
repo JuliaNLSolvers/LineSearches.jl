@@ -5,11 +5,12 @@
 
 ## Description
 This package provides an interface to line search algorithms implemented in Julia.
-It is used by the optimization package [Optim](https://github.com/JuliaOpt/Optim.jl).
+The code was originally written as part of [Optim](https://github.com/JuliaOpt/Optim.jl),
+but has now been separated out to its own package.
 
 ### Available line search algorithms
-* `hz_linesearch!` [Taken from the Conjugate Gradient implementation
-  by Hager and Zhang (HZ)][1]
+* `hz_linesearch!` (Taken from the Conjugate Gradient implementation
+  by Hager and Zhang (HZ))
 * `backtracking_linesearch!`
 * `interpolating_linesearch!`
 * `mt_linesearch!`
@@ -68,4 +69,4 @@ This gives the following result, reducing the number of function and gradient ca
 ```
 
 ## References
-[1]: W. W. Hager and H. Zhang (2006) "Algorithm 851: CG_DESCENT, a conjugate gradient method with guaranteed descent." ACM Transactions on Mathematical Software 32: 113-137.
+W. W. Hager and H. Zhang (2006) "Algorithm 851: CG_DESCENT, a conjugate gradient method with guaranteed descent." ACM Transactions on Mathematical Software 32: 113-137.
