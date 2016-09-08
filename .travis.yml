@@ -4,11 +4,12 @@ os:
   - linux
   - osx
 julia:
-  - release
-  - nightly
+  - 0.4
+  - 0.5
 notifications:
   email: false
-# uncomment the following lines to override the default test script
-#script:
-#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-#  - julia -e 'Pkg.clone(pwd()); Pkg.build("LineSearches"); Pkg.test("LineSearches"; coverage=true)'
+script:
+    - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+    - julia -e 'Pkg.clone(pwd()); Pkg.test("LineSearches", coverage=true)'
+after_success:
+    - julia -e 'cd(Pkg.dir("LineSearches")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
