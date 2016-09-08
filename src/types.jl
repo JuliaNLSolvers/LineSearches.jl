@@ -34,3 +34,17 @@ type LinesearchException{T<:Real} <: Exception
     g_update::Int
     lsr::LineSearchResults
 end
+
+immutable LSDifferentiableFunction <: LineSearches.AbstractDifferentiableFunction
+    f::Function
+    g!::Function
+    fg!::Function
+end
+
+function LSDifferentiableFunction(f::Function, g!::Function)
+    function fg!(x::Array, storage::Array)
+        g!(x, storage)
+        return f(x)
+    end
+    return LSDifferentiableFunction(f, g!, fg!)
+end
