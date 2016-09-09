@@ -1,6 +1,10 @@
+The original code has been separated out from the Optim.jl package,
+licensed under the MIT License:
+> Copyright (c) 2012: John Myles White and other contributors.
+
 The LineSearches.jl package is licensed under the MIT "Expat" License:
 
-> Copyright (c) 2016: Asbjørn Nilsen Riseth.
+> Copyright (c) 2016: Asbjørn Nilsen Riseth and other contributors.
 >
 > Permission is hereby granted, free of charge, to any person obtaining
 > a copy of this software and associated documentation files (the
