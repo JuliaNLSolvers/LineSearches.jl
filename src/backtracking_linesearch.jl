@@ -1,4 +1,4 @@
-function backtracking_linesearch!{T}(df::AbstractDifferentiableFunction,
+function backtracking_linesearch!{T}(df,
                                      x::Vector{T},
                                      s::Vector,
                                      x_scratch::Vector,

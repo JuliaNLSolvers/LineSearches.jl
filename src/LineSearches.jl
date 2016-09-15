@@ -1,6 +1,6 @@
 module LineSearches
 
-export AbstractDifferentiableFunction, LineSearchResults
+export LineSearchResults
 
 export clear!, alphatry, alphainit
 

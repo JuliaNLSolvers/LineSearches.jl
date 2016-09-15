@@ -1,5 +1,3 @@
-abstract AbstractDifferentiableFunction
-
 # A cache for results from line search methods (to avoid recomputation)
 type LineSearchResults{T}
     alpha::Vector{T}
@@ -35,16 +33,16 @@ type LinesearchException{T<:Real} <: Exception
     lsr::LineSearchResults
 end
 
-immutable LSDifferentiableFunction <: LineSearches.AbstractDifferentiableFunction
+immutable DifferentiableFunction
     f::Function
     g!::Function
     fg!::Function
 end
 
-function LSDifferentiableFunction(f::Function, g!::Function)
+function DifferentiableFunction(f::Function, g!::Function)
     function fg!(x::Array, storage::Array)
         g!(x, storage)
         return f(x)
     end
-    return LSDifferentiableFunction(f, g!, fg!)
+    return DifferentiableFunction(f, g!, fg!)
 end

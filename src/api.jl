@@ -1,7 +1,7 @@
 # Code used to use phi, a 1-parameter function induced by f and s
 # Need to pass s as an explicit parameter
 function alphatry{T}(alpha::T,
-                     df::AbstractDifferentiableFunction,
+                     df,
                      x::Array,
                      s::Array,
                      xtmp::Array,

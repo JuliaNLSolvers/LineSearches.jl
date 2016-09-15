@@ -11,7 +11,7 @@ function g!(x, out)
     out[:] = 2x
 end
 
-df = LineSearches.LSDifferentiableFunction(f,g!)
+df = LineSearches.DifferentiableFunction(f,g!)
 
 for (i, linesearch!) in enumerate(lsfunctions)
     println("Testing $(string(linesearch!))")
