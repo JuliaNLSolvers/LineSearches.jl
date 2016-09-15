@@ -1,7 +1,7 @@
 # TODO: Optimize for fg! calls
 # TODO: Implement safeguards
 
-function interpolating_linesearch!{T}(df::AbstractDifferentiableFunction,
+function interpolating_linesearch!{T}(df,
                                       x::Vector,
                                       p::Vector,
                                       x_new::Vector,

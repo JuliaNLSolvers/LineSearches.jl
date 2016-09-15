@@ -54,7 +54,7 @@ display_nextbit = 14
 const DEFAULTDELTA = 0.1
 const DEFAULTSIGMA = 0.9
 
-function hz_linesearch!{T}(df::AbstractDifferentiableFunction,
+function hz_linesearch!{T}(df,
                            x::Array{T},
                            s::Array,
                            xtmp::Array,
@@ -285,7 +285,7 @@ function secant(lsr::LineSearchResults, ia::Integer, ib::Integer)
     return secant(lsr.alpha[ia], lsr.alpha[ib], lsr.slope[ia], lsr.slope[ib])
 end
 # phi
-function secant2!{T}(df::AbstractDifferentiableFunction,
+function secant2!{T}(df,
                      x::Array,
                      s::Array,
                      xtmp::Array,
@@ -378,7 +378,7 @@ end
 # Given a third point, pick the best two that retain the bracket
 # around the minimum (as defined by HZ, eq. 29)
 # b will be the upper bound, and a the lower bound
-function update!(df::AbstractDifferentiableFunction,
+function update!(df,
                  x::Array,
                  s::Array,
                  xtmp::Array,
@@ -428,7 +428,7 @@ function update!(df::AbstractDifferentiableFunction,
 end
 
 # HZ, stage U3 (with theta=0.5)
-function bisect!{T}(df::AbstractDifferentiableFunction,
+function bisect!{T}(df,
                     x::Array,
                     s::Array,
                     xtmp::Array,
@@ -475,7 +475,7 @@ function bisect!{T}(df::AbstractDifferentiableFunction,
 end
 
 # Define one-parameter function for line searches
-function linefunc!(df::AbstractDifferentiableFunction,
+function linefunc!(df,
                    x::Array,
                    s::Array,
                    alpha::Real,

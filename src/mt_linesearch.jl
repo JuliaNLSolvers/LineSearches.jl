@@ -132,7 +132,7 @@
 # TODO: Decide whether to update x, f, g and info
 #       or just return step and nfev and let existing code do its job
 
-function mt_linesearch!{T}(df::AbstractDifferentiableFunction,
+function mt_linesearch!{T}(df,
                          x::Vector,
                          s::Vector,
                          new_x::Vector,
