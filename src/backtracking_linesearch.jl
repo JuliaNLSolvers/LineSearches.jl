@@ -62,8 +62,8 @@ function backtracking_linesearch!{T}(df,
     if interp   # this means we are coming from interpbacktrack_linesearch!
        backtrack_condition = 1.0 - 1.0/(2*rho) # want guaranteed backtrack factor
        if c1 >= backtrack_condition
-           warning("""The Armijo constant c1 is too large; replacing it with
-                      $(backtrack_condition)""")
+           warn("""The Armijo constant c1 is too large; replacing it with
+                   $(backtrack_condition)""")
            c1 = backtrack_condition
        end
        if rho <= mindecfact
