@@ -1,5 +1,19 @@
 
-# wrapping backtracking_linesearch! but calling it with interp=true
+"""
+`interpbacktrack_linesearch!` is a backtracking line-search that uses
+a quadratic interpolant to determine the reduction in step-size. Specifically,
+if f(α) > f(0) + c₁ α f'(0), then the quadratic interpolant of
+f(0), f'(0), f(α) has a minimiser α' in the open interval (0, α). More strongly,
+there exists a factor ρ = ρ(c₁) such that α' ≦ ρ α. This makes
+the `interpbacktrack_linesearch!` a backtracking type linesearch.
+
+**Default Parameters**
+
+* `c1 = 0.2` : Armijo condition
+* `rho = 0.9` : decrease `rho` to automatically adjust `c1` to obtain a stronger backtracking guarantee
+* `mindecfact = 0.25` : specifies another safe-guard, α' ← max(α', mindecfact * α) to
+   make sure not too small steps are taken.
+"""
 interpbacktrack_linesearch!{T}(df,
                                x::Vector{T},
                                s::Vector,
@@ -11,7 +25,8 @@ interpbacktrack_linesearch!{T}(df,
                                c1::Real = 0.2,
                                c2::Real = 0.9,
                                rho=0.9,
-                               iterations::Integer = 1_000) =
+                               iterations::Integer = 1_000,
+                               mindecfact=0.25) =
    backtracking_linesearch!(df,
                              x,
                              s,
@@ -24,7 +39,8 @@ interpbacktrack_linesearch!{T}(df,
                              c2,
                              rho,
                              iterations,
-                             true)
+                             true,
+                             mindecfact)
 
 
 function backtracking_linesearch!{T}(df,
@@ -39,7 +55,8 @@ function backtracking_linesearch!{T}(df,
                                      c2::Real = 0.9,
                                      rho::Real = 0.9,
                                      iterations::Integer = 1_000,
-                                     interp::Bool = false)
+                                     interp::Bool = false,
+                                     mindecfact=0.25)
 
     # Check the input is valid, and modify otherwise
     if interp   # this means we are coming from interpbacktrack_linesearch!
@@ -49,8 +66,10 @@ function backtracking_linesearch!{T}(df,
                       $(backtrack_condition)""")
            c1 = backtrack_condition
        end
-       if rho <= 0.25
-           warn("rho <= 0.25; revert to standard backtracking")
+       if rho <= mindecfact
+           warn("""rho ($rho) <= mindecfact ($mindecfact); revert to standard
+                  backtracking with constant factor rho = $rho""")
+           interp = false
        end
     end
 
@@ -98,7 +117,7 @@ function backtracking_linesearch!{T}(df,
            # provided that c1 < 1/2; the backtrack_condition at the beginning
            # of the function guarantees at least a backtracking factor rho.
            alpha1 = - (gxp * alpha) / ( 2.0 * ((f_x_scratch - f_x)/alpha - gxp) )
-           alpha = max(alpha1, alpha * min(0.25, rho))  # avoid miniscule steps
+           alpha = max(alpha1, alpha * min(mindecfact, rho))  # avoid miniscule steps
         end
 
         # Update proposed position
