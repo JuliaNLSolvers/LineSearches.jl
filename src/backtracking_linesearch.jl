@@ -7,6 +7,8 @@ f(0), f'(0), f(α) has a minimiser α' in the open interval (0, α). More strong
 there exists a factor ρ = ρ(c₁) such that α' ≦ ρ α. This makes
 the `interpbacktrack_linesearch!` a backtracking type linesearch.
 
+This is a modification of the algorithm described in Nocedal Wright (2nd ed), Sec. 3.5.
+
 **Default Parameters**
 
 * `c1 = 0.2` : Armijo condition
