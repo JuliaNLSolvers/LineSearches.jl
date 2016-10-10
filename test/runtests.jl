@@ -2,8 +2,9 @@ using LineSearches
 using Base.Test
 
 lsfunctions = [hz_linesearch!, interpolating_linesearch!,
-               mt_linesearch!, backtracking_linesearch!]
-lsalphas = [0.5,0.5,0.49995,0.9]
+               mt_linesearch!, backtracking_linesearch!,
+               interpbacktrack_linesearch!]
+lsalphas = [0.5,0.5,0.49995,0.9,0.5]
 
 f(x) = vecdot(x,x)
 

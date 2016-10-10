@@ -5,7 +5,7 @@ export LineSearchResults
 export clear!, alphatry, alphainit
 
 export hz_linesearch!, backtracking_linesearch!, interpolating_linesearch!,
-    mt_linesearch!
+    mt_linesearch!, interpbacktrack_linesearch!
 
 include("types.jl")
 include("api.jl")
