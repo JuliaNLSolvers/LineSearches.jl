@@ -1,4 +1,3 @@
-
 """
 `interpbacktrack_linesearch!` is a backtracking line-search that uses
 a quadratic interpolant to determine the reduction in step-size. Specifically,
