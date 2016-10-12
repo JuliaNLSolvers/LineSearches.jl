@@ -78,8 +78,8 @@ function hz_linesearch!{T}(df,
     f_calls = 0
     g_calls = 0
 
-    phi0 = lsr.value[1]
-    dphi0 = lsr.slope[1]
+    phi0 = lsr.value[1] # Should this be [1] or [end]?
+    dphi0 = lsr.slope[1] # Should this be [1] or [end]?
     (isfinite(phi0) && isfinite(dphi0)) || error("Initial value and slope must be finite")
     philim = phi0 + epsilon * abs(phi0)
     @assert c > 0

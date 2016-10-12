@@ -12,7 +12,6 @@ function interpolating_linesearch!{T}(df,
                                       c1::Real = 1e-4,
                                       c2::Real = 0.9,
                                       rho::Real = 2.0)
-
     # Parameter space
     n = length(x)
 
@@ -26,15 +25,12 @@ function interpolating_linesearch!{T}(df,
     a_max = 65536.0
 
     # phi(alpha) = f(x + alpha * p)
-    phi_0 = df.f(x)
-    f_calls += 1
+    phi_0 = lsr.value[end]
     phi_a_iminus1 = phi_0
     phi_a_i = NaN
 
     # phi'(alpha) = vecdot(g(x + alpha * p), p)
-    df.g!(x, gr_new)
-    g_calls += 1
-    phiprime_0 = vecdot(gr_new, p)
+    phiprime_0 = lsr.slope[end]
     phiprime_a_i = NaN
 
     # Iteration counter
@@ -52,7 +48,7 @@ function interpolating_linesearch!{T}(df,
 
         # Test Wolfe conditions
         if (phi_a_i > phi_0 + c1 * a_i * phiprime_0) ||
-             (phi_a_i >= phi_a_iminus1 && i > 1)
+            (phi_a_i >= phi_a_iminus1 && i > 1)
             a_star, f_up, g_up = zoom(a_iminus1, a_i,
                                       phiprime_0, phi_0,
                                       df.f, df.g!, x, p, x_new, gr_new)
@@ -165,7 +161,7 @@ function zoom(a_lo::Real,
 
         # Check Armijo
         if (phi_a_j > phi_0 + c1 * a_j * phiprime_0) ||
-             (phi_a_j > phi_a_lo)
+            (phi_a_j > phi_a_lo)
             a_hi = a_j
         else
             # Evaluate phiprime(a_j)
@@ -195,9 +191,9 @@ function interpolate(a_i1::Real, a_i::Real,
                      phi_a_i1::Real, phi_a_i::Real,
                      phiprime_a_i1::Real, phiprime_a_i::Real)
     d1 = phiprime_a_i1 + phiprime_a_i -
-           3.0 * (phi_a_i1 - phi_a_i) / (a_i1 - a_i)
+        3.0 * (phi_a_i1 - phi_a_i) / (a_i1 - a_i)
     d2 = sqrt(d1 * d1 - phiprime_a_i1 * phiprime_a_i)
     return a_i - (a_i - a_i1) *
-            ((phiprime_a_i + d2 - d1) /
-             (phiprime_a_i - phiprime_a_i1 + 2.0 * d2))
+        ((phiprime_a_i + d2 - d1) /
+         (phiprime_a_i - phiprime_a_i1 + 2.0 * d2))
 end
