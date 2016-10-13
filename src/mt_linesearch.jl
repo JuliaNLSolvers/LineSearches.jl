@@ -132,22 +132,22 @@
 # TODO: Decide whether to update x, f, g and info
 #       or just return step and nfev and let existing code do its job
 
-function mt_linesearch!{T}(df,
-                           x::Vector,
-                           s::Vector,
-                           new_x::Vector,
-                           g::Vector,
-                           lsr::LineSearchResults{T},
-                           c::Real,
-                           mayterminate::Bool;
-                           n::Integer = length(x),
-                           stp::Real = 1.0,
-                           f_tol::Real = 1e-4,
-                           gtol::Real = 0.9,
-                           x_tol::Real = 1e-8,
-                           stpmin::Real = 1e-16,
-                           stpmax::Real = 65536.0,
-                           maxfev::Integer = 100)
+function morethuente!{T}(df,
+                         x::Vector,
+                         s::Vector,
+                         new_x::Vector,
+                         g::Vector,
+                         lsr::LineSearchResults{T},
+                         c::Real,
+                         mayterminate::Bool;
+                         n::Integer = length(x),
+                         stp::Real = 1.0,
+                         f_tol::Real = 1e-4,
+                         gtol::Real = 0.9,
+                         x_tol::Real = 1e-8,
+                         stpmin::Real = 1e-16,
+                         stpmax::Real = 65536.0,
+                         maxfev::Integer = 100)
 
     info = 0
     info_cstep = 1 # Info from step

@@ -1,10 +1,10 @@
 """
-`interpbacktrack_linesearch!` is a backtracking line-search that uses
+`interpbacktrack!` is a backtracking line-search that uses
 a quadratic interpolant to determine the reduction in step-size. Specifically,
 if f(α) > f(0) + c₁ α f'(0), then the quadratic interpolant of
 f(0), f'(0), f(α) has a minimiser α' in the open interval (0, α). More strongly,
 there exists a factor ρ = ρ(c₁) such that α' ≦ ρ α. This makes
-the `interpbacktrack_linesearch!` a backtracking type linesearch.
+the `interpbacktrack!` a backtracking type linesearch.
 
 This is a modification of the algorithm described in Nocedal Wright (2nd ed), Sec. 3.5.
 
@@ -15,52 +15,52 @@ This is a modification of the algorithm described in Nocedal Wright (2nd ed), Se
 * `mindecfact = 0.25` : specifies another safe-guard, α' ← max(α', mindecfact * α) to
    make sure not too small steps are taken.
 """
-interpbacktrack_linesearch!{T}(df,
-                               x::Vector{T},
-                               s::Vector,
-                               x_scratch::Vector,
-                               gr_scratch::Vector,
-                               lsr::LineSearchResults,
-                               alpha::Real = 1.0,
-                               mayterminate::Bool = false,
-                               c1::Real = 0.2,
-                               c2::Real = 0.9,
-                               rho=0.9,
-                               iterations::Integer = 1_000,
-                               mindecfact=0.25) =
-   backtracking_linesearch!(df,
-                             x,
-                             s,
-                             x_scratch,
-                             gr_scratch,
-                             lsr,
-                             alpha,
-                             mayterminate,
-                             c1,
-                             c2,
-                             rho,
-                             iterations,
-                             true,
-                             mindecfact)
+interpbacktrack!{T}(df,
+                    x::Vector{T},
+                    s::Vector,
+                    x_scratch::Vector,
+                    gr_scratch::Vector,
+                    lsr::LineSearchResults,
+                    alpha::Real = 1.0,
+                    mayterminate::Bool = false,
+                    c1::Real = 0.2,
+                    c2::Real = 0.9,
+                    rho=0.9,
+                    iterations::Integer = 1_000,
+                    mindecfact=0.25) =
+                        backtracking!(df,
+                                      x,
+                                      s,
+                                      x_scratch,
+                                      gr_scratch,
+                                      lsr,
+                                      alpha,
+                                      mayterminate,
+                                      c1,
+                                      c2,
+                                      rho,
+                                      iterations,
+                                      true,
+                                      mindecfact)
 
 
-function backtracking_linesearch!{T}(df,
-                                     x::Vector{T},
-                                     s::Vector,
-                                     x_scratch::Vector,
-                                     gr_scratch::Vector,
-                                     lsr::LineSearchResults,
-                                     alpha::Real = 1.0,
-                                     mayterminate::Bool = false,
-                                     c1::Real = 1e-4,
-                                     c2::Real = 0.9,
-                                     rho::Real = 0.9,
-                                     iterations::Integer = 1_000,
-                                     interp::Bool = false,
-                                     mindecfact=0.25)
+function backtracking!{T}(df,
+                          x::Vector{T},
+                          s::Vector,
+                          x_scratch::Vector,
+                          gr_scratch::Vector,
+                          lsr::LineSearchResults,
+                          alpha::Real = 1.0,
+                          mayterminate::Bool = false,
+                          c1::Real = 1e-4,
+                          c2::Real = 0.9,
+                          rho::Real = 0.9,
+                          iterations::Integer = 1_000,
+                          interp::Bool = false,
+                          mindecfact=0.25)
 
     # Check the input is valid, and modify otherwise
-    if interp   # this means we are coming from interpbacktrack_linesearch!
+    if interp   # this means we are coming from interpbacktrack!
        backtrack_condition = 1.0 - 1.0/(2*rho) # want guaranteed backtrack factor
        if c1 >= backtrack_condition
            warn("""The Armijo constant c1 is too large; replacing it with
@@ -102,7 +102,7 @@ function backtracking_linesearch!{T}(df,
 
         # Ensure termination
         if iteration > iterations
-            error("Too many iterations in backtracking_linesearch!")
+            error("Too many iterations in backtracking!")
         end
 
         # Shrink proposed step-size:
