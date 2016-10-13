@@ -15,7 +15,6 @@ include("api.jl")
 # Line Search Methods
 include("backtracking.jl")
 include("strongwolfe.jl")
-include("mt_cstep.jl")
 include("morethuente.jl")
 include("hagerzhang.jl")
 
