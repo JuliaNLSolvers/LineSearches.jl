@@ -13,11 +13,11 @@ include("types.jl")
 include("api.jl")
 
 # Line Search Methods
-include("backtracking_linesearch.jl")
-include("interpolating_linesearch.jl")
+include("backtracking.jl")
+include("strongwolfe.jl")
 include("mt_cstep.jl")
-include("mt_linesearch.jl")
-include("hz_linesearch.jl")
+include("morethuente.jl")
+include("hagerzhang.jl")
 
 
 end # module
