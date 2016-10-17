@@ -2,9 +2,9 @@ using LineSearches
 using Base.Test
 import Optim
 
-lsfunctions = (hz_linesearch!, interpolating_linesearch!,
-               mt_linesearch!, backtracking_linesearch!,
-               interpbacktrack_linesearch!)
+lsfunctions = (hagerzhang!, strongwolfe!,
+               morethuente!, backtracking!,
+               interpbacktrack!)
 
 println("Running tests:")
 my_tests = [

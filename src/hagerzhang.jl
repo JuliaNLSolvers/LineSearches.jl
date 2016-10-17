@@ -54,24 +54,24 @@ display_nextbit = 14
 const DEFAULTDELTA = 0.1
 const DEFAULTSIGMA = 0.9
 
-function hz_linesearch!{T}(df,
-                           x::Array{T},
-                           s::Array,
-                           xtmp::Array,
-                           g::Array,
-                           lsr::LineSearchResults{T},
-                           c::Real,
-                           mayterminate::Bool,
-                           delta::Real = DEFAULTDELTA,
-                           sigma::Real = DEFAULTSIGMA,
-                           alphamax::Real = convert(T,Inf),
-                           rho::Real = convert(T,5),
-                           epsilon::Real = convert(T,1e-6),
-                           gamma::Real = convert(T,0.66),
-                           linesearchmax::Integer = 50,
-                           psi3::Real = convert(T,0.1),
-                           iterfinitemax::Integer = ceil(Integer, -log2(eps(T))),
-                           display::Integer = 0)
+function hagerzhang!{T}(df,
+                        x::Array{T},
+                        s::Array,
+                        xtmp::Array,
+                        g::Array,
+                        lsr::LineSearchResults{T},
+                        c::Real,
+                        mayterminate::Bool,
+                        delta::Real = DEFAULTDELTA,
+                        sigma::Real = DEFAULTSIGMA,
+                        alphamax::Real = convert(T,Inf),
+                        rho::Real = convert(T,5),
+                        epsilon::Real = convert(T,1e-6),
+                        gamma::Real = convert(T,0.66),
+                        linesearchmax::Integer = 50,
+                        psi3::Real = convert(T,0.1),
+                        iterfinitemax::Integer = ceil(Integer, -log2(eps(T))),
+                        display::Integer = 0)
     if display & LINESEARCH > 0
         println("New linesearch")
     end

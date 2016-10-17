@@ -6,18 +6,17 @@ export LineSearchResults
 
 export clear!, alphatry, alphainit
 
-export hz_linesearch!, backtracking_linesearch!, interpolating_linesearch!,
-    mt_linesearch!, interpbacktrack_linesearch!
+export hagerzhang!, backtracking!, strongwolfe!,
+    morethuente!, interpbacktrack!
 
 include("types.jl")
 include("api.jl")
 
 # Line Search Methods
-include("backtracking_linesearch.jl")
-include("interpolating_linesearch.jl")
-include("mt_cstep.jl")
-include("mt_linesearch.jl")
-include("hz_linesearch.jl")
+include("backtracking.jl")
+include("strongwolfe.jl")
+include("morethuente.jl")
+include("hagerzhang.jl")
 
 
 end # module

@@ -1,17 +1,21 @@
 # TODO: Optimize for fg! calls
 # TODO: Implement safeguards
 
-function interpolating_linesearch!{T}(df,
-                                      x::Vector,
-                                      p::Vector,
-                                      x_new::Vector,
-                                      gr_new::Vector,
-                                      lsr::LineSearchResults{T},
-                                      c::Real,
-                                      mayterminate::Bool;
-                                      c1::Real = 1e-4,
-                                      c2::Real = 0.9,
-                                      rho::Real = 2.0)
+# This linesearch algorithm guarantees that the step length
+# satisfies the (strong) Wolfe conditions.
+# See Nocedal and Wright - Algorithms 3.5 and 3.6
+
+function strongwolfe!{T}(df,
+                         x::Vector,
+                         p::Vector,
+                         x_new::Vector,
+                         gr_new::Vector,
+                         lsr::LineSearchResults{T},
+                         c::Real,
+                         mayterminate::Bool;
+                         c1::Real = 1e-4,
+                         c2::Real = 0.9,
+                         rho::Real = 2.0)
     # Parameter space
     n = length(x)
 
