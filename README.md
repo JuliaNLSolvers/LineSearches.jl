@@ -9,11 +9,12 @@ The code was originally written as part of [Optim](https://github.com/JuliaOpt/O
 but has now been separated out to its own package.
 
 ### Available line search algorithms
-* `hz_linesearch!` (Taken from the Conjugate Gradient implementation
+* `hagerzhang!` (Taken from the Conjugate Gradient implementation
   by Hager and Zhang (HZ))
-* `backtracking_linesearch!`
-* `interpolating_linesearch!`
-* `mt_linesearch!`
+* `backtracking!`
+* `interpbacktracking!`
+* `strongwolfe!`
+* `morethuente!`
 
 
 ## Example
@@ -25,7 +26,7 @@ First, run `Newton` with the default line search algorithm:
 using Optim
 prob = Optim.UnconstrainedProblems.examples["Rosenbrock"]
 
-algo_hz = Newton(;linesearch! = hz_linesearch!)
+algo_hz = Newton(;linesearch! = hagerzhang!)
 res_hz = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_hz)
 ```
 
@@ -48,7 +49,7 @@ Results of Optimization Algorithm
 
 Now we can try `Newton` with the Mure Thuente line search:
 ``` julia
-algo_mt = Newton(;linesearch! = mt_linesearch!)
+algo_mt = Newton(;linesearch! = morethuente!)
 res_mt = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_mt)
 ```
 
