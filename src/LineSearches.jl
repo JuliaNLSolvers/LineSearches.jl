@@ -18,5 +18,6 @@ include("strongwolfe.jl")
 include("morethuente.jl")
 include("hagerzhang.jl")
 
+include("deprecate.jl")
 
 end # module
