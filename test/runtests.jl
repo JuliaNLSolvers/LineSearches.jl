@@ -1,6 +1,5 @@
 using LineSearches
 using Base.Test
-import Optim
 
 lsfunctions = (hagerzhang!, strongwolfe!,
                morethuente!, backtracking!,
@@ -9,10 +8,10 @@ lsfunctions = (hagerzhang!, strongwolfe!,
 println("Running tests:")
 my_tests = [
     "alphacalc.jl",
-#    "optim.jl"
+    "optim.jl"
 ]
 
 for my_test in my_tests
-    println(" * $(my_test)")
+    println("\n * $(my_test)")
     include(my_test)
 end
