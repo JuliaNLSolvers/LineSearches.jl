@@ -102,7 +102,8 @@ function backtracking!{T}(df,
 
         # Ensure termination
         if iteration > iterations
-            error("Too many iterations in backtracking!")
+            throw(LineSearchException("Linesearch failed to converge, reached maximum iterations $(linesearchmax).",
+                                      lsr.alpha[ia], f_calls, g_calls,lsr))
         end
 
         # Shrink proposed step-size:

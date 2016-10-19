@@ -25,7 +25,7 @@ function clear!(lsr::LineSearchResults)
     # nfailures is deliberately not set to 0
 end
 
-type LinesearchException{T<:Real} <: Exception
+type LineSearchException{T<:Real} <: Exception
     message::AbstractString
     alpha::T
     f_update::Int

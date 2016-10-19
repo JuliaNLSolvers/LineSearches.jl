@@ -258,7 +258,11 @@ function hagerzhang!{T}(df,
         end
         iter += 1
     end
-    error("Linesearch failed to converge")
+
+    throw(LineSearchException("Linesearch failed to converge, reached maximum iterations $(linesearchmax).",
+                              lsr.alpha[ia], f_calls, g_calls,lsr))
+
+
 end
 
 # Check Wolfe & approximate Wolfe

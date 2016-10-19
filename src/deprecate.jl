@@ -5,3 +5,4 @@
 @deprecate backtracking_linesearch! backtracking!
 @deprecate interpbacktrack_linesearch! interpbacktrack!
 @deprecate interpolating_linesearch! strongwolfe!
+@deprecate LinesearchException LineSearchException
