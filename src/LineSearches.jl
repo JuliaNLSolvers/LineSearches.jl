@@ -2,7 +2,7 @@ isdefined(Base, :__precompile__) && __precompile__()
 
 module LineSearches
 
-export LineSearchResults
+export LineSearchResults, LineSearchException
 
 export clear!, alphatry, alphainit
 

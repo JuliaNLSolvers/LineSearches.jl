@@ -158,7 +158,7 @@ function morethuente!{T}(df,
 
     if n <= 0 || stp <= 0.0 || f_tol < 0.0 || gtol < 0.0 ||
         x_tol < 0.0 || stpmin < 0.0 || stpmax < stpmin || maxfev <= 0
-        throw(ArgumentError("Invalid parameters to mure_thuente_line_search"))
+        throw(ArgumentError("Invalid parameters to morethuente"))
     end
 
     # Count function and gradient calls
@@ -255,7 +255,7 @@ function morethuente!{T}(df,
         # Test for convergence.
         #
 
-        # What's does info_cstep stand for?
+        # What does info_cstep stand for?
 
         if (bracketed && (stp <= stmin || stp >= stmax)) || info_cstep == 0
             info = 6
