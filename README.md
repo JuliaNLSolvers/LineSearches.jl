@@ -10,11 +10,11 @@ but has now been separated out to its own package.
 
 ### Available line search algorithms
 * `hagerzhang!` (Taken from the Conjugate Gradient implementation
-  by Hager and Zhang (HZ))
-* `backtracking!`
-* `interpbacktracking!`
-* `strongwolfe!`
-* `morethuente!`
+  by Hager and Zhang, 2006)
+* `morethuente!` (From the algorithm in More and Thuente, 1994)
+* `backtracking!` (Described in Nocedal and Wright, 2006)
+* `interpbacktracking!` (Nocedal and Wright)
+* `strongwolfe!` (Nocedal and Wright)
 
 
 ## Example
@@ -47,7 +47,7 @@ Results of Optimization Algorithm
  * Gradient Calls: 54
 ```
 
-Now we can try `Newton` with the Mure Thuente line search:
+Now we can try `Newton` with the Moré Thuente line search:
 ``` julia
 algo_mt = Newton(;linesearch! = morethuente!)
 res_mt = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_mt)
@@ -70,4 +70,6 @@ This gives the following result, reducing the number of function and gradient ca
 ```
 
 ## References
-W. W. Hager and H. Zhang (2006) "Algorithm 851: CG_DESCENT, a conjugate gradient method with guaranteed descent." ACM Transactions on Mathematical Software 32: 113-137.
+- W. W. Hager and H. Zhang (2006) "Algorithm 851: CG_DESCENT, a conjugate gradient method with guaranteed descent." ACM Transactions on Mathematical Software 32: 113-137.
+- Moré, Jorge J., and David J. Thuente. "Line search algorithms with guaranteed sufficient decrease." ACM Transactions on Mathematical Software (TOMS) 20.3 (1994): 286-307.
+- Nocedal, Jorge, and Stephen Wright. "Numerical optimization." Springer Science & Business Media, 2006.
