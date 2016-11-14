@@ -1,48 +1,13 @@
 """
-`interpbacktrack!` is a backtracking line-search that uses
-a quadratic interpolant to determine the reduction in step-size. Specifically,
+`backtracking!` is a backtracking line-search that uses
+a quadratic or cubic interpolant to determine the reduction in step-size.
+E.g.,
 if f(α) > f(0) + c₁ α f'(0), then the quadratic interpolant of
 f(0), f'(0), f(α) has a minimiser α' in the open interval (0, α). More strongly,
-there exists a factor ρ = ρ(c₁) such that α' ≦ ρ α. This makes
-the `interpbacktrack!` a backtracking type linesearch.
+there exists a factor ρ = ρ(c₁) such that α' ≦ ρ α.
 
 This is a modification of the algorithm described in Nocedal Wright (2nd ed), Sec. 3.5.
-
-**Default Parameters**
-
-* `c1 = 0.2` : Armijo condition
-* `rho = 0.9` : decrease `rho` to automatically adjust `c1` to obtain a stronger backtracking guarantee
-* `mindecfact = 0.25` : specifies another safe-guard, α' ← max(α', mindecfact * α) to
-   make sure not too small steps are taken.
 """
-interpbacktrack!{T}(df,
-                    x::Vector{T},
-                    s::Vector,
-                    x_scratch::Vector,
-                    gr_scratch::Vector,
-                    lsr::LineSearchResults,
-                    alpha::Real = 1.0,
-                    mayterminate::Bool = false,
-                    c1::Real = 0.2,
-                    c2::Real = 0.9,
-                    rho=0.9,
-                    iterations::Integer = 1_000,
-                    mindecfact=0.25) =
-                        backtracking!(df,
-                                      x,
-                                      s,
-                                      x_scratch,
-                                      gr_scratch,
-                                      lsr,
-                                      alpha,
-                                      mayterminate,
-                                      c1,
-                                      c2,
-                                      rho,
-                                      iterations,
-                                      true,
-                                      mindecfact)
-
 
 function backtracking!{T}(df,
                           x::Vector{T},
@@ -53,26 +18,18 @@ function backtracking!{T}(df,
                           alpha::Real = 1.0,
                           mayterminate::Bool = false,
                           c1::Real = 1e-4,
-                          c2::Real = 0.9,
-                          rho::Real = 0.9,
+                          rhohi::Real = 0.5,
+                          rholo::Real = 0.1,
                           iterations::Integer = 1_000,
-                          interp::Bool = false,
-                          mindecfact=0.25)
-
+                          order::Int = 3)
+    @assert order in (2,3)
     # Check the input is valid, and modify otherwise
-    if interp   # this means we are coming from interpbacktrack!
-       backtrack_condition = 1.0 - 1.0/(2*rho) # want guaranteed backtrack factor
-       if c1 >= backtrack_condition
-           warn("""The Armijo constant c1 is too large; replacing it with
-                   $(backtrack_condition)""")
-           c1 = backtrack_condition
-       end
-       if rho <= mindecfact
-           warn("""rho ($rho) <= mindecfact ($mindecfact); revert to standard
-                  backtracking with constant factor rho = $rho""")
-           interp = false
-       end
-    end
+    #backtrack_condition = 1.0 - 1.0/(2*rho) # want guaranteed backtrack factor
+    #if c1 >= backtrack_condition
+    #    warn("""The Armijo constant c1 is too large; replacing it with
+    #                   $(backtrack_condition)""")
+    #   c1 = backtrack_condition
+    #end
 
     # Count the total number of iterations
     iteration = 0
@@ -95,6 +52,7 @@ function backtracking!{T}(df,
 
     # Backtrack until we satisfy sufficient decrease condition
     f_x_scratch = df.f(x_scratch)
+    push!(lsr.value, f_x_scratch)
     f_calls += 1
     while f_x_scratch > f_x + c1 * alpha * gxp
         # Increment the number of steps we've had to perform
@@ -103,24 +61,39 @@ function backtracking!{T}(df,
         # Ensure termination
         if iteration > iterations
             throw(LineSearchException("Linesearch failed to converge, reached maximum iterations $(iterations).",
-                                      lsr.alpha[ia], f_calls, g_calls,lsr))
+                                      lsr.alpha[end], f_calls, g_calls,lsr))
         end
 
         # Shrink proposed step-size:
-        if !interp
-           # standard backtracking:
-           alpha *= rho
+        if order == 2 || iteration == 1
+            # backtracking via interpolation:
+            # This interpolates the available data
+            #    f(0), f'(0), f(α)
+            # with a quadractic which is then minimised; this comes with a
+            # guaranteed backtracking factor 0.5 * (1-c1)^{-1} which is < 1
+            # provided that c1 < 1/2; the backtrack_condition at the beginning
+            # of the function guarantees at least a backtracking factor rho.
+            alphatmp = - (gxp * alpha^2) / ( 2.0 * (f_x_scratch - f_x - gxp*alpha) )
         else
-           # backtracking via interpolation:
-           # This interpolates the available data
-           #    f(0), f'(0), f(α)
-           # with a quadractic which is then minimised; this comes with a
-           # guaranteed backtracking factor 0.5 * (1-c1)^{-1} which is < 1
-           # provided that c1 < 1/2; the backtrack_condition at the beginning
-           # of the function guarantees at least a backtracking factor rho.
-           alpha1 = - (gxp * alpha) / ( 2.0 * ((f_x_scratch - f_x)/alpha - gxp) )
-           alpha = max(alpha1, alpha * min(mindecfact, rho))  # avoid miniscule steps
+            alpha0 = lsr.alpha[end-1]
+            alpha1 = lsr.alpha[end]
+            phi0 = lsr.value[end-1]
+            phi1 = lsr.value[end]
+
+            div = alpha0^2*alpha1^2*(alpha1-alpha0)
+            # TODO: Don't create arrays, write out the expressions
+            (a,b) = [alpha0^2 -alpha1^2; -alpha0^3 alpha1^3]*[phi1-f_x-gxp*alpha1; phi0-f_x-gxp*alpha0]/div
+            if isapprox(a,0)
+                alphatmp = gxp / (2.0*b)
+            else
+                discr = max(b^2-3*a*gxp, 0.)
+                alphatmp = (-b + sqrt(discr)) / (3.0*a)
+            end
         end
+        alphatmp =  min(alphatmp, alpha*rhohi) # avoid too small reductions
+        alpha = max(alphatmp, alpha*rholo) # avoid too big reductions
+
+        push!(lsr.alpha, alpha)
 
         # Update proposed position
         @simd for i in 1:n
@@ -129,6 +102,7 @@ function backtracking!{T}(df,
 
         # Evaluate f(x) at proposed position
         f_x_scratch = df.f(x_scratch)
+        push!(lsr.value, f_x_scratch)
         f_calls += 1
     end
 
