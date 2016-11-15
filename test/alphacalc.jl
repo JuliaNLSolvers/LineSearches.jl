@@ -1,5 +1,5 @@
 let
-    lsalphas = [0.5,0.5,0.49995,0.9,0.5]
+    lsalphas = [0.5,0.5,0.49995,0.5,0.5,0.5]
 
     f(x) = vecdot(x,x)
     function g!(x, out)
