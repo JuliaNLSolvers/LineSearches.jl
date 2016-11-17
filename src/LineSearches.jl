@@ -2,6 +2,8 @@ isdefined(Base, :__precompile__) && __precompile__()
 
 module LineSearches
 
+import Base.clear!
+
 export LineSearchResults, LineSearchException
 
 export clear!, alphatry, alphainit
