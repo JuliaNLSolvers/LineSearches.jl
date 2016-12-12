@@ -102,7 +102,7 @@ function backtracking!{T}(df,
 
         # Ensure termination
         if iteration > iterations
-            throw(LineSearchException("Linesearch failed to converge, reached maximum iterations $(linesearchmax).",
+            throw(LineSearchException("Linesearch failed to converge, reached maximum iterations $(iterations).",
                                       lsr.alpha[ia], f_calls, g_calls,lsr))
         end
 
