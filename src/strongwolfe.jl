@@ -11,7 +11,7 @@ function strongwolfe!{T}(df,
                          x_new::Vector,
                          gr_new::Vector,
                          lsr::LineSearchResults{T},
-                         c::Real,
+                         alpha0::Real,
                          mayterminate::Bool;
                          c1::Real = 1e-4,
                          c2::Real = 0.9,
@@ -25,7 +25,7 @@ function strongwolfe!{T}(df,
     # Step-sizes
     a_0 = 0.0
     a_iminus1 = a_0
-    a_i = 1.0
+    a_i = alpha0
     a_max = 65536.0
 
     # phi(alpha) = f(x + alpha * p)
