@@ -13,7 +13,6 @@ but has now been separated out to its own package.
   by Hager and Zhang, 2006)
 * `morethuente!` (From the algorithm in More and Thuente, 1994)
 * `backtracking!` (Described in Nocedal and Wright, 2006)
-* `interpbacktracking!` (Nocedal and Wright)
 * `strongwolfe!` (Nocedal and Wright)
 
 

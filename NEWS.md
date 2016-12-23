@@ -1,3 +1,7 @@
+# LineSearches v0.1.3 release notes
+* The backtracking algorithm now performs quadratic or cubic interpolations
+[#20](https://github.com/anriseth/LineSearches.jl/pull/20)
+
 # LineSearches v0.1.1 release notes
 * Hagerzhang and Backtrack now throw LineSearchExceptions
 [#19](https://github.com/anriseth/LineSearches.jl/pull/19)
