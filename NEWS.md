@@ -1,4 +1,6 @@
 # LineSearches v0.1.3 release notes
+* Algorithms morethuente and strongwolfe now takes an initial step length as an input
+[#23](https://github.com/anriseth/LineSearches.jl/pull/23)
 * The backtracking algorithm now performs quadratic or cubic interpolations
 [#20](https://github.com/anriseth/LineSearches.jl/pull/20)
 
