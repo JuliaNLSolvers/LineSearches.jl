@@ -9,7 +9,7 @@ export LineSearchResults, LineSearchException
 export clear!, alphatry, alphainit
 
 export hagerzhang!, backtracking!, strongwolfe!,
-    morethuente!, bt2!, bt3!
+    morethuente!, bt2!, bt3!, basic!
 
 include("types.jl")
 include("api.jl")
@@ -19,6 +19,7 @@ include("backtracking.jl")
 include("strongwolfe.jl")
 include("morethuente.jl")
 include("hagerzhang.jl")
+include("basic.jl")
 
 include("deprecate.jl")
 

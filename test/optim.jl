@@ -6,11 +6,10 @@ let
         println("\nTesting $(string(ls))")
         for (name, prob) in Optim.UnconstrainedProblems.examples
             if prob.isdifferentiable
-                f_prob = prob.f
-                res = Optim.optimize(f_prob, prob.initial_x, Optim.Newton(linesearch! = ls),
-                                     Optim.OptimizationOptions(autodiff = true))
-                println("$(name):\tf_calls = $(Optim.f_calls(res))\tg_calls = $(Optim.g_calls(res))")
-                @assert norm(Optim.minimizer(res) - prob.solutions) < 1e-2
+                res = Optim.optimize(prob.f, prob.initial_x, Optim.Newton(linesearch = ls),
+                                     Optim.Options(autodiff = true))
+                println("$(name):\titerations = $(res.iterations)\tf_calls = $(Optim.f_calls(res))\tg_calls = $(Optim.g_calls(res))")
+                @assert Optim.minimum(res) <  prob.f(prob.solutions) + 1e-2
             end
         end
     end
