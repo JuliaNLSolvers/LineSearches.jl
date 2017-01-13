@@ -14,7 +14,7 @@ but has now been separated out to its own package.
 * `morethuente!` (From the algorithm in More and Thuente, 1994)
 * `backtracking!` (Described in Nocedal and Wright, 2006)
 * `strongwolfe!` (Nocedal and Wright)
-
+* `basic!` (Simply takes a given step length, default 1.0)
 
 ## Example
 This example shows how to use `LineSearches` with `Optim`.
