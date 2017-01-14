@@ -1,7 +1,7 @@
 using LineSearches
 using Base.Test
 
-lsfunctions = (hagerzhang!, strongwolfe!,
+lsfunctions = (basic!, hagerzhang!, strongwolfe!,
                morethuente!, backtracking!,
                bt2!, bt3!)
 

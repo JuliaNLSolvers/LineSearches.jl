@@ -1,5 +1,5 @@
 let
-    lsalphas = [0.5,0.5,0.49995,0.5,0.5,0.5]
+    lsalphas = [1.0, 0.5,0.5,0.49995,0.5,0.5,0.5]
 
     f(x) = vecdot(x,x)
     function g!(x, out)
@@ -7,8 +7,6 @@ let
     end
 
     df = LineSearches.DifferentiableFunction(f,g!)
-
-
 
     for (i, linesearch!) in enumerate(lsfunctions)
         println("Testing $(string(linesearch!))")

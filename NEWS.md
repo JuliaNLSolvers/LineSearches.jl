@@ -1,3 +1,7 @@
+# LineSearches v0.1.4 release notes
+* Adds the `basic!` linesearch, which simply takes a predefined step. See
+[#26](https://github.com/anriseth/LineSearches.jl/pull/26)
+
 # LineSearches v0.1.3 release notes
 * Algorithms morethuente and strongwolfe now takes an initial step length as an input
 [#23](https://github.com/anriseth/LineSearches.jl/pull/23)
