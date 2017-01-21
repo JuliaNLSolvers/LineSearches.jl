@@ -26,6 +26,6 @@ let
         alpha, f_update, g_update = linesearch!(df, x, p, xtmp, grtmp, lsr, alpha, mayterminate)
         #xnew = x + alpha*p
 
-        @test_approx_eq alpha lsalphas[i]
+        @test alpha ≈ lsalphas[i]
     end
 end
