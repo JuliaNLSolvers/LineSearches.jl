@@ -81,6 +81,7 @@ function backtracking!{T}(df,
     @simd for i in 1:n
         @inbounds x_scratch[i] = x[i] + alpha * s[i]
     end
+    push!(lsr.alpha, alpha)
 
     # Backtrack until we satisfy sufficient decrease condition
     f_x_scratch = df.f(x_scratch)
@@ -134,8 +135,8 @@ function backtracking!{T}(df,
 
         # Evaluate f(x) at proposed position
         f_x_scratch = df.f(x_scratch)
-        push!(lsr.value, f_x_scratch)
         f_calls += 1
+        push!(lsr.value, f_x_scratch)
     end
 
     return alpha, f_calls, g_calls
