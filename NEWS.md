@@ -1,3 +1,7 @@
+# LineSearches v0.1.5 release notes
+* Fix bug in `bt3!` linesearch, which uses the wrong initial step in the first cubic interpolation. See 
+[#29](https://github.com/anriseth/LineSearches.jl/pull/29)
+
 # LineSearches v0.1.4 release notes
 * Adds the `basic!` linesearch, which simply takes a predefined step. See
 [#26](https://github.com/anriseth/LineSearches.jl/pull/26)
