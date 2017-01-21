@@ -10,6 +10,5 @@ let
     prob = Optim.UnconstrainedProblems.examples[name]
     res = Optim.optimize(prob.f, prob.initial_x, Optim.BFGS(linesearch=LineSearches.bt3!),
                          Optim.Options(autodiff = true))
-
-    @assert norm(Optim.minimizer(res) - prob.solutions) < 1e-2
+    @assert Optim.minimum(res) < prob.f(prob.solutions) + 1e-2
 end
