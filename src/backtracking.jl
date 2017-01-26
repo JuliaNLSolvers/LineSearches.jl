@@ -113,9 +113,10 @@ function backtracking!{T}(df,
             phi0 = lsr.value[end-1]
             phi1 = lsr.value[end]
 
-            div = alpha0^2*alpha1^2*(alpha1-alpha0)
-            # TODO: Don't create arrays, write out the expressions
-            (a,b) = [alpha0^2 -alpha1^2; -alpha0^3 alpha1^3]*[phi1-f_x-gxp*alpha1; phi0-f_x-gxp*alpha0]/div
+            div = 1.0/(alpha0^2*alpha1^2*(alpha1-alpha0))
+            a = (alpha0^2*(phi1-f_x-gxp*alpha1)-alpha1^2*(phi0-f_x-gxp*alpha0))*div
+            b = (-alpha0^3*(phi1-f_x-gxp*alpha1)+alpha1^3*(phi0-f_x-gxp*alpha0))*div
+
             if isapprox(a,0)
                 alphatmp = gxp / (2.0*b)
             else
