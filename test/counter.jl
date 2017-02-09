@@ -37,7 +37,8 @@ let
         prob.g!(x,out)
     end
 
-    opts = Optim.Options(allow_f_increases=true)
+    # TODO: add allow_f_increases when tagged in Optim
+    opts = Optim.Options()#)allow_f_increases=true)
     for ls in lsfunctions
         println("\nTesting $(string(ls))")
         fcounter(true); gcounter(true)
