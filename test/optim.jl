@@ -3,7 +3,11 @@ import Optim
 
 let
     for ls in lsfunctions
-        opts = Optim.Options(allow_f_increases = true)
+        # TODO: add basic! when allow_f_increases is tagged in Optim
+        if ls == LineSearches.basic!
+            continue
+        end
+        opts = Optim.Options()#allow_f_increases = true)
 
         println("\nTesting $(string(ls))")
         for (name, prob) in Optim.UnconstrainedProblems.examples
