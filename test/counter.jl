@@ -37,14 +37,12 @@ let
         prob.g!(x,out)
     end
 
-    # TODO: add allow_f_increases when tagged in Optim
-    opts = Optim.Options()#)allow_f_increases=true)
     for ls in lsfunctions
         println("\nTesting $(string(ls))")
         fcounter(true); gcounter(true)
 
         res = Optim.optimize(f,g!, prob.h!, prob.initial_x,
-                             Optim.BFGS(linesearch = ls), opts)
+                             Optim.BFGS(linesearch = ls))
         @assert fcount == Optim.f_calls(res)
         @assert gcount == Optim.g_calls(res)
     end
