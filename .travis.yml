@@ -14,6 +14,7 @@ notifications:
   email: false
 script:
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+    - julia -e 'Pkg.checkout("Optim")'
     - julia -e 'Pkg.clone(pwd()); Pkg.test("LineSearches", coverage=true)'
 after_success:
     - julia -e 'cd(Pkg.dir("LineSearches")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
