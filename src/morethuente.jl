@@ -135,7 +135,7 @@
 function morethuente!{T}(df,
                          x::Vector,
                          s::Vector,
-                         new_x::Vector,
+                         x_new::Vector,
                          g::Vector,
                          lsr::LineSearchResults{T},
                          stp::Real,
@@ -147,7 +147,9 @@ function morethuente!{T}(df,
                          stpmin::Real = 1e-16,
                          stpmax::Real = 65536.0,
                          maxfev::Integer = 100)
-
+    if norm(s) == 0
+        Base.error("Step direction is zero.")
+    end
     info = 0
     info_cstep = 1 # Info from step
 
@@ -182,9 +184,8 @@ function morethuente!{T}(df,
     dgtest = f_tol * dginit
     width = stpmax - stpmin
     width1 = 2 * width
-    copy!(new_x, x)
+    copy!(x_new, x)
     # Keep this across calls
-    # Replace with new_x?
 
     #
     # The variables stx, fx, dgx contain the values of the step,
@@ -241,12 +242,16 @@ function morethuente!{T}(df,
         #
 
         for i in 1:n
-            new_x[i] = x[i] + stp * s[i] # TODO: Use x_new here
+            x_new[i] = x[i] + stp * s[i]
         end
 
-        f = df.fg!(new_x, g)
+        f = df.fg!(x_new, g)
         f_calls += 1
         g_calls += 1
+        if isapprox(norm(g), 0) # TODO: this should be tested vs Optim's gtol
+            return stp, f_calls, g_calls
+        end
+
         nfev += 1 # This includes calls to f() and g!()
         dg = vecdot(g, s)
         push!(lsr, stp, f, dg)
