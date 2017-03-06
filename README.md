@@ -1,11 +1,11 @@
 # LineSearches
 
-[![Build Status](https://travis-ci.org/anriseth/LineSearches.jl.svg?branch=master)](https://travis-ci.org/anriseth/LineSearches.jl)
-[![Codecov branch](https://img.shields.io/codecov/c/github/anriseth/LineSearches.jl/master.svg?maxAge=2592000)](https://codecov.io/gh/anriseth/LineSearches.jl)
+[![Build Status](https://travis-ci.org/JuliaNLSolvers/LineSearches.jl.svg?branch=master)](https://travis-ci.org/JuliaNLSolvers/LineSearches.jl)
+[![Codecov branch](https://img.shields.io/codecov/c/github/JuliaNLSolvers/LineSearches.jl/master.svg?maxAge=2592000)](https://codecov.io/gh/JuliaNLSolvers/LineSearches.jl)
 
 ## Description
 This package provides an interface to line search algorithms implemented in Julia.
-The code was originally written as part of [Optim](https://github.com/JuliaOpt/Optim.jl),
+The code was originally written as part of [Optim](https://github.com/JuliaNLSolvers/Optim.jl),
 but has now been separated out to its own package.
 
 ### Available line search algorithms
