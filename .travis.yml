@@ -4,8 +4,8 @@ os:
   - linux
   - osx
 julia:
-  - 0.4
   - 0.5
+  - 0.6
 # Workaround for https://github.com/travis-ci/travis-ci/issues/4942
 git:
   depth: 99999
