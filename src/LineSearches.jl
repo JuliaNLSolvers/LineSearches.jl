@@ -2,6 +2,7 @@ isdefined(Base, :__precompile__) && __precompile__()
 
 module LineSearches
 
+import NLSolversBase
 import Base.clear!
 
 export LineSearchResults, LineSearchException

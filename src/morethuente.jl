@@ -245,7 +245,8 @@ function morethuente!{T}(df,
             x_new[i] = x[i] + stp * s[i]
         end
 
-        f = df.fg!(x_new, g)
+        f = NLSolversBase.value_grad!(df, x_new)
+        g = gradient(df)
         f_calls += 1
         g_calls += 1
         if isapprox(norm(g), 0) # TODO: this should be tested vs Optim's gtol

@@ -84,7 +84,7 @@ function backtracking!{T}(df,
     push!(lsr.alpha, alpha)
 
     # Backtrack until we satisfy sufficient decrease condition
-    f_x_scratch = df.f(x_scratch)
+    f_x_scratch = NLSolversBase.value!(df, x_scratch)
     push!(lsr.value, f_x_scratch)
     f_calls += 1
     while f_x_scratch > f_x + c1 * alpha * gxp
@@ -135,7 +135,7 @@ function backtracking!{T}(df,
         end
 
         # Evaluate f(x) at proposed position
-        f_x_scratch = df.f(x_scratch)
+        f_x_scratch = NLSolversBase.value!(df, x_scratch)
         f_calls += 1
         push!(lsr.value, f_x_scratch)
     end
