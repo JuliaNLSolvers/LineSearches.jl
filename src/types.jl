@@ -32,17 +32,3 @@ type LineSearchException{T<:Real} <: Exception
     g_update::Int
     lsr::LineSearchResults
 end
-
-immutable DifferentiableFunction
-    f::Function
-    g!::Function
-    fg!::Function
-end
-
-function DifferentiableFunction(f::Function, g!::Function)
-    function fg!(x::Array, storage::Array)
-        g!(x, storage)
-        return f(x)
-    end
-    return DifferentiableFunction(f, g!, fg!)
-end

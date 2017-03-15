@@ -1,7 +1,6 @@
-# TODO: move the import into the let block when we stop supporting Julia v0.4?
-import Optim
-
 let
+    import Optim
+
     for ls in lsfunctions
         opts = Optim.Options(allow_f_increases = true)
 
