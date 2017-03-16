@@ -245,7 +245,7 @@ function morethuente!{T}(df,
             x_new[i] = x[i] + stp * s[i]
         end
 
-        f = NLSolversBase.value_grad!(df, x_new)
+        f = NLSolversBase.value_gradient!(df, x_new)
         g = gradient(df)
         f_calls += 1
         g_calls += 1

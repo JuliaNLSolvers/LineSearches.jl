@@ -16,7 +16,7 @@ function strongwolfe!{T}(df,
                          c2::Real = 0.9,
                          rho::Real = 2.0)
     # TODO: do we need gr_new anymore?
-    # Any call to gradient! or value_grad! would update df.g anyway
+    # Any call to gradient! or value_gradient! would update df.g anyway
 
     # Parameter space
     n = length(x)
@@ -129,7 +129,7 @@ function zoom(a_lo::Real,
         @simd for index in 1:n
             @inbounds x_new[index] = x[index] + a_lo * p[index]
         end
-        phi_a_lo = NLSolversBase.value_grad!(df, x_new)
+        phi_a_lo = NLSolversBase.value_gradient!(df, x_new)
         gr_new[:] = NLSolversBase.gradient(df)
         f_calls += 1
         g_calls += 1
@@ -139,7 +139,7 @@ function zoom(a_lo::Real,
         @simd for index in 1:n
             @inbounds x_new[index] = x[index] + a_hi * p[index]
         end
-        phi_a_hi = NLSolversBase.value_grad!(df, x_new)
+        phi_a_hi = NLSolversBase.value_gradient!(df, x_new)
         gr_new[:] = NLSolversBase.gradient(df)
         f_calls += 1
         g_calls += 1

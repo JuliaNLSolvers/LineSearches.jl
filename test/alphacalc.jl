@@ -15,7 +15,7 @@ let
         df = NLSolversBase.OnceDifferentiable(f,g!,x)
 
         xtmp = copy(x)
-        phi0 = NLSolversBase.value_grad!(df, x)
+        phi0 = NLSolversBase.value_gradient!(df, x)
         grtmp = gradient(df)
         p = -grtmp
         dphi0 = dot(p, grtmp)

@@ -73,7 +73,7 @@ function hagerzhang!{T}(df,
                         iterfinitemax::Integer = ceil(Integer, -log2(eps(T))),
                         display::Integer = 0)
     # TODO: do we need g anymore?
-    # Any call to gradient! or value_grad! would update df.g anyway
+    # Any call to gradient! or value_gradient! would update df.g anyway
 
     if display & LINESEARCH > 0
         println("New linesearch")
@@ -496,7 +496,7 @@ function linefunc!(df,
     end
     gphi = convert(eltype(g), NaN)
     if calc_grad
-        val = NLSolversBase.value_grad!(df,xtmp)
+        val = NLSolversBase.value_gradient!(df,xtmp)
         g[:] = gradient(df)
         f_calls += 1
         g_calls += 1
