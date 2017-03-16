@@ -22,10 +22,10 @@ We solve the Rosenbrock problem with two different line search algorithms.
 
 First, run `Newton` with the default line search algorithm:
 ```julia
-using Optim
+using Optim, LineSearches
 prob = Optim.UnconstrainedProblems.examples["Rosenbrock"]
 
-algo_hz = Newton(;linesearch! = hagerzhang!)
+algo_hz = Newton(linesearch = hagerzhang!)
 res_hz = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_hz)
 ```
 
@@ -34,38 +34,43 @@ This gives the result
 Results of Optimization Algorithm
  * Algorithm: Newton's Method
  * Starting Point: [0.0,0.0]
- * Minimizer: [0.9999999999979515,0.9999999999960232]
- * Minimum: 5.639268e-24
- * Iterations: 13
- * Convergence: true
-   * |x - x'| < 1.0e-32: false
-   * |f(x) - f(x')| / |f(x)| < 1.0e-32: false
-   * |g(x)| < 1.0e-08: true
-   * Reached Maximum Number of Iterations: false
- * Objective Function Calls: 54
- * Gradient Calls: 54
-```
-
-Now we can try `Newton` with the Moré Thuente line search:
-``` julia
-algo_mt = Newton(;linesearch! = morethuente!)
-res_mt = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_mt)
-```
-
-This gives the following result, reducing the number of function and gradient calls:
-``` julia
- * Algorithm: Newton's Method
- * Starting Point: [0.0,0.0]
- * Minimizer: [0.9999999999999992,0.999999999999998]
- * Minimum: 2.032549e-29
+ * Minimizer: [0.9999999999999994,0.9999999999999989]
+ * Minimum: 3.081488e-31
  * Iterations: 14
  * Convergence: true
    * |x - x'| < 1.0e-32: false
    * |f(x) - f(x')| / |f(x)| < 1.0e-32: false
    * |g(x)| < 1.0e-08: true
+   * f(x) > f(x'): false
    * Reached Maximum Number of Iterations: false
- * Objective Function Calls: 45
- * Gradient Calls: 45
+ * Objective Calls: 44
+ * Gradient Calls: 44
+ * Hessian Calls: 14
+```
+
+Now we can try `Newton` with the cubic backtracking line search:
+``` julia
+algo_bt3 = Newton(linesearch = bt3!)
+res_bt3 = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_bt3)
+```
+
+This gives the following result, reducing the number of function and gradient calls:
+``` julia
+Results of Optimization Algorithm
+ * Algorithm: Newton's Method
+ * Starting Point: [0.0,0.0]
+ * Minimizer: [0.9999999959215587,0.9999999918223065]
+ * Minimum: 1.667699e-17
+ * Iterations: 14
+ * Convergence: true
+   * |x - x'| < 1.0e-32: false
+   * |f(x) - f(x')| / |f(x)| < 1.0e-32: false
+   * |g(x)| < 1.0e-08: true
+   * f(x) > f(x'): false
+   * Reached Maximum Number of Iterations: false
+ * Objective Calls: 19
+ * Gradient Calls: 15
+ * Hessian Calls: 14
 ```
 
 ## References
