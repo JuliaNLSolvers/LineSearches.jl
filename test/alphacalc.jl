@@ -26,7 +26,7 @@ let
         alpha = 1.0
         mayterminate = false
 
-        alpha, f_update, g_update = linesearch!(df, x, p, xtmp, grtmp, lsr, alpha, mayterminate)
+        alpha = linesearch!(df, x, p, xtmp, grtmp, lsr, alpha, mayterminate)
         #xnew = x + alpha*p
 
         @test alpha ≈ lsalphas[i]

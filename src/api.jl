@@ -13,8 +13,6 @@ function alphatry{T}(alpha::T,
                      iterfinitemax::Integer = ceil(Integer, -log2(eps(T))),
                      alphamax::Real = convert(T, Inf),
                      verbose::Bool = false)
-    f_calls = 0
-    g_calls = 0
 
     phi0 = lsr.value[1]
     dphi0 = lsr.slope[1]
@@ -24,18 +22,16 @@ function alphatry{T}(alpha::T,
 
     # Use xtmp here
     phitest = NLSolversBase.value!(df, x + alphatest * s)
-    f_calls += 1
 
     iterfinite = 1
     while !isfinite(phitest)
         alphatest = psi3 * alphatest
         # Use xtmp here
         phitest = NLSolversBase.value!(df, x + alphatest * s)
-        f_calls += 1
         lsr.nfailures += 1
         iterfinite += 1
         if iterfinite >= iterfinitemax
-            return zero(T), true, f_calls, g_calls
+            return zero(T), true
 #             error("Failed to achieve finite test value; alphatest = ", alphatest)
         end
     end
@@ -73,7 +69,7 @@ function alphatry{T}(alpha::T,
     if verbose == true
         println("alpha guess (expand): ", alpha)
     end
-    return alpha, mayterminate, f_calls, g_calls
+    return alpha, mayterminate
 end
 
 

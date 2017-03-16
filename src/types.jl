@@ -28,7 +28,5 @@ end
 type LineSearchException{T<:Real} <: Exception
     message::AbstractString
     alpha::T
-    f_update::Int
-    g_update::Int
     lsr::LineSearchResults
 end

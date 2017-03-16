@@ -21,9 +21,6 @@ function strongwolfe!{T}(df,
     # Parameter space
     n = length(x)
 
-    # Count function calls
-    f_calls, g_calls = 0, 0
-
     # Step-sizes
     a_0 = 0.0
     a_iminus1 = a_0
@@ -50,35 +47,33 @@ function strongwolfe!{T}(df,
 
         # Evaluate phi(a_i)
         phi_a_i = NLSolversBase.value!(df, x_new)
-        f_calls += 1
 
         # Test Wolfe conditions
         if (phi_a_i > phi_0 + c1 * a_i * phiprime_0) ||
             (phi_a_i >= phi_a_iminus1 && i > 1)
-            a_star, f_up, g_up = zoom(a_iminus1, a_i,
-                                      phiprime_0, phi_0,
-                                      df, x, p, x_new, gr_new)
-            return a_star, f_calls + f_up, g_calls + g_up
+            a_star = zoom(a_iminus1, a_i,
+                          phiprime_0, phi_0,
+                          df, x, p, x_new, gr_new)
+            return a_star
         end
 
         # Evaluate phi'(a_i)
         NLSolversBase.gradient!(df, x_new)
         gr_new[:] = gradient(df)
 
-        g_calls += 1
         phiprime_a_i = vecdot(gr_new, p)
 
         # Check condition 2
         if abs(phiprime_a_i) <= -c2 * phiprime_0
-            return a_i, f_calls, g_calls
+            return a_i
         end
 
         # Check condition 3
         if phiprime_a_i >= 0.0
-            a_star, f_up, g_up = zoom(a_i, a_iminus1,
-                                      phiprime_0, phi_0,
-                                      df, x, p, x_new, gr_new)
-            return a_star, f_calls + f_up, g_calls + g_up
+            a_star = zoom(a_i, a_iminus1,
+                          phiprime_0, phi_0,
+                          df, x, p, x_new, gr_new)
+            return a_star
         end
 
         # Choose a_iplus1 from the interval (a_i, a_max)
@@ -93,7 +88,7 @@ function strongwolfe!{T}(df,
     end
 
     # Quasi-error response
-    return a_max, f_calls, g_calls
+    return a_max
 end
 
 function zoom(a_lo::Real,
@@ -110,9 +105,6 @@ function zoom(a_lo::Real,
 
     # Parameter space
     n = length(x)
-
-    # Count function and gradient calls
-    f_calls, g_calls = 0, 0
 
     # Step-size
     a_j = NaN
@@ -131,8 +123,6 @@ function zoom(a_lo::Real,
         end
         phi_a_lo = NLSolversBase.value_gradient!(df, x_new)
         gr_new[:] = NLSolversBase.gradient(df)
-        f_calls += 1
-        g_calls += 1
         phiprime_a_lo = vecdot(gr_new, p)
 
         # Cache phi_a_hi
@@ -141,8 +131,6 @@ function zoom(a_lo::Real,
         end
         phi_a_hi = NLSolversBase.value_gradient!(df, x_new)
         gr_new[:] = NLSolversBase.gradient(df)
-        f_calls += 1
-        g_calls += 1
         phiprime_a_hi = vecdot(gr_new, p)
 
         # Interpolate a_j
@@ -164,7 +152,6 @@ function zoom(a_lo::Real,
 
         # Evaluate phi(a_j)
         phi_a_j = NLSolversBase.value!(df, x_new)
-        f_calls += 1
 
         # Check Armijo
         if (phi_a_j > phi_0 + c1 * a_j * phiprime_0) ||
@@ -174,11 +161,10 @@ function zoom(a_lo::Real,
             # Evaluate phiprime(a_j)
             NLSolversBase.gradient!(df, x_new)
             gr_new[:] = gradient(df)
-            g_calls += 1
             phiprime_a_j = vecdot(gr_new, p)
 
             if abs(phiprime_a_j) <= -c2 * phiprime_0
-                return a_j, f_calls, g_calls
+                return a_j
             end
 
             if phiprime_a_j * (a_hi - a_lo) >= 0.0
@@ -190,7 +176,7 @@ function zoom(a_lo::Real,
     end
 
     # Quasi-error response
-    return a_j, f_calls, g_calls
+    return a_j
 end
 
 # a_lo = a_{i - 1}
