@@ -30,7 +30,7 @@ function alphatry{T}(alpha::T,
     while !isfinite(phitest)
         alphatest = psi3 * alphatest
         # Use xtmp here
-        phitest = NLSolversBase.value!(x + alphatest * s)
+        phitest = NLSolversBase.value!(df, x + alphatest * s)
         f_calls += 1
         lsr.nfailures += 1
         iterfinite += 1
