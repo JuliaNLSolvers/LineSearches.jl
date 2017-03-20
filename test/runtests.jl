@@ -8,9 +8,10 @@ lsfunctions = (basic!, hagerzhang!, strongwolfe!,
 println("Running tests:")
 my_tests = [
     "alphacalc.jl",
-    "optim.jl",
-    "backtracking.jl",
-    "counter.jl"
+# TODO: Add Optim tests back when Optim.jl#388 is merged
+#    "optim.jl",
+#    "backtracking.jl",
+#    "counter.jl"
 ]
 
 for my_test in my_tests

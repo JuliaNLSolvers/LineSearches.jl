@@ -1,4 +1,3 @@
-# TODO: Optimize for fg! calls
 # TODO: Implement safeguards
 
 # This linesearch algorithm guarantees that the step length
@@ -16,11 +15,11 @@ function strongwolfe!{T}(df,
                          c1::Real = 1e-4,
                          c2::Real = 0.9,
                          rho::Real = 2.0)
+    # TODO: do we need gr_new anymore?
+    # Any call to gradient! or value_gradient! would update df.g anyway
+
     # Parameter space
     n = length(x)
-
-    # Count function calls
-    f_calls, g_calls = 0, 0
 
     # Step-sizes
     a_0 = 0.0
@@ -28,7 +27,7 @@ function strongwolfe!{T}(df,
     a_i = alpha0
     a_max = 65536.0
 
-    # phi(alpha) = f(x + alpha * p)
+    # phi(alpha) = df.f(x + alpha * p)
     phi_0 = lsr.value[end]
     phi_a_iminus1 = phi_0
     phi_a_i = NaN
@@ -47,34 +46,34 @@ function strongwolfe!{T}(df,
         end
 
         # Evaluate phi(a_i)
-        phi_a_i = df.f(x_new)
-        f_calls += 1
+        phi_a_i = NLSolversBase.value!(df, x_new)
 
         # Test Wolfe conditions
         if (phi_a_i > phi_0 + c1 * a_i * phiprime_0) ||
             (phi_a_i >= phi_a_iminus1 && i > 1)
-            a_star, f_up, g_up = zoom(a_iminus1, a_i,
-                                      phiprime_0, phi_0,
-                                      df.f, df.g!, x, p, x_new, gr_new)
-            return a_star, f_calls + f_up, g_calls + g_up
+            a_star = zoom(a_iminus1, a_i,
+                          phiprime_0, phi_0,
+                          df, x, p, x_new, gr_new)
+            return a_star
         end
 
         # Evaluate phi'(a_i)
-        df.g!(x_new, gr_new)
-        g_calls += 1
+        NLSolversBase.gradient!(df, x_new)
+        gr_new[:] = gradient(df)
+
         phiprime_a_i = vecdot(gr_new, p)
 
         # Check condition 2
         if abs(phiprime_a_i) <= -c2 * phiprime_0
-            return a_i, f_calls, g_calls
+            return a_i
         end
 
         # Check condition 3
         if phiprime_a_i >= 0.0
-            a_star, f_up, g_up = zoom(a_i, a_iminus1,
-                                      phiprime_0, phi_0,
-                                      df.f, df.g!, x, p, x_new, gr_new)
-            return a_star, f_calls + f_up, g_calls + g_up
+            a_star = zoom(a_i, a_iminus1,
+                          phiprime_0, phi_0,
+                          df, x, p, x_new, gr_new)
+            return a_star
         end
 
         # Choose a_iplus1 from the interval (a_i, a_max)
@@ -89,15 +88,14 @@ function strongwolfe!{T}(df,
     end
 
     # Quasi-error response
-    return a_max, f_calls, g_calls
+    return a_max
 end
 
 function zoom(a_lo::Real,
               a_hi::Real,
               phiprime_0::Real,
               phi_0::Real,
-              f::Function,
-              g!::Function,
+              df,
               x::Vector,
               p::Vector,
               x_new::Vector,
@@ -107,9 +105,6 @@ function zoom(a_lo::Real,
 
     # Parameter space
     n = length(x)
-
-    # Count function and gradient calls
-    f_calls, g_calls = 0, 0
 
     # Step-size
     a_j = NaN
@@ -126,20 +121,16 @@ function zoom(a_lo::Real,
         @simd for index in 1:n
             @inbounds x_new[index] = x[index] + a_lo * p[index]
         end
-        phi_a_lo = f(x_new)
-        g!(x_new, gr_new)
-        f_calls += 1
-        g_calls += 1
+        phi_a_lo = NLSolversBase.value_gradient!(df, x_new)
+        gr_new[:] = NLSolversBase.gradient(df)
         phiprime_a_lo = vecdot(gr_new, p)
 
         # Cache phi_a_hi
         @simd for index in 1:n
             @inbounds x_new[index] = x[index] + a_hi * p[index]
         end
-        phi_a_hi = f(x_new)
-        g!(x_new, gr_new)
-        f_calls += 1
-        g_calls += 1
+        phi_a_hi = NLSolversBase.value_gradient!(df, x_new)
+        gr_new[:] = NLSolversBase.gradient(df)
         phiprime_a_hi = vecdot(gr_new, p)
 
         # Interpolate a_j
@@ -160,8 +151,7 @@ function zoom(a_lo::Real,
         end
 
         # Evaluate phi(a_j)
-        phi_a_j = f(x_new)
-        f_calls += 1
+        phi_a_j = NLSolversBase.value!(df, x_new)
 
         # Check Armijo
         if (phi_a_j > phi_0 + c1 * a_j * phiprime_0) ||
@@ -169,12 +159,12 @@ function zoom(a_lo::Real,
             a_hi = a_j
         else
             # Evaluate phiprime(a_j)
-            g!(x_new, gr_new)
-            g_calls += 1
+            NLSolversBase.gradient!(df, x_new)
+            gr_new[:] = gradient(df)
             phiprime_a_j = vecdot(gr_new, p)
 
             if abs(phiprime_a_j) <= -c2 * phiprime_0
-                return a_j, f_calls, g_calls
+                return a_j
             end
 
             if phiprime_a_j * (a_hi - a_lo) >= 0.0
@@ -186,7 +176,7 @@ function zoom(a_lo::Real,
     end
 
     # Quasi-error response
-    return a_j, f_calls, g_calls
+    return a_j
 end
 
 # a_lo = a_{i - 1}

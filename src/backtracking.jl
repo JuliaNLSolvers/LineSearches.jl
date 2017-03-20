@@ -66,10 +66,6 @@ function backtracking!{T}(df,
     # Count the total number of iterations
     iteration = 0
 
-    # Track calls to function and gradient
-    f_calls = 0
-    g_calls = 0
-
     # Count number of parameters
     n = length(x)
 
@@ -84,9 +80,8 @@ function backtracking!{T}(df,
     push!(lsr.alpha, alpha)
 
     # Backtrack until we satisfy sufficient decrease condition
-    f_x_scratch = df.f(x_scratch)
+    f_x_scratch = NLSolversBase.value!(df, x_scratch)
     push!(lsr.value, f_x_scratch)
-    f_calls += 1
     while f_x_scratch > f_x + c1 * alpha * gxp
         # Increment the number of steps we've had to perform
         iteration += 1
@@ -94,7 +89,7 @@ function backtracking!{T}(df,
         # Ensure termination
         if iteration > iterations
             throw(LineSearchException("Linesearch failed to converge, reached maximum iterations $(iterations).",
-                                      lsr.alpha[end], f_calls, g_calls,lsr))
+                                      lsr.alpha[end], lsr))
         end
 
         # Shrink proposed step-size:
@@ -135,10 +130,9 @@ function backtracking!{T}(df,
         end
 
         # Evaluate f(x) at proposed position
-        f_x_scratch = df.f(x_scratch)
-        f_calls += 1
+        f_x_scratch = NLSolversBase.value!(df, x_scratch)
         push!(lsr.value, f_x_scratch)
     end
 
-    return alpha, f_calls, g_calls
+    return alpha
 end

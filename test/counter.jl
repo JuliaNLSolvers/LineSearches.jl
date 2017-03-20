@@ -1,7 +1,6 @@
-# TODO: move the import into the let block when we stop supporting Julia v0.4?
-import Optim
-
 let
+    import Optim
+
     println("\n#####################\nTest f_calls, g_calls")
     prob = Optim.UnconstrainedProblems.examples["Rosenbrock"]
 

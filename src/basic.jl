@@ -21,11 +21,8 @@ function basic!{T}(df,
     end
 
     # Evaluate f(x) at new position
-    f_x_scratch = df.f(x_scratch)
+    f_x_scratch = NLSolversBase.value!(df, x_scratch)
     push!(lsr.value, f_x_scratch)
-    f_calls = 1
 
-    g_calls = 0
-
-    return alpha, f_calls, g_calls
+    return alpha
 end

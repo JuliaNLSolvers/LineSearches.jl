@@ -162,9 +162,6 @@ function morethuente!{T}(df,
         throw(ArgumentError("Invalid parameters to morethuente"))
     end
 
-    # Count function and gradient calls
-    f_calls = 0
-    g_calls = 0
 
     # read finit and slope from LineSearchResults
     f = lsr.value[end]
@@ -245,11 +242,10 @@ function morethuente!{T}(df,
             x_new[i] = x[i] + stp * s[i]
         end
 
-        f = df.fg!(x_new, g)
-        f_calls += 1
-        g_calls += 1
+        f = NLSolversBase.value_gradient!(df, x_new)
+        g = gradient(df)
         if isapprox(norm(g), 0) # TODO: this should be tested vs Optim's gtol
-            return stp, f_calls, g_calls
+            return stp
         end
 
         nfev += 1 # This includes calls to f() and g!()
@@ -287,7 +283,7 @@ function morethuente!{T}(df,
         #
 
         if info != 0
-            return stp, f_calls, g_calls
+            return stp
         end
 
         #

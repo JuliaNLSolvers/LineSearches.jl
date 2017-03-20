@@ -1,4 +1,6 @@
 let
+    import NLSolversBase
+
     lsalphas = [1.0, 0.5,0.5,0.49995,0.5,0.5,0.5]
 
     f(x) = vecdot(x,x)
@@ -6,14 +8,15 @@ let
         out[:] = 2x
     end
 
-    df = LineSearches.DifferentiableFunction(f,g!)
+    x = [-1., -1.]
 
     for (i, linesearch!) in enumerate(lsfunctions)
         println("Testing $(string(linesearch!))")
-        x = [-1., -1.]
+        df = NLSolversBase.OnceDifferentiable(f,g!,x)
+
         xtmp = copy(x)
-        grtmp = similar(x)
-        phi0 = df.fg!(x, grtmp)
+        phi0 = NLSolversBase.value_gradient!(df, x)
+        grtmp = gradient(df)
         p = -grtmp
         dphi0 = dot(p, grtmp)
 
@@ -23,7 +26,7 @@ let
         alpha = 1.0
         mayterminate = false
 
-        alpha, f_update, g_update = linesearch!(df, x, p, xtmp, grtmp, lsr, alpha, mayterminate)
+        alpha = linesearch!(df, x, p, xtmp, grtmp, lsr, alpha, mayterminate)
         #xnew = x + alpha*p
 
         @test alpha ≈ lsalphas[i]
