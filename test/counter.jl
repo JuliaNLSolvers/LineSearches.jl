@@ -31,9 +31,9 @@ let
         fcounter()
         prob.f(x)
     end
-    g!(x,out) = begin
+    g!(out, x) = begin
         gcounter()
-        prob.g!(x,out)
+        prob.g!(out, x)
     end
 
     for ls in lsfunctions

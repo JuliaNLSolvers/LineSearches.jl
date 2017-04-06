@@ -3,8 +3,8 @@ let
 
     lsalphas = [1.0, 0.5,0.5,0.49995,0.5,0.5,0.5]
 
-    f(x) = vecdot(x,x)
-    function g!(x, out)
+    f(x) = vecdot(x, x)
+    function g!(out, x)
         out[:] = 2x
     end
 
