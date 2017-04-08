@@ -1,3 +1,7 @@
+# LineSearches v2.0.0 release notes
+- Switch storage and evaluation point position
+# LineSearches v1.0.0 release notes
+- Switch to using the NLSolversBase dependency
 # LineSearches v0.1.5 release notes
 * Fix bug in `bt3!` linesearch, which uses the wrong initial step in the first cubic interpolation. See 
 [#29](https://github.com/anriseth/LineSearches.jl/pull/29)
