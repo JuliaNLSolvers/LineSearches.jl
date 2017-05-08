@@ -105,7 +105,7 @@ function backtracking!{T}(df,
         alphatmp = max(alphatmp, alpha*rholo) # avoid too big reductions
 
         # enforce a maximum step alpha * s (application specific, default is Inf)
-        alpha = max(alphatmp, maxstep / vecnorm(s, Inf))
+        alpha = min(alphatmp, maxstep / vecnorm(s, Inf))
 
         push!(lsr.alpha, alpha)
 
