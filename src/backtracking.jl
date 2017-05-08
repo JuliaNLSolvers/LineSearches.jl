@@ -53,7 +53,8 @@ function backtracking!{T}(df,
                           rhohi::Real = 0.5,
                           rholo::Real = 0.1,
                           iterations::Integer = 1_000,
-                          order::Int = 3)
+                          order::Int = 3,
+                          maxstep::Real = Inf)
     @assert order in (2,3)
     # Check the input is valid, and modify otherwise
     #backtrack_condition = 1.0 - 1.0/(2*rho) # want guaranteed backtrack factor
@@ -120,7 +121,10 @@ function backtracking!{T}(df,
             end
         end
         alphatmp =  min(alphatmp, alpha*rhohi) # avoid too small reductions
-        alpha = max(alphatmp, alpha*rholo) # avoid too big reductions
+        alphatmp = max(alphatmp, alpha*rholo) # avoid too big reductions
+
+        # enforce a maximum step alpha * s (application specific, default is Inf)
+        alpha = max(alphatmp, maxstep / vecnorm(s, Inf))
 
         push!(lsr.alpha, alpha)
 
