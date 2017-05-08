@@ -1,7 +1,7 @@
 let
     import NLSolversBase
 
-    lsalphas = [1.0, 0.5,0.5,0.49995,0.5,0.5,0.5]
+    lsalphas = [1.0, 0.5,0.5,0.49995,0.5,0.5,0.5, 0.5, 0.5]
 
     f(x) = vecdot(x, x)
     function g!(out, x)
