@@ -13,7 +13,7 @@ export clear!, alphatry, alphainit
 
 export hagerzhang!, backtracking!, strongwolfe!,
     morethuente!, bt2!, bt3!, basic!,
-    BackTracking
+    BackTracking, HagerZhang, Static
 
 include("types.jl")
 include("api.jl")
