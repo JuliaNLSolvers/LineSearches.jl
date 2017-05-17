@@ -4,7 +4,8 @@ using Base.Test
 lsfunctions = (basic!, hagerzhang!, strongwolfe!,
                morethuente!, backtracking!,
                bt2!, bt3!,
-               Static(), HagerZhang(), BackTracking(), BackTracking(order=2) )
+               Static(), HagerZhang(), StrongWolfe(), MoreThuente(),
+               BackTracking(), BackTracking(order=2) )
 
 println("Running tests:")
 my_tests = [

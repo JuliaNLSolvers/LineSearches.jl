@@ -63,7 +63,7 @@ const DEFAULTSIGMA = 0.9
 #       inferred from the input vector `x` and not from the type information
 #       on the parameters
 
-@with_kw type HagerZhang{T}
+@with_kw immutable HagerZhang{T}
    delta::T = DEFAULTDELTA
    sigma::T = DEFAULTSIGMA
    alphamax::T = Inf

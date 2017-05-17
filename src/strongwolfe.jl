@@ -1,8 +1,27 @@
 # TODO: Implement safeguards
 
-# This linesearch algorithm guarantees that the step length
-# satisfies the (strong) Wolfe conditions.
-# See Nocedal and Wright - Algorithms 3.5 and 3.6
+
+"""
+`StrongWolfe`: This linesearch algorithm guarantees that the step length
+satisfies the (strong) Wolfe conditions.
+See Nocedal and Wright - Algorithms 3.5 and 3.6
+
+This algorithm is mostly of theoretical interest, users should most likely
+use `MoreThuente`, `HagerZhang` or `BackTracking`.
+
+## Parameters:  (and defaults)
+* `c1 = 1e-4`: Armijo condition
+* `c2 = 0.9` : second (strong) Wolfe condition
+* `rho = 2.0` : bracket growth
+"""
+@with_kw immutable StrongWolfe{T}
+   c1::T = 1e-4
+   c2::T = 0.9
+   rho::T = 2.0
+end
+
+(ls::StrongWolfe)(args...) =
+        strongwolfe!(args...; c1=ls.c1, c2=ls.c2, rho=ls.rho)
 
 function strongwolfe!{T}(df,
                          x::Vector,
