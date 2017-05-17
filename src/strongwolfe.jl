@@ -21,9 +21,9 @@ use `MoreThuente`, `HagerZhang` or `BackTracking`.
 end
 
 (ls::StrongWolfe)(args...) =
-        strongwolfe!(args...; c1=ls.c1, c2=ls.c2, rho=ls.rho)
+        _strongwolfe!(args...; c1=ls.c1, c2=ls.c2, rho=ls.rho)
 
-function strongwolfe!{T}(df,
+function _strongwolfe!{T}(df,
                          x::Vector,
                          p::Vector,
                          x_new::Vector,

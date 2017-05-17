@@ -11,9 +11,9 @@ with `Static(alpha = 0.3141)` for fixed step-size 0.3141. Default is 1.0.
 end
 
 (ls::Static)(df, x, s, x_scratch, gr_scratch, lsr, alpha, mayterminate) =
-        basic!(df, x, s, x_scratch, gr_scratch, lsr, ls.alpha, mayterminate)
+        _static!(df, x, s, x_scratch, gr_scratch, lsr, ls.alpha, mayterminate)
 
-function basic!{T}(df,
+function _static!{T}(df,
                    x::Vector{T},
                    s::Vector,
                    x_scratch::Vector,

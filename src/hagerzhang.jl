@@ -75,12 +75,12 @@ const DEFAULTSIGMA = 0.9
    display::Int = 0
 end
 
-(ls::HagerZhang)(args...) = hagerzhang!(args...,
+(ls::HagerZhang)(args...) = _hagerzhang!(args...,
       ls.delta, ls.sigma, ls.alphamax, ls.rho, ls.epsilon, ls.gamma,
       ls.linesearchmax, ls.psi3, ls.display)
 
 
-function hagerzhang!{T}(df,
+function _hagerzhang!{T}(df,
                         x::Array{T},
                         s::Array,
                         xtmp::Array,

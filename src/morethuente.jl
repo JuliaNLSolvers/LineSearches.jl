@@ -143,11 +143,11 @@
 end
 
 (ls::MoreThuente)(args...) =
-       morethuente!(args...;
+       _morethuente!(args...;
                    f_tol=ls.f_tol, gtol=ls.gtol, x_tol=ls.x_tol, stpmin=ls.stpmin,
                    stpmax=ls.stpmax, maxfev=ls.maxfev)
 
-function morethuente!{T}(df,
+function _morethuente!{T}(df,
                          x::Vector,
                          s::Vector,
                          x_new::Vector,

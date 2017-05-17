@@ -1,9 +1,9 @@
 let
     import NLSolversBase
 
-    lsalphas = [1.0,   0.5, 0.5, 0.49995, 0.5,  0.5,  0.5,  # function calls
-                1.0,   0.5, 0.5, 0.49995,       0.5,  0.5]  # types
-                # Stat #HZ  wolfe   mt          bt2   bt3
+    dep_lsalphas = [1.0,   0.5, 0.5, 0.49995, 0.5,  0.5,  0.5]  # functions
+    lsalphas =     [1.0,   0.5, 0.5, 0.49995,       0.5,  0.5]  # types
+                    # Stat #HZ  wolfe   mt          bt2   bt3
 
     f(x) = vecdot(x, x)
     function g!(out, x)
@@ -11,6 +11,9 @@ let
     end
 
     x = [-1., -1.]
+
+    lsfunctions = tuple(dep_lsfunctions..., lstypes...)
+    lsalphas = [dep_lsalphas; lsalphas]
 
     for (i, linesearch!) in enumerate(lsfunctions)
         println("Testing $(string(linesearch!))")

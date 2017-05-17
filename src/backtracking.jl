@@ -18,11 +18,11 @@ This is a modification of the algorithm described in Nocedal Wright (2nd ed), Se
 end
 
 (ls::BackTracking)(df, x, s, x_scratch, gr_scratch, lsr, alpha, mayterminate) =
-    backtracking!(df, x, s, x_scratch, gr_scratch, lsr, alpha, mayterminate,
+    _backtracking!(df, x, s, x_scratch, gr_scratch, lsr, alpha, mayterminate,
              ls.c1, ls.rhohi, ls.rholo, ls.iterations, ls.order, ls.maxstep)
 
 
-function backtracking!{T}(df,
+function _backtracking!{T}(df,
                           x::Vector{T},
                           s::Vector,
                           x_scratch::Vector,
