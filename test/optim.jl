@@ -1,7 +1,7 @@
 let
     import Optim
 
-    for ls in lsfunctions
+    for ls in lstypes
         opts = Optim.Options(allow_f_increases = true)
 
         println("\nTesting $(string(ls))")

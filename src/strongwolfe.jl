@@ -27,16 +27,12 @@ function _strongwolfe!{T}(df,
                          x::Vector,
                          p::Vector,
                          x_new::Vector,
-                         gr_new::Vector,
                          lsr::LineSearchResults{T},
                          alpha0::Real,
                          mayterminate::Bool;
                          c1::Real = 1e-4,
                          c2::Real = 0.9,
                          rho::Real = 2.0)
-    # TODO: do we need gr_new anymore?
-    # Any call to gradient! or value_gradient! would update df.g anyway
-
     # Parameter space
     n = length(x)
 
@@ -72,15 +68,14 @@ function _strongwolfe!{T}(df,
             (phi_a_i >= phi_a_iminus1 && i > 1)
             a_star = zoom(a_iminus1, a_i,
                           phiprime_0, phi_0,
-                          df, x, p, x_new, gr_new)
+                          df, x, p, x_new)
             return a_star
         end
 
         # Evaluate phi'(a_i)
         NLSolversBase.gradient!(df, x_new)
-        gr_new[:] = gradient(df)
 
-        phiprime_a_i = vecdot(gr_new, p)
+        phiprime_a_i = vecdot(NLSolversBase.gradient(df), p)
 
         # Check condition 2
         if abs(phiprime_a_i) <= -c2 * phiprime_0
@@ -91,7 +86,7 @@ function _strongwolfe!{T}(df,
         if phiprime_a_i >= 0.0
             a_star = zoom(a_i, a_iminus1,
                           phiprime_0, phi_0,
-                          df, x, p, x_new, gr_new)
+                          df, x, p, x_new)
             return a_star
         end
 
@@ -118,7 +113,6 @@ function zoom(a_lo::Real,
               x::Vector,
               p::Vector,
               x_new::Vector,
-              gr_new::Vector;
               c1::Real = 1e-4,
               c2::Real = 0.9)
 
@@ -141,16 +135,14 @@ function zoom(a_lo::Real,
             @inbounds x_new[index] = x[index] + a_lo * p[index]
         end
         phi_a_lo = NLSolversBase.value_gradient!(df, x_new)
-        gr_new[:] = NLSolversBase.gradient(df)
-        phiprime_a_lo = vecdot(gr_new, p)
+        phiprime_a_lo = vecdot(NLSolversBase.gradient(df), p)
 
         # Cache phi_a_hi
         @simd for index in 1:n
             @inbounds x_new[index] = x[index] + a_hi * p[index]
         end
         phi_a_hi = NLSolversBase.value_gradient!(df, x_new)
-        gr_new[:] = NLSolversBase.gradient(df)
-        phiprime_a_hi = vecdot(gr_new, p)
+        phiprime_a_hi = vecdot(NLSolversBase.gradient(df), p)
 
         # Interpolate a_j
         if a_lo < a_hi
@@ -179,8 +171,7 @@ function zoom(a_lo::Real,
         else
             # Evaluate phiprime(a_j)
             NLSolversBase.gradient!(df, x_new)
-            gr_new[:] = gradient(df)
-            phiprime_a_j = vecdot(gr_new, p)
+            phiprime_a_j = vecdot(NLSolversBase.gradient(df), p)
 
             if abs(phiprime_a_j) <= -c2 * phiprime_0
                 return a_j

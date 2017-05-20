@@ -1,5 +1,3 @@
-# phi = (galpha, alpha) -> linefunc(galpha, alpha, func, x, d, xtmp, g)
-
 # Display flags are represented as a bitfield
 # (not exported, but can use via OptimizeMod.ITER, for example)
 const one64 = convert(UInt64, 1)
@@ -84,7 +82,6 @@ function _hagerzhang!{T}(df,
                         x::Array{T},
                         s::Array,
                         xtmp::Array,
-                        g::Array,
                         lsr::LineSearchResults{T},
                         c::Real,
                         mayterminate::Bool,
@@ -98,9 +95,6 @@ function _hagerzhang!{T}(df,
                         psi3::Real = convert(T,0.1),
                         display::Integer = 0,
                         iterfinitemax::Integer = ceil(Integer, -log2(eps(T))) )
-    # TODO: do we need g anymore?
-    # Any call to gradient! or value_gradient! would update df.g anyway
-
     if display & LINESEARCH > 0
         println("New linesearch")
     end
@@ -111,14 +105,14 @@ function _hagerzhang!{T}(df,
     philim = phi0 + epsilon * abs(phi0)
     @assert c > 0
     @assert isfinite(c) && c <= alphamax
-    phic, dphic = linefunc!(df, x, s, c, xtmp, g, true)
+    phic, dphic = linefunc!(df, x, s, c, xtmp, true)
     iterfinite = 1
     while !(isfinite(phic) && isfinite(dphic)) && iterfinite < iterfinitemax
         mayterminate = false
         lsr.nfailures += 1
         iterfinite += 1
         c *= psi3
-        phic, dphic = linefunc!(df, x, s, c, xtmp, g, true)
+        phic, dphic = linefunc!(df, x, s, c, xtmp, true)
     end
     if !(isfinite(phic) && isfinite(dphic))
         println("Warning: failed to achieve finite new evaluation point, using alpha=0")
@@ -185,7 +179,7 @@ function _hagerzhang!{T}(df,
                     return cold
                 end
             end
-            phic, dphic = linefunc!(df, x, s, c, xtmp, g, true)
+            phic, dphic = linefunc!(df, x, s, c, xtmp, true)
             iterfinite = 1
             while !(isfinite(phic) && isfinite(dphic)) && c > nextfloat(cold) && iterfinite < iterfinitemax
                 alphamax = c
@@ -195,7 +189,7 @@ function _hagerzhang!{T}(df,
                     println("bracket: non-finite value, bisection")
                 end
                 c = (cold + c) / 2
-                phic, dphic = linefunc!(df, x, s, c, xtmp, g, true)
+                phic, dphic = linefunc!(df, x, s, c, xtmp, true)
             end
             if !(isfinite(phic) && isfinite(dphic))
                 return cold
@@ -234,7 +228,7 @@ function _hagerzhang!{T}(df,
         if b - a <= eps(b)
             return a # lsr.value[ia]
         end
-        iswolfe, iA, iB = secant2!(df, x, s, xtmp, g, lsr, ia, ib, philim, delta, sigma, display)
+        iswolfe, iA, iB = secant2!(df, x, s, xtmp, lsr, ia, ib, philim, delta, sigma, display)
         if iswolfe
             return lsr.alpha[iA] # lsr.value[iA]
         end
@@ -261,11 +255,11 @@ function _hagerzhang!{T}(df,
             end
             c = (A + B) / convert(T, 2)
             # phic = phi(gphi, c) # TODO: Replace
-            phic, dphic = linefunc!(df, x, s, c, xtmp, g, true)
+            phic, dphic = linefunc!(df, x, s, c, xtmp, true)
             @assert isfinite(phic) && isfinite(dphic)
             push!(lsr, c, phic, dphic)
             # ia, ib = update(phi, lsr, iA, iB, length(lsr), philim) # TODO: Pass options
-            ia, ib = update!(df, x, s, xtmp, g, lsr, iA, iB, length(lsr), philim, display)
+            ia, ib = update!(df, x, s, xtmp, lsr, iA, iB, length(lsr), philim, display)
         end
         iter += 1
     end
@@ -304,7 +298,6 @@ function secant2!{T}(df,
                      x::Array,
                      s::Array,
                      xtmp::Array,
-                     g::Array,
                      lsr::LineSearchResults{T},
                      ia::Integer,
                      ib::Integer,
@@ -329,7 +322,7 @@ function secant2!{T}(df,
     end
     @assert isfinite(c)
     # phic = phi(tmpc, c) # Replace
-    phic, dphic = linefunc!(df, x, s, c, xtmp, g, true)
+    phic, dphic = linefunc!(df, x, s, c, xtmp, true)
     @assert isfinite(phic) && isfinite(dphic)
     push!(lsr, c, phic, dphic)
     ic = length(lsr)
@@ -340,7 +333,7 @@ function secant2!{T}(df,
         return true, ic, ic
     end
     # iA, iB = update(phi, lsr, ia, ib, ic, philim)
-    iA, iB = update!(df, x, s, xtmp, g, lsr, ia, ib, ic, philim, display)
+    iA, iB = update!(df, x, s, xtmp, lsr, ia, ib, ic, philim, display)
     if display & SECANT2 > 0
         println("secant2: iA = ", iA, ", iB = ", iB, ", ic = ", ic)
     end
@@ -359,7 +352,7 @@ function secant2!{T}(df,
             println("secant2: second c = ", c)
         end
         # phic = phi(tmpc, c) # TODO: Replace
-        phic, dphic = linefunc!(df, x, s, c, xtmp, g, true)
+        phic, dphic = linefunc!(df, x, s, c, xtmp, true)
         @assert isfinite(phic) && isfinite(dphic)
         push!(lsr, c, phic, dphic)
         ic = length(lsr)
@@ -370,7 +363,7 @@ function secant2!{T}(df,
             end
             return true, ic, ic
         end
-        iA, iB = update!(df, x, s, xtmp, g, lsr, iA, iB, ic, philim, display)
+        iA, iB = update!(df, x, s, xtmp, lsr, iA, iB, ic, philim, display)
     end
     if display & SECANT2 > 0
         println("secant2 output: a = ", lsr.alpha[iA], ", b = ", lsr.alpha[iB])
@@ -386,7 +379,6 @@ function update!(df,
                  x::Array,
                  s::Array,
                  xtmp::Array,
-                 g::Array,
                  lsr::LineSearchResults,
                  ia::Integer,
                  ib::Integer,
@@ -428,7 +420,7 @@ function update!(df,
     end
     # phic is bigger than phi0, which implies that the minimum
     # lies between a and c. Find it via bisection.
-    return bisect!(df, x, s, xtmp, g, lsr, ia, ic, philim, display)
+    return bisect!(df, x, s, xtmp, lsr, ia, ic, philim, display)
 end
 
 # HZ, stage U3 (with theta=0.5)
@@ -436,7 +428,6 @@ function bisect!{T}(df,
                     x::Array,
                     s::Array,
                     xtmp::Array,
-                    g::Array,
                     lsr::LineSearchResults{T},
                     ia::Integer,
                     ib::Integer,
@@ -456,7 +447,7 @@ function bisect!{T}(df,
             println("bisect: a = ", a, ", b = ", b, ", b - a = ", b - a)
         end
         d = (a + b) / convert(T, 2)
-        phid, gphi = linefunc!(df, x, s, d, xtmp, g, true)
+        phid, gphi = linefunc!(df, x, s, d, xtmp, true)
         @assert isfinite(phid) && isfinite(gphi)
         push!(lsr, d, phid, gphi)
         id = length(lsr)
@@ -480,17 +471,15 @@ function linefunc!(df,
                    s::Array,
                    alpha::Real,
                    xtmp::Array,
-                   g::Array,
                    calc_grad::Bool)
     for i = 1:length(x)
         xtmp[i] = x[i] + alpha * s[i]
     end
-    gphi = convert(eltype(g), NaN)
+    gphi = convert(eltype(s), NaN)
     if calc_grad
         val = NLSolversBase.value_gradient!(df,xtmp)
-        g[:] = gradient(df)
         if isfinite(val)
-            gphi = vecdot(g, s)
+            gphi = vecdot(NLSolversBase.gradient(df), s)
         end
     else
         val = value!(df,xtmp)

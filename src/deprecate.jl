@@ -23,10 +23,10 @@ end
 
 _bt3!(args...) = _backtracking!(args...)
 
-_bt2!(df, x, s, x_scratch, gr_scratch, lsr, alpha, mayterminate,
+_bt2!(df, x, s, x_scratch, lsr, alpha, mayterminate,
       c1::Real = 1e-4, rhohi::Real = 0.5, rholo::Real = 0.1, iterations::Integer = 1_000) =
-      _backtracking!(df, x, s, x_scratch, gr_scratch, lsr, alpha, mayterminate,
-                     c1, rhohi, rholo, iterations, 2)
+          _backtracking!(df, x, s, x_scratch, lsr, alpha, mayterminate,
+                         c1, rhohi, rholo, iterations, 2)
 
 
 bt3!(args...) = _deprecate(

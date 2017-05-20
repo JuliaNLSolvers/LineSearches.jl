@@ -36,7 +36,7 @@ let
         prob.g!(out, x)
     end
 
-    for ls in lsfunctions
+    for ls in lstypes
         println("\nTesting $(string(ls))")
         fcounter(true); gcounter(true)
 

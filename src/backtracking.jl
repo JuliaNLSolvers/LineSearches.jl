@@ -17,8 +17,8 @@ This is a modification of the algorithm described in Nocedal Wright (2nd ed), Se
     maxstep::TF = Inf
 end
 
-(ls::BackTracking)(df, x, s, x_scratch, gr_scratch, lsr, alpha, mayterminate) =
-    _backtracking!(df, x, s, x_scratch, gr_scratch, lsr, alpha, mayterminate,
+(ls::BackTracking)(df, x, s, x_scratch, lsr, alpha, mayterminate) =
+    _backtracking!(df, x, s, x_scratch, lsr, alpha, mayterminate,
              ls.c1, ls.rhohi, ls.rholo, ls.iterations, ls.order, ls.maxstep)
 
 
@@ -26,7 +26,6 @@ function _backtracking!{T}(df,
                           x::Vector{T},
                           s::Vector,
                           x_scratch::Vector,
-                          gr_scratch::Vector,
                           lsr::LineSearchResults,
                           alpha::Real = 1.0,
                           mayterminate::Bool = false,

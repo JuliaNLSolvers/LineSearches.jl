@@ -41,7 +41,7 @@
 #
 #     The subroutine statement is
 #
-#        subroutine cvsrch(df,n,x,f,g,s,stp,f_tol,gtol,x_tol,
+#        subroutine cvsrch(df,n,x,f,s,stp,f_tol,gtol,x_tol,
 #                          stpmin,stpmax,maxfev,info,nfev,wa)
 #
 #     where
@@ -128,7 +128,7 @@
 #
 #     **********
 
-# Returns x, f, g, stp, info, nfev
+# Returns x, f, stp, info, nfev
 # TODO: Decide whether to update x, f, g and info
 #       or just return step and nfev and let existing code do its job
 
@@ -151,7 +151,6 @@ function _morethuente!{T}(df,
                          x::Vector,
                          s::Vector,
                          x_new::Vector,
-                         g::Vector,
                          lsr::LineSearchResults{T},
                          stp::Real,
                          mayterminate::Bool;
@@ -180,7 +179,7 @@ function _morethuente!{T}(df,
 
     # read finit and slope from LineSearchResults
     f = lsr.value[end]
-    dginit = lsr.slope[end] # dot(g,s)
+    dginit = lsr.slope[end] # dot(gradient(df),s)
     if dginit >= 0.0
         throw(ArgumentError("Search direction is not a direction of descent"))
     end
@@ -258,13 +257,12 @@ function _morethuente!{T}(df,
         end
 
         f = NLSolversBase.value_gradient!(df, x_new)
-        g = gradient(df)
-        if isapprox(norm(g), 0) # TODO: this should be tested vs Optim's gtol
+        if isapprox(norm(NLSolversBase.gradient(df)), 0) # TODO: this should be tested vs Optim's gtol
             return stp
         end
 
         nfev += 1 # This includes calls to f() and g!()
-        dg = vecdot(g, s)
+        dg = vecdot(NLSolversBase.gradient(df), s)
         push!(lsr, stp, f, dg)
         ftest1 = finit + stp * dgtest
 
