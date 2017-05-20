@@ -132,7 +132,22 @@
 # TODO: Decide whether to update x, f, g and info
 #       or just return step and nfev and let existing code do its job
 
-function morethuente!{T}(df,
+
+@with_kw immutable MoreThuente{T}
+    f_tol::T = 1e-4
+    gtol::T = 0.9
+    x_tol::T = 1e-8
+    stpmin::T = 1e-16
+    stpmax::T = 65536.0
+    maxfev::Int = 100
+end
+
+(ls::MoreThuente)(args...) =
+       _morethuente!(args...;
+                   f_tol=ls.f_tol, gtol=ls.gtol, x_tol=ls.x_tol, stpmin=ls.stpmin,
+                   stpmax=ls.stpmax, maxfev=ls.maxfev)
+
+function _morethuente!{T}(df,
                          x::Vector,
                          s::Vector,
                          x_new::Vector,

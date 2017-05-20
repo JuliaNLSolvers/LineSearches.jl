@@ -10,10 +10,10 @@ LineSearchResults{T}(::Type{T}) = LineSearchResults(T[], T[], T[], 0)
 
 Base.length(lsr::LineSearchResults) = length(lsr.alpha)
 
-function Base.push!{T}(lsr::LineSearchResults{T}, a::T, v::T, d::T)
-    push!(lsr.alpha, a)
-    push!(lsr.value, v)
-    push!(lsr.slope, d)
+function Base.push!{T}(lsr::LineSearchResults{T}, a, v, d)
+    push!(lsr.alpha, convert(T, a))
+    push!(lsr.value, convert(T, v))
+    push!(lsr.slope, convert(T, d))
     return
 end
 

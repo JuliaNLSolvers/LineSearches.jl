@@ -2,6 +2,8 @@ isdefined(Base, :__precompile__) && __precompile__()
 
 module LineSearches
 
+using Parameters
+
 import NLSolversBase
 import Base.clear!
 
@@ -9,8 +11,8 @@ export LineSearchResults, LineSearchException
 
 export clear!, alphatry, alphainit
 
-export hagerzhang!, backtracking!, strongwolfe!,
-    morethuente!, bt2!, bt3!, basic!
+export BackTracking, HagerZhang, Static, MoreThuente, StrongWolfe
+    
 
 include("types.jl")
 include("api.jl")

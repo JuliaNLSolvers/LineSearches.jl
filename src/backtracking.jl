@@ -1,5 +1,5 @@
 """
-`backtracking!` is a backtracking line-search that uses
+`BackTracking` specifies a backtracking line-search that uses
 a quadratic or cubic interpolant to determine the reduction in step-size.
 E.g.,
 if f(α) > f(0) + c₁ α f'(0), then the quadratic interpolant of
@@ -8,40 +8,21 @@ there exists a factor ρ = ρ(c₁) such that α' ≦ ρ α.
 
 This is a modification of the algorithm described in Nocedal Wright (2nd ed), Sec. 3.5.
 """
+@with_kw immutable BackTracking{TF, TI}
+    c1::TF = 1e-4
+    rhohi::TF = 0.5
+    rholo::TF = 0.1
+    iterations::TI = 1_000
+    order::TI = 3
+    maxstep::TF = Inf
+end
 
-bt3!{T}(df,
-        x::Vector{T},
-        s::Vector,
-        x_scratch::Vector,
-        gr_scratch::Vector,
-        lsr::LineSearchResults,
-        alpha::Real = 1.0,
-        mayterminate::Bool = false,
-        c1::Real = 1e-4,
-        rhohi::Real = 0.5,
-        rholo::Real = 0.1,
-        iterations::Integer = 1_000) =
-            backtracking!(df,x,s,x_scratch,gr_scratch,
-                          lsr,alpha,mayterminate,c1,
-                          rhohi,rholo,iterations,3)
-bt2!{T}(df,
-        x::Vector{T},
-        s::Vector,
-        x_scratch::Vector,
-        gr_scratch::Vector,
-        lsr::LineSearchResults,
-        alpha::Real = 1.0,
-        mayterminate::Bool = false,
-        c1::Real = 1e-4,
-        rhohi::Real = 0.5,
-        rholo::Real = 0.1,
-        iterations::Integer = 1_000) =
-            backtracking!(df,x,s,x_scratch,gr_scratch,
-                          lsr,alpha,mayterminate,c1,
-                          rhohi,rholo,iterations,2)
+(ls::BackTracking)(df, x, s, x_scratch, gr_scratch, lsr, alpha, mayterminate) =
+    _backtracking!(df, x, s, x_scratch, gr_scratch, lsr, alpha, mayterminate,
+             ls.c1, ls.rhohi, ls.rholo, ls.iterations, ls.order, ls.maxstep)
 
 
-function backtracking!{T}(df,
+function _backtracking!{T}(df,
                           x::Vector{T},
                           s::Vector,
                           x_scratch::Vector,
@@ -53,7 +34,8 @@ function backtracking!{T}(df,
                           rhohi::Real = 0.5,
                           rholo::Real = 0.1,
                           iterations::Integer = 1_000,
-                          order::Int = 3)
+                          order::Int = 3,
+                          maxstep::Real = Inf)
     @assert order in (2,3)
     # Check the input is valid, and modify otherwise
     #backtrack_condition = 1.0 - 1.0/(2*rho) # want guaranteed backtrack factor
@@ -120,7 +102,10 @@ function backtracking!{T}(df,
             end
         end
         alphatmp =  min(alphatmp, alpha*rhohi) # avoid too small reductions
-        alpha = max(alphatmp, alpha*rholo) # avoid too big reductions
+        alphatmp = max(alphatmp, alpha*rholo) # avoid too big reductions
+
+        # enforce a maximum step alpha * s (application specific, default is Inf)
+        alpha = min(alphatmp, maxstep / vecnorm(s, Inf))
 
         push!(lsr.alpha, alpha)
 

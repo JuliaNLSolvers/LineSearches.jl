@@ -1,9 +1,11 @@
 using LineSearches
 using Base.Test
 
-lsfunctions = (basic!, hagerzhang!, strongwolfe!,
-               morethuente!, backtracking!,
-               bt2!, bt3!)
+lstypes =  (Static(), HagerZhang(), StrongWolfe(), MoreThuente(),
+            BackTracking(), BackTracking(order=2) )
+
+dep_lsfunctions = (basic!, hagerzhang!, strongwolfe!, morethuente!,
+                  backtracking!, bt2!, bt3!)
 
 println("Running tests:")
 my_tests = [
