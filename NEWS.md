@@ -1,3 +1,9 @@
+# LineSearches v2.1.0 release notes
+- Algorithms no longer takes a gradient storage parameter. See
+[#48](https://github.com/anriseth/LineSearches.jl/pull/48)
+- Linesearch algorithms are now callable types. See
+[#43](https://github.com/anriseth/LineSearches.jl/pull/43)
+
 # LineSearches v2.0.0 release notes
 - Switch storage and evaluation point position
 # LineSearches v1.0.0 release notes
