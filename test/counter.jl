@@ -1,7 +1,7 @@
-let
+@testset "Counters" begin
     import Optim
 
-    println("\n#####################\nTest f_calls, g_calls")
+    debug_printing && println("\n#####################\nTest f_calls, g_calls")
     prob = Optim.UnconstrainedProblems.examples["Rosenbrock"]
 
     let
@@ -36,13 +36,13 @@ let
         prob.g!(out, x)
     end
 
-    for ls in lsfunctions
-        println("\nTesting $(string(ls))")
+    for ls in lstypes
+        debug_printing && println("\nTesting $(string(ls))")
         fcounter(true); gcounter(true)
 
         res = Optim.optimize(f,g!, prob.h!, prob.initial_x,
                              Optim.BFGS(linesearch = ls))
-        @assert fcount == Optim.f_calls(res)
-        @assert gcount == Optim.g_calls(res)
+        @test fcount == Optim.f_calls(res)
+        @test gcount == Optim.g_calls(res)
     end
 end
