@@ -54,7 +54,33 @@ display_nextbit = 14
 const DEFAULTDELTA = 0.1
 const DEFAULTSIGMA = 0.9
 
-function hagerzhang!{T}(df,
+
+# NOTE:
+#   [1] The type `T` in the `HagerZhang{T}` need not be the same `T` as in
+#       `hagerzhang!{T}`; in the latter, `T` comes from the input vector `x`.
+#   [2] the only method parameter that is not included in the
+#       type is `iterfinitemax` since this value needs to be
+#       inferred from the input vector `x` and not from the type information
+#       on the parameters
+
+@with_kw immutable HagerZhang{T}
+   delta::T = DEFAULTDELTA
+   sigma::T = DEFAULTSIGMA
+   alphamax::T = Inf
+   rho::T = 5.0
+   epsilon::T = 1e-6
+   gamma::T = 0.66
+   linesearchmax::Int = 50
+   psi3::T = 0.1
+   display::Int = 0
+end
+
+(ls::HagerZhang)(args...) = _hagerzhang!(args...,
+      ls.delta, ls.sigma, ls.alphamax, ls.rho, ls.epsilon, ls.gamma,
+      ls.linesearchmax, ls.psi3, ls.display)
+
+
+function _hagerzhang!{T}(df,
                         x::Array{T},
                         s::Array,
                         xtmp::Array,
@@ -70,8 +96,8 @@ function hagerzhang!{T}(df,
                         gamma::Real = convert(T,0.66),
                         linesearchmax::Integer = 50,
                         psi3::Real = convert(T,0.1),
-                        iterfinitemax::Integer = ceil(Integer, -log2(eps(T))),
-                        display::Integer = 0)
+                        display::Integer = 0,
+                        iterfinitemax::Integer = ceil(Integer, -log2(eps(T))) )
     # TODO: do we need g anymore?
     # Any call to gradient! or value_gradient! would update df.g anyway
 
