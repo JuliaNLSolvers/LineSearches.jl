@@ -21,6 +21,8 @@ function _deprecate(msg, depvar, lsfun, args...)
    return lsfun(args...)
 end
 
+
+
 _bt3!(args...) = _backtracking!(args...)
 
 _bt2!(df, x, s, x_scratch, lsr, alpha, mayterminate,
@@ -58,3 +60,61 @@ basic!(args...) = _deprecate(
    dep_basic, _static!, args...)
 
 # <<<<<<<<<<<< end deprecation warnings for linesearch functions
+
+
+# <<<< Start deprecation of gradient storage removal
+function _hagerzhang!(df, x, s, xtmp, g, lsr, c, mayterminate, args...)
+    warn("You no longer have to provide a 'g'(gradient storage) input")
+    retval = _hagerzhang!(df, x, s, xtmp, lsr, c, mayterminate, args...)
+    copy!(g, df.g)
+    return retval
+end
+
+function _backtracking!(df, x, s, xtmp, g, lsr, c, mayterminate, args...)
+    warn("You no longer have to provide a 'g'(gradient storage) input")
+    retval = _backtracking!(df, x, s, xtmp, lsr, c, mayterminate, args...)
+    copy!(g, df.g)
+    return retval
+end
+
+function _bt2!(df, x, s, xtmp, g, lsr, c, mayterminate, args...)
+    warn("You no longer have to provide a 'g'(gradient storage) input")
+    retval = _bt2!(df, x, s, xtmp, lsr, c, mayterminate, args...)
+    copy!(g, df.g)
+    return retval
+end
+
+_bt2!(df, x, s, x_scratch, g, lsr, alpha, mayterminate,
+      c1::Real = 1e-4, rhohi::Real = 0.5, rholo::Real = 0.1, iterations::Integer = 1_000) =
+          _backtracking!(df, x, s, x_scratch, g, lsr, alpha, mayterminate,
+                         c1, rhohi, rholo, iterations, 2)
+
+function _bt3!(df, x, s, xtmp, g, lsr, c, mayterminate, args...)
+    warn("You no longer have to provide a 'g'(gradient storage) input")
+    retval = _bt3!(df, x, s, xtmp, lsr, c, mayterminate, args...)
+    copy!(g, df.g)
+    return retval
+end
+
+function _static!(df, x, s, xtmp, g, lsr, c, mayterminate, args...)
+    retval = _static!(df, x, s, xtmp, lsr, c, mayterminate, args...)
+    copy!(g, df.g)
+    return retval
+end
+
+function _strongwolfe!(df, x, s, xtmp, g, lsr, c, mayterminate, args...)
+    warn("You no longer have to provide a 'g'(gradient storage) input")
+    retval = _strongwolfe!(df, x, s, xtmp, lsr, c, mayterminate, args...)
+    copy!(g, df.g)
+    return retval
+end
+
+function _morethuente!(df, x, s, xtmp, g, lsr, c, mayterminate, args...)
+    warn("You no longer have to provide a 'g'(gradient storage) input")
+    retval = _morethuente!(df, x, s, xtmp, lsr, c, mayterminate, args...)
+    copy!(g, df.g)
+    return retval
+end
+
+
+# >>>> End deprecation  f gradient storage removal
