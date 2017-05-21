@@ -70,6 +70,7 @@ const dep_g_static = Ref(false)
 const dep_g_strongwolfe = Ref(false)
 const dep_g_morethuente = Ref(false)
 const dep_g_hagerzhang = Ref(false)
+const dep_g_alphatry = Ref(false)
 
 function _warn_g(depvar)
     if depvar[] == false
@@ -130,6 +131,12 @@ function _morethuente!(df, x, s, xtmp, g, lsr, c, mayterminate, args...)
     retval = _morethuente!(df, x, s, xtmp, lsr, c, mayterminate, args...)
     copy!(g, df.g)
     return retval
+end
+
+function alphatry{T}(alpha::T, df, x::Array, s::Array, xtmp::Array, g::Array, lsr::LineSearchResults, args...)
+    _warn_g(dep_g_alphatry)
+    warn("Alphatry")
+    alphatry(alpha, df, x, s, xtmp, lsr, args...)
 end
 
 # >>>> End deprecation  f gradient storage removal
