@@ -12,7 +12,6 @@ export LineSearchResults, LineSearchException
 export clear!, alphatry, alphainit
 
 export BackTracking, HagerZhang, Static, MoreThuente, StrongWolfe
-    
 
 include("types.jl")
 include("api.jl")

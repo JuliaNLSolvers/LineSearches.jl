@@ -9,12 +9,12 @@ The code was originally written as part of [Optim](https://github.com/JuliaNLSol
 but has now been separated out to its own package.
 
 ### Available line search algorithms
-* `hagerzhang!` (Taken from the Conjugate Gradient implementation
+* `HagerZhang` (Taken from the Conjugate Gradient implementation
   by Hager and Zhang, 2006)
-* `morethuente!` (From the algorithm in More and Thuente, 1994)
-* `backtracking!` (Described in Nocedal and Wright, 2006)
-* `strongwolfe!` (Nocedal and Wright)
-* `basic!` (Simply takes a given step length, default 1.0)
+* `MoreThuente` (From the algorithm in More and Thuente, 1994)
+* `BackTracking` (Described in Nocedal and Wright, 2006)
+* `StrongWolfe` (Nocedal and Wright)
+* `Static` (Simply takes a given step length, default 1.0)
 
 ## Example
 This example shows how to use `LineSearches` with `Optim`.
@@ -25,7 +25,7 @@ First, run `Newton` with the default line search algorithm:
 using Optim, LineSearches
 prob = Optim.UnconstrainedProblems.examples["Rosenbrock"]
 
-algo_hz = Newton(linesearch = hagerzhang!)
+algo_hz = Newton(linesearch = HagerZhang())
 res_hz = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_hz)
 ```
 
@@ -50,7 +50,7 @@ Results of Optimization Algorithm
 
 Now we can try `Newton` with the cubic backtracking line search:
 ``` julia
-algo_bt3 = Newton(linesearch = bt3!)
+algo_bt3 = Newton(linesearch = BackTracking(order=3))
 res_bt3 = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_bt3)
 ```
 

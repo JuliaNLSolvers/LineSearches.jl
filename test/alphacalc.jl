@@ -21,7 +21,7 @@
 
         xtmp = copy(x)
         phi0 = NLSolversBase.value_gradient!(df, x)
-        grtmp = gradient(df)
+        grtmp = NLSolversBase.gradient(df)
         p = -grtmp
         dphi0 = dot(p, grtmp)
 
@@ -31,7 +31,7 @@
         alpha = 1.0
         mayterminate = false
 
-        alpha = linesearch!(df, x, p, xtmp, grtmp, lsr, alpha, mayterminate)
+        alpha = linesearch!(df, x, p, xtmp, lsr, alpha, mayterminate)
         #xnew = x + alpha*p
 
         @test alpha ≈ lsalphas[i]

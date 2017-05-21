@@ -40,7 +40,7 @@
         debug_printing && println("\nTesting $(string(ls))")
         fcounter(true); gcounter(true)
 
-        res = Optim.optimize(f,g!, prob.h!, prob.initial_x,
+        res = Optim.optimize(f,g!, prob.initial_x,
                              Optim.BFGS(linesearch = ls))
         @test fcount == Optim.f_calls(res)
         @test gcount == Optim.g_calls(res)
