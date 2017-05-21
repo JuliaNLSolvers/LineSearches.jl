@@ -1,4 +1,4 @@
-let
+@testset "alpha-calculations" begin
     import NLSolversBase
 
     lsalphas = [1.0, 0.5,0.5,0.49995,0.5,0.5,0.5]
@@ -11,7 +11,7 @@ let
     x = [-1., -1.]
 
     for (i, linesearch!) in enumerate(lsfunctions)
-        println("Testing $(string(linesearch!))")
+        debug_printing && println("Testing $(string(linesearch!))")
         df = NLSolversBase.OnceDifferentiable(f,g!,x)
 
         xtmp = copy(x)
