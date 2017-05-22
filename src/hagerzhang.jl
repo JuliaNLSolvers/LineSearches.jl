@@ -163,7 +163,7 @@ function _hagerzhang!{T}(df,
                 error("c = ", c, ", lsr = ", lsr)
             end
             # ia, ib = bisect(phi, lsr, ia, ib, philim) # TODO: Pass options
-            ia, ib = bisect!(df, x, s, xtmp, g, lsr, ia, ib, philim, display)
+            ia, ib = bisect!(df, x, s, xtmp, lsr, ia, ib, philim, display)
             isbracketed = true
         else
             # We'll still going downhill, expand the interval and try again

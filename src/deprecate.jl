@@ -135,7 +135,6 @@ end
 
 function alphatry{T}(alpha::T, df, x::Array, s::Array, xtmp::Array, g::Array, lsr::LineSearchResults, args...)
     _warn_g(dep_g_alphatry)
-    warn("Alphatry")
     alphatry(alpha, df, x, s, xtmp, lsr, args...)
 end
 
