@@ -8,5 +8,5 @@
     ls = LineSearches.BackTracking(order = 3)
     name = "Himmelblau"
     prob = Optim.UnconstrainedProblems.examples[name]
-    res = Optim.optimize(prob.f, prob.g!, prob.initial_x, Optim.BFGS(linesearch=ls)
+    res = Optim.optimize(prob.f, prob.g!, prob.initial_x, Optim.BFGS(linesearch=ls))
 end

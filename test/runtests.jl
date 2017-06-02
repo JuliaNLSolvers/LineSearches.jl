@@ -1,7 +1,7 @@
 using LineSearches
 using Base.Test
 
-debug_printing = true
+debug_printing = false
 
 lstypes =  (Static(), HagerZhang(), StrongWolfe(), MoreThuente(),
             BackTracking(), BackTracking(order=2) )
