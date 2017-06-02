@@ -1,7 +1,7 @@
 using LineSearches
 using Base.Test
 
-debug_printing = true
+debug_printing = false
 
 lstypes =  (Static(), HagerZhang(), StrongWolfe(), MoreThuente(),
             BackTracking(), BackTracking(order=2) )
@@ -11,10 +11,9 @@ dep_lsfunctions = (basic!, hagerzhang!, strongwolfe!, morethuente!,
 
 my_tests = [
     "alphacalc.jl",
-    # TODO: Add Optim tests back when Optim 1.0 is tagged
-    # "optim.jl",
-    # "backtracking.jl",
-    # "counter.jl"
+    "optim.jl",
+    "backtracking.jl",
+    "counter.jl"
 ]
 
 for my_test in my_tests
