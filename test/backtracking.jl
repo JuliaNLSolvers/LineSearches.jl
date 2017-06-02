@@ -9,4 +9,5 @@
     name = "Himmelblau"
     prob = Optim.UnconstrainedProblems.examples[name]
     res = Optim.optimize(prob.f, prob.g!, prob.initial_x, Optim.BFGS(linesearch=ls))
+    @test Optim.minimum(res) < prob.f(prob.solutions) + 1e-2
 end
