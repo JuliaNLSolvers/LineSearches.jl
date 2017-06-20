@@ -55,9 +55,7 @@ function _backtracking!{T}(df,
     gxp = lsr.slope[end]
 
     # Tentatively move a distance of alpha in the direction of s
-    @simd for i in 1:n
-        @inbounds x_scratch[i] = x[i] + alpha * s[i]
-    end
+    x_scratch .= x .+ alpha.*s
     push!(lsr.alpha, alpha)
 
     # Backtrack until we satisfy sufficient decrease condition
@@ -109,9 +107,7 @@ function _backtracking!{T}(df,
         push!(lsr.alpha, alpha)
 
         # Update proposed position
-        @simd for i in 1:n
-            @inbounds x_scratch[i] = x[i] + alpha * s[i]
-        end
+        x_scratch .= x .+ alpha.*s
 
         # Evaluate f(x) at proposed position
         f_x_scratch = NLSolversBase.value!(df, x_scratch)

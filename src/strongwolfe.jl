@@ -56,10 +56,7 @@ function _strongwolfe!{T}(df,
 
     while a_i < a_max
         # Update x_new
-        @simd for index in 1:n
-            @inbounds x_new[index] = x[index] + a_i * p[index]
-        end
-
+        x_new .= x .+ a_i .* p
         # Evaluate phi(a_i)
         phi_a_i = NLSolversBase.value!(df, x_new)
 
@@ -131,16 +128,12 @@ function zoom(a_lo::Real,
         iteration += 1
 
         # Cache phi_a_lo
-        @simd for index in 1:n
-            @inbounds x_new[index] = x[index] + a_lo * p[index]
-        end
+        x_new .= x .+ a_lo .* p
         phi_a_lo = NLSolversBase.value_gradient!(df, x_new)
         phiprime_a_lo = vecdot(NLSolversBase.gradient(df), p)
 
         # Cache phi_a_hi
-        @simd for index in 1:n
-            @inbounds x_new[index] = x[index] + a_hi * p[index]
-        end
+        x_new .= x .+ a_hi .* p
         phi_a_hi = NLSolversBase.value_gradient!(df, x_new)
         phiprime_a_hi = vecdot(NLSolversBase.gradient(df), p)
 
@@ -157,10 +150,7 @@ function zoom(a_lo::Real,
         end
 
         # Update x_new
-        @simd for index in 1:n
-            @inbounds x_new[index] = x[index] + a_j * p[index]
-        end
-
+        x_new .= x .+ a_j .* p
         # Evaluate phi(a_j)
         phi_a_j = NLSolversBase.value!(df, x_new)
 
