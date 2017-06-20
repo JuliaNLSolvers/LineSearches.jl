@@ -56,7 +56,6 @@ function _backtracking!{T}(df,
 
     # Tentatively move a distance of alpha in the direction of s
     x_scratch .= x .+ alpha.*s
-
     push!(lsr.alpha, alpha)
 
     # Backtrack until we satisfy sufficient decrease condition
