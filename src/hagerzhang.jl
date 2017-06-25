@@ -80,8 +80,8 @@ end
 
 function _hagerzhang!{T}(df,
                         x::Array{T},
-                        s::Array,
-                        xtmp::Array,
+                        s::Array{T},
+                        xtmp::Array{T},
                         lsr::LineSearchResults{T},
                         c::Real,
                         mayterminate::Bool,

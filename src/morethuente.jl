@@ -148,9 +148,9 @@ end
                    stpmax=ls.stpmax, maxfev=ls.maxfev)
 
 function _morethuente!{T}(df,
-                         x::Vector,
-                         s::Vector,
-                         x_new::Vector,
+                         x::Array{T},
+                         s::Array{T},
+                         x_new::Array{T},
                          lsr::LineSearchResults{T},
                          stp::Real,
                          mayterminate::Bool;
