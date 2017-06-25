@@ -14,9 +14,9 @@ end
         _static!(df, x, s, x_scratch, lsr, ls.alpha, mayterminate)
 
 function _static!{T}(df,
-                   x::Vector{T},
-                   s::Vector,
-                   x_scratch::Vector,
+                   x::Array{T},
+                   s::Array{T},
+                   x_scratch::Array{T},
                    lsr::LineSearchResults,
                    alpha::Real = 1.0,
                    mayterminate::Bool = false)

@@ -23,9 +23,9 @@ end
 
 
 function _backtracking!{T}(df,
-                          x::Vector{T},
-                          s::Vector,
-                          x_scratch::Vector,
+                          x::Array{T},
+                          s::Array{T},
+                          x_scratch::Array{T},
                           lsr::LineSearchResults,
                           alpha::Real = 1.0,
                           mayterminate::Bool = false,
