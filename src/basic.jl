@@ -26,9 +26,7 @@ function _static!{T}(df,
     # Count number of parameters
     n = length(x)
     # Move a distance of alpha in the direction of s
-    @simd for i in 1:n
-        @inbounds x_scratch[i] = x[i] + alpha * s[i]
-    end
+    x_scratch .= x .+ alpha.*s
 
     # Evaluate f(x) at new position
     f_x_scratch = NLSolversBase.value!(df, x_scratch)
