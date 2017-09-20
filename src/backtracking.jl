@@ -8,7 +8,7 @@ there exists a factor ρ = ρ(c₁) such that α' ≦ ρ α.
 
 This is a modification of the algorithm described in Nocedal Wright (2nd ed), Sec. 3.5.
 """
-@with_kw immutable BackTracking{TF, TI}
+@with_kw struct BackTracking{TF, TI}
     c1::TF = 1e-4
     rhohi::TF = 0.5
     rholo::TF = 0.1
@@ -22,19 +22,19 @@ end
              ls.c1, ls.rhohi, ls.rholo, ls.iterations, ls.order, ls.maxstep)
 
 
-function _backtracking!{T}(df,
-                          x::Array{T},
-                          s::Array{T},
-                          x_scratch::Array{T},
-                          lsr::LineSearchResults,
-                          alpha::Real = 1.0,
-                          mayterminate::Bool = false,
-                          c1::Real = 1e-4,
-                          rhohi::Real = 0.5,
-                          rholo::Real = 0.1,
-                          iterations::Integer = 1_000,
-                          order::Int = 3,
-                          maxstep::Real = Inf)
+function _backtracking!(df,
+                       x::Array{T},
+                       s::Array{T},
+                       x_scratch::Array{T},
+                       lsr::LineSearchResults,
+                       alpha::Real = 1.0,
+                       mayterminate::Bool = false,
+                       c1::Real = 1e-4,
+                       rhohi::Real = 0.5,
+                       rholo::Real = 0.1,
+                       iterations::Integer = 1_000,
+                       order::Int = 3,
+                       maxstep::Real = Inf) where T
     @assert order in (2,3)
     # Check the input is valid, and modify otherwise
     #backtrack_condition = 1.0 - 1.0/(2*rho) # want guaranteed backtrack factor

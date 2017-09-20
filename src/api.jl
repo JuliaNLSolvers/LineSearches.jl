@@ -1,17 +1,17 @@
 # Code used to use phi, a 1-parameter function induced by f and s
 # Need to pass s as an explicit parameter
-function alphatry{T}(alpha::T,
-                     df,
-                     x::Array,
-                     s::Array,
-                     xtmp::Array,
-                     lsr::LineSearchResults,
-                     psi1::Real = convert(T,0.2),
-                     psi2::Real = convert(T,2),
-                     psi3::Real = convert(T,0.1),
-                     iterfinitemax::Integer = ceil(Integer, -log2(eps(T))),
-                     alphamax::Real = convert(T, Inf),
-                     verbose::Bool = false)
+function alphatry(alpha::T,
+                  df,
+                  x::Array,
+                  s::Array,
+                  xtmp::Array,
+                  lsr::LineSearchResults,
+                  psi1::Real = convert(T,0.2),
+                  psi2::Real = convert(T,2),
+                  psi3::Real = convert(T,0.1),
+                  iterfinitemax::Integer = ceil(Integer, -log2(eps(T))),
+                  alphamax::Real = convert(T, Inf),
+                  verbose::Bool = false) where T
 
     phi0 = lsr.value[1]
     dphi0 = lsr.slope[1]
@@ -73,11 +73,11 @@ end
 
 
 # Generate initial guess for step size (HZ, stage I0)
-function alphainit{T}(alpha::Real,
-                      x::Array{T},
-                      gr::Array,
-                      f_x::Real,
-                      psi0::T = convert(T,0.01))
+function alphainit(alpha::Real,
+                   x::Array{T},
+                   gr::Array,
+                   f_x::Real,
+                   psi0::T = convert(T,0.01)) where T
     if isnan(alpha)
         alpha = one(T)
         gr_max = maximum(abs, gr)

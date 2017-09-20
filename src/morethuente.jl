@@ -133,7 +133,7 @@
 #       or just return step and nfev and let existing code do its job
 
 
-@with_kw immutable MoreThuente{T}
+@with_kw struct MoreThuente{T}
     f_tol::T = 1e-4
     gtol::T = 0.9
     x_tol::T = 1e-8
@@ -147,20 +147,20 @@ end
                    f_tol=ls.f_tol, gtol=ls.gtol, x_tol=ls.x_tol, stpmin=ls.stpmin,
                    stpmax=ls.stpmax, maxfev=ls.maxfev)
 
-function _morethuente!{T}(df,
-                         x::Array{T},
-                         s::Array{T},
-                         x_new::Array{T},
-                         lsr::LineSearchResults{T},
-                         stp::Real,
-                         mayterminate::Bool;
-                         n::Integer = length(x),
-                         f_tol::Real = 1e-4,
-                         gtol::Real = 0.9,
-                         x_tol::Real = 1e-8,
-                         stpmin::Real = 1e-16,
-                         stpmax::Real = 65536.0,
-                         maxfev::Integer = 100)
+function _morethuente!(df,
+                      x::Array{T},
+                      s::Array{T},
+                      x_new::Array{T},
+                      lsr::LineSearchResults{T},
+                      stp::Real,
+                      mayterminate::Bool;
+                      n::Integer = length(x),
+                      f_tol::Real = 1e-4,
+                      gtol::Real = 0.9,
+                      x_tol::Real = 1e-8,
+                      stpmin::Real = 1e-16,
+                      stpmax::Real = 65536.0,
+                      maxfev::Integer = 100) where T
     if norm(s) == 0
         Base.error("Step direction is zero.")
     end
