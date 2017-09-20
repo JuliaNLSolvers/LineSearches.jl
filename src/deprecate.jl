@@ -133,7 +133,7 @@ function _morethuente!(df, x, s, xtmp, g, lsr, c, mayterminate, args...)
     return retval
 end
 
-function alphatry{T}(alpha::T, df, x::Array, s::Array, xtmp::Array, g::Array, lsr::LineSearchResults, args...)
+function alphatry(alpha::T, df, x::Array, s::Array, xtmp::Array, g::Array, lsr::LineSearchResults, args...) where T
     _warn_g(dep_g_alphatry)
     alphatry(alpha, df, x, s, xtmp, lsr, args...)
 end

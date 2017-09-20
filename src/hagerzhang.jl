@@ -61,7 +61,7 @@ const DEFAULTSIGMA = 0.9
 #       inferred from the input vector `x` and not from the type information
 #       on the parameters
 
-@with_kw immutable HagerZhang{T}
+@with_kw struct HagerZhang{T}
    delta::T = DEFAULTDELTA
    sigma::T = DEFAULTSIGMA
    alphamax::T = Inf
@@ -78,23 +78,23 @@ end
       ls.linesearchmax, ls.psi3, ls.display)
 
 
-function _hagerzhang!{T}(df,
-                        x::Array{T},
-                        s::Array{T},
-                        xtmp::Array{T},
-                        lsr::LineSearchResults{T},
-                        c::Real,
-                        mayterminate::Bool,
-                        delta::Real = DEFAULTDELTA,
-                        sigma::Real = DEFAULTSIGMA,
-                        alphamax::Real = convert(T,Inf),
-                        rho::Real = convert(T,5),
-                        epsilon::Real = convert(T,1e-6),
-                        gamma::Real = convert(T,0.66),
-                        linesearchmax::Integer = 50,
-                        psi3::Real = convert(T,0.1),
-                        display::Integer = 0,
-                        iterfinitemax::Integer = ceil(Integer, -log2(eps(T))) )
+function _hagerzhang!(df,
+                     x::Array{T},
+                     s::Array{T},
+                     xtmp::Array{T},
+                     lsr::LineSearchResults{T},
+                     c::Real,
+                     mayterminate::Bool,
+                     delta::Real = DEFAULTDELTA,
+                     sigma::Real = DEFAULTSIGMA,
+                     alphamax::Real = convert(T,Inf),
+                     rho::Real = convert(T,5),
+                     epsilon::Real = convert(T,1e-6),
+                     gamma::Real = convert(T,0.66),
+                     linesearchmax::Integer = 50,
+                     psi3::Real = convert(T,0.1),
+                     display::Integer = 0,
+                     iterfinitemax::Integer = ceil(Integer, -log2(eps(T))) ) where T
     if display & LINESEARCH > 0
         println("New linesearch")
     end
@@ -271,14 +271,14 @@ function _hagerzhang!{T}(df,
 end
 
 # Check Wolfe & approximate Wolfe
-function satisfies_wolfe{T<:Number}(c::T,
-                                    phic::Real,
-                                    dphic::Real,
-                                    phi0::Real,
-                                    dphi0::Real,
-                                    philim::Real,
-                                    delta::Real,
-                                    sigma::Real)
+function satisfies_wolfe(c::T,
+                         phic::Real,
+                         dphic::Real,
+                         phi0::Real,
+                         dphi0::Real,
+                         philim::Real,
+                         delta::Real,
+                         sigma::Real) where T<:Number
     wolfe1 = delta * dphi0 >= (phic - phi0) / c &&
                dphic >= sigma * dphi0
     wolfe2 = (2.0 * delta - 1.0) * dphi0 >= dphic >= sigma * dphi0 &&
@@ -294,17 +294,17 @@ function secant(lsr::LineSearchResults, ia::Integer, ib::Integer)
     return secant(lsr.alpha[ia], lsr.alpha[ib], lsr.slope[ia], lsr.slope[ib])
 end
 # phi
-function secant2!{T}(df,
-                     x::Array,
-                     s::Array,
-                     xtmp::Array,
-                     lsr::LineSearchResults{T},
-                     ia::Integer,
-                     ib::Integer,
-                     philim::Real,
-                     delta::Real = DEFAULTDELTA,
-                     sigma::Real = DEFAULTSIGMA,
-                     display::Integer = 0)
+function secant2!(df,
+                  x::Array,
+                  s::Array,
+                  xtmp::Array,
+                  lsr::LineSearchResults{T},
+                  ia::Integer,
+                  ib::Integer,
+                  philim::Real,
+                  delta::Real = DEFAULTDELTA,
+                  sigma::Real = DEFAULTSIGMA,
+                  display::Integer = 0) where T
     phi0 = lsr.value[1]
     dphi0 = lsr.slope[1]
     a = lsr.alpha[ia]
@@ -424,15 +424,15 @@ function update!(df,
 end
 
 # HZ, stage U3 (with theta=0.5)
-function bisect!{T}(df,
-                    x::Array,
-                    s::Array,
-                    xtmp::Array,
-                    lsr::LineSearchResults{T},
-                    ia::Integer,
-                    ib::Integer,
-                    philim::Real,
-                    display::Integer = 0)
+function bisect!(df,
+                 x::Array,
+                 s::Array,
+                 xtmp::Array,
+                 lsr::LineSearchResults{T},
+                 ia::Integer,
+                 ib::Integer,
+                 philim::Real,
+                 display::Integer = 0) where T
     gphi = convert(T, NaN)
     a = lsr.alpha[ia]
     b = lsr.alpha[ib]
