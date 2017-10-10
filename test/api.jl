@@ -10,7 +10,6 @@
 
     df = NLSolversBase.OnceDifferentiable(f,g!,x)
 
-
     phi0 = NLSolversBase.value_gradient!(df, x)
     grtmp = NLSolversBase.gradient(df)
     p = -grtmp
