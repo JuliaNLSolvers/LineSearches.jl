@@ -6,9 +6,6 @@ debug_printing = false
 lstypes =  (Static(), HagerZhang(), StrongWolfe(), MoreThuente(),
             BackTracking(), BackTracking(order=2) )
 
-dep_lsfunctions = (basic!, hagerzhang!, strongwolfe!, morethuente!,
-                   backtracking!, bt3!, bt2!)
-
 my_tests = [
     "alphacalc.jl",
     "backtracking.jl"

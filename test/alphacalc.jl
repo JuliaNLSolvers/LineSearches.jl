@@ -1,9 +1,8 @@
 @testset "alpha-calculations" begin
     import NLSolversBase
 
-    dep_lsalphas = [1.0,   0.5, 0.5, 0.49995, 0.5,  0.5,  0.5]  # functions
-    lsalphas =     [1.0,   0.5, 0.5, 0.49995,       0.5,  0.5]  # types
-                    # Stat #HZ  wolfe   mt          bt2   bt3
+    lsalphas =     [1.0,   0.5, 0.5, 0.49995, 0.5,  0.5]  # types
+                    # Stat #HZ  wolfe   mt    bt2   bt3
 
     f(x) = vecdot(x, x)
     function g!(out, x)
@@ -12,10 +11,7 @@
 
     x = [-1., -1.]
 
-    lsfunctions = tuple(dep_lsfunctions..., lstypes...)
-    lsalphas = [dep_lsalphas; lsalphas]
-
-    for (i, linesearch!) in enumerate(lsfunctions)
+    for (i, linesearch!) in enumerate(lstypes)
         debug_printing && println("Testing $(string(linesearch!))")
         df = NLSolversBase.OnceDifferentiable(f,g!,x)
 
