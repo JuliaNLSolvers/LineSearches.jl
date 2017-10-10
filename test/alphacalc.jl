@@ -57,7 +57,6 @@
             if linesearch! == HagerZhang() || linesearch! == MoreThuente()
                 @test_throws ErrorException alpha = linesearch!(df, x, p, xtmp, lsr, alpha, mayterminate)
             else
-                println(string(linesearch!))
                 alpha = linesearch!(df, x, p, xtmp, lsr, alpha, mayterminate)
                 @test alpha == 1.0 # Is this what we want for non-descent directions?
             end
@@ -101,7 +100,7 @@
             df = NLSolversBase.OnceDifferentiable(f,g!,x0)
             stepsize = ls(df, x0, s, xtmp, lsr, alpha, mayterminate)
 
-            @test stepsize == lsalphas[i]
+            @test stepsize ≈ lsalphas[i]
         end
     end
 end
