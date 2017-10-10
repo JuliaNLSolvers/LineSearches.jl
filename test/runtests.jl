@@ -11,9 +11,7 @@ dep_lsfunctions = (basic!, hagerzhang!, strongwolfe!, morethuente!,
 
 my_tests = [
     "alphacalc.jl",
-    "optim.jl",
-    "backtracking.jl",
-    "counter.jl"
+    "backtracking.jl"
 ]
 
 for my_test in my_tests

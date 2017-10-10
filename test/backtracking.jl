@@ -4,10 +4,29 @@
 # some of the linesearches.
 
 @testset "Check cubic backtracking" begin
-    import Optim
-    ls = LineSearches.BackTracking(order = 3)
-    name = "Himmelblau"
-    prob = Optim.UnconstrainedProblems.examples[name]
-    res = Optim.optimize(prob.f, prob.g!, prob.initial_x, Optim.BFGS(linesearch=ls))
-    @test Optim.minimum(res) < prob.f(prob.solutions) + 1e-2
+
+    function himmelblau(x::Vector)
+        return (x[1]^2 + x[2] - 11)^2 + (x[1] + x[2]^2 - 7)^2
+    end
+
+    function himmelblau_gradient!(storage::Vector, x::Vector)
+        storage[1] = 4.0 * x[1]^3 + 4.0 * x[1] * x[2] -
+            44.0 * x[1] + 2.0 * x[1] + 2.0 * x[2]^2 - 14.0
+        storage[2] = 2.0 * x[1]^2 + 2.0 * x[2] - 22.0 +
+            4.0 * x[1] * x[2] + 4.0 * x[2]^3 - 28.0 * x[2]
+    end
+    x0 = [2.0, 2.0]
+
+    df = NLSolversBase.OnceDifferentiable(himmelblau,himmelblau_gradient!,x0)
+
+    s = [42.0,18.0]
+    lsr = LineSearchResults(eltype(x0))
+    push!(lsr, 0.0, 26.0, -2088.0)
+
+    mayterminate = false; alpha = 1.0; xtmp = zeros(x0)
+
+    ls = BackTracking(order = 3)
+    stepsize = ls(df, x0, s, xtmp, lsr, alpha, mayterminate)
+
+    @test stepsize ≈ 0.020545340808876406
 end
