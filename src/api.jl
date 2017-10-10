@@ -80,9 +80,9 @@ function alphainit{T}(alpha::Real,
                       psi0::T = convert(T,0.01))
     if isnan(alpha)
         alpha = one(T)
-        gr_max = maximum(abs(gr))
+        gr_max = maximum(abs, gr)
         if gr_max != 0.0
-            x_max = maximum(abs(x))
+            x_max = maximum(abs, x)
             if x_max != 0.0
                 alpha = psi0 * x_max / gr_max
             elseif f_x != 0.0
