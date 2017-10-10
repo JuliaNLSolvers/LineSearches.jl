@@ -1,16 +1,16 @@
 # A cache for results from line search methods (to avoid recomputation)
-type LineSearchResults{T}
+mutable struct LineSearchResults{T}
     alpha::Vector{T}
     value::Vector{T}
     slope::Vector{T}
     nfailures::Int
 end
 
-LineSearchResults{T}(::Type{T}) = LineSearchResults(T[], T[], T[], 0)
+LineSearchResults(::Type{T}) where {T} = LineSearchResults(T[], T[], T[], 0)
 
 Base.length(lsr::LineSearchResults) = length(lsr.alpha)
 
-function Base.push!{T}(lsr::LineSearchResults{T}, a, v, d)
+function Base.push!(lsr::LineSearchResults{T}, a, v, d) where T
     push!(lsr.alpha, convert(T, a))
     push!(lsr.value, convert(T, v))
     push!(lsr.slope, convert(T, d))
@@ -25,7 +25,7 @@ function clear!(lsr::LineSearchResults)
     # nfailures is deliberately not set to 0
 end
 
-type LineSearchException{T<:Real} <: Exception
+mutable struct LineSearchException{T<:Real} <: Exception
     message::AbstractString
     alpha::T
     lsr::LineSearchResults
