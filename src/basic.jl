@@ -6,20 +6,20 @@
 `Static`: defines a static linesearch, i.e. with fixed step-size. E.g., initialise
 with `Static(alpha = 0.3141)` for fixed step-size 0.3141. Default is 1.0.
 """
-@with_kw immutable Static{T}
+@with_kw struct Static{T}
     alpha::T = 1.0
 end
 
 (ls::Static)(df, x, s, x_scratch, lsr, alpha, mayterminate) =
         _static!(df, x, s, x_scratch, lsr, ls.alpha, mayterminate)
 
-function _static!{T}(df,
-                   x::Array{T},
-                   s::Array{T},
-                   x_scratch::Array{T},
-                   lsr::LineSearchResults,
-                   alpha::Real = 1.0,
-                   mayterminate::Bool = false)
+function _static!(df,
+                x::Array{T},
+                s::Array{T},
+                x_scratch::Array{T},
+                lsr::LineSearchResults,
+                alpha::Real = 1.0,
+                mayterminate::Bool = false) where T
     @assert alpha > 0
     push!(lsr.alpha, alpha)
 

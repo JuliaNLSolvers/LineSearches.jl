@@ -14,7 +14,7 @@ use `MoreThuente`, `HagerZhang` or `BackTracking`.
 * `c2 = 0.9` : second (strong) Wolfe condition
 * `rho = 2.0` : bracket growth
 """
-@with_kw immutable StrongWolfe{T}
+@with_kw struct StrongWolfe{T}
    c1::T = 1e-4
    c2::T = 0.9
    rho::T = 2.0
@@ -23,16 +23,16 @@ end
 (ls::StrongWolfe)(args...) =
         _strongwolfe!(args...; c1=ls.c1, c2=ls.c2, rho=ls.rho)
 
-function _strongwolfe!{T}(df,
-                         x::Array{T},
-                         p::Array{T},
-                         x_new::Array{T},
-                         lsr::LineSearchResults{T},
-                         alpha0::Real,
-                         mayterminate::Bool;
-                         c1::Real = 1e-4,
-                         c2::Real = 0.9,
-                         rho::Real = 2.0)
+function _strongwolfe!(df,
+                      x::Array{T},
+                      p::Array{T},
+                      x_new::Array{T},
+                      lsr::LineSearchResults{T},
+                      alpha0::Real,
+                      mayterminate::Bool;
+                      c1::Real = 1e-4,
+                      c2::Real = 0.9,
+                      rho::Real = 2.0) where T
     # Parameter space
     n = length(x)
 
