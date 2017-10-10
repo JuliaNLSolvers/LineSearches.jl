@@ -10,7 +10,6 @@
 
     df = NLSolversBase.OnceDifferentiable(f,g!,x)
 
-
     phi0 = NLSolversBase.value_gradient!(df, x)
     grtmp = NLSolversBase.gradient(df)
     p = -grtmp
@@ -26,7 +25,7 @@
     @test alpha == 0.005
 
     xtmp = zeros(x)
-    alpha, mayerminate = alphatry(alpha, df, x, p, xtmp, lsr)
+    alpha, mayterminate = alphatry(alpha, df, x, p, xtmp, lsr)
     @test alpha == 0.49999999999994404
     @test mayterminate == true
 

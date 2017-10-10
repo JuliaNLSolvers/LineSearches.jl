@@ -7,6 +7,7 @@ lstypes =  (Static(), HagerZhang(), StrongWolfe(), MoreThuente(),
             BackTracking(), BackTracking(order=2) )
 
 my_tests = [
+    "api.jl",
     "alphacalc.jl",
     "backtracking.jl"
 ]
