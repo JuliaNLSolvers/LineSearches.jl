@@ -4,20 +4,10 @@
 # some of the linesearches.
 
 @testset "Check cubic backtracking" begin
+    pr = OptimTestProblems.Unconstrained.examples["Himmelblau"]
+    x0 = copy(pr.initial_x)
 
-    function himmelblau(x::Vector)
-        return (x[1]^2 + x[2] - 11)^2 + (x[1] + x[2]^2 - 7)^2
-    end
-
-    function himmelblau_gradient!(storage::Vector, x::Vector)
-        storage[1] = 4.0 * x[1]^3 + 4.0 * x[1] * x[2] -
-            44.0 * x[1] + 2.0 * x[1] + 2.0 * x[2]^2 - 14.0
-        storage[2] = 2.0 * x[1]^2 + 2.0 * x[2] - 22.0 +
-            4.0 * x[1] * x[2] + 4.0 * x[2]^3 - 28.0 * x[2]
-    end
-    x0 = [2.0, 2.0]
-
-    df = NLSolversBase.OnceDifferentiable(himmelblau,himmelblau_gradient!,x0)
+    df = NLSolversBase.OnceDifferentiable(pr.f, pr.g!, x0)
 
     s = [42.0,18.0]
     lsr = LineSearchResults(eltype(x0))

@@ -1,5 +1,6 @@
 using LineSearches
 using Base.Test
+using OptimTestProblems
 
 debug_printing = false
 
