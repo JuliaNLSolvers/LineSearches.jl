@@ -65,7 +65,7 @@
 
     @testset "Himmelblau" begin
         # This should be a bit more difficult, so hopefully it hits more of the algorithm steps
-        pr = OptimTestProblems.Unconstrained.examples["Himmelblau"]
+        pr = OptimTestProblems.UnconstrainedProblems.examples["Himmelblau"]
         x0 = copy(pr.initial_x)
 
         df = NLSolversBase.OnceDifferentiable(pr.f, pr.g!, x0)
