@@ -9,8 +9,7 @@ lstypes =  (Static(), HagerZhang(), StrongWolfe(), MoreThuente(),
 
 my_tests = [
     "api.jl",
-    "alphacalc.jl",
-    "backtracking.jl"
+    "alphacalc.jl"
 ]
 
 for my_test in my_tests

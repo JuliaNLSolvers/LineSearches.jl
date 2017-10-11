@@ -68,7 +68,6 @@
         pr = OptimTestProblems.UnconstrainedProblems.examples["Himmelblau"]
         x0 = copy(pr.initial_x)
 
-        df = NLSolversBase.OnceDifferentiable(pr.f, pr.g!, x0)
 
         s = [42.0,18.0]
 
@@ -84,8 +83,8 @@
             debug_printing && println("Testing $(string(ls))")
             lsr = LineSearchResults(eltype(x0))
             push!(lsr, 0.0, 26.0, -2088.0)
+            df = NLSolversBase.OnceDifferentiable(pr.f, pr.g!, x0)
 
-            df = NLSolversBase.OnceDifferentiable(f,g!,x0)
             stepsize = ls(df, x0, s, xtmp, lsr, alpha, mayterminate)
 
             @test stepsize ≈ lsalphas[i]
