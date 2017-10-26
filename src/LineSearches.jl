@@ -21,7 +21,7 @@ include("backtracking.jl")
 include("strongwolfe.jl")
 include("morethuente.jl")
 include("hagerzhang.jl")
-include("basic.jl")
+include("static.jl")
 
 include("deprecate.jl")
 
