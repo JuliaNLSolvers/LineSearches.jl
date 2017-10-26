@@ -1,15 +1,19 @@
+# LineSearches v3.0.0 release notes
+- Use NLSolversBase v3.0
+
 # LineSearches v2.1.0 release notes
 - Algorithms no longer takes a gradient storage parameter. See
 [#48](https://github.com/anriseth/LineSearches.jl/pull/48)
 - Linesearch algorithms are now callable types. See
 [#43](https://github.com/anriseth/LineSearches.jl/pull/43)
+- The `basic!` linesearch is now `Static()`
 
 # LineSearches v2.0.0 release notes
 - Switch storage and evaluation point position
 # LineSearches v1.0.0 release notes
 - Switch to using the NLSolversBase dependency
 # LineSearches v0.1.5 release notes
-* Fix bug in `bt3!` linesearch, which uses the wrong initial step in the first cubic interpolation. See 
+* Fix bug in `bt3!` linesearch, which uses the wrong initial step in the first cubic interpolation. See
 [#29](https://github.com/anriseth/LineSearches.jl/pull/29)
 
 # LineSearches v0.1.4 release notes
