@@ -1,3 +1,6 @@
+# LineSearches v3.1.0 release notes
+- Include option for `Static()` to be scale-dependent. See [#68](https://github.com/anriseth/LineSearches.jl/pull/68)
+
 # LineSearches v3.0.0 release notes
 - Use NLSolversBase v3.0
 
