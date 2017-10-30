@@ -5,13 +5,27 @@
 """
 `Static`: defines a static linesearch, i.e. with fixed step-size. E.g., initialise
 with `Static(alpha = 0.3141)` for fixed step-size 0.3141. Default is 1.0.
+
+You can also make this independent of the size of the step `s`, by using
+`Static(scaled = true)`.
+This will then use a steps-size alpha ← min(ls.alpha,||s||_2) / ||s||_2
 """
 @with_kw struct Static{T}
     alpha::T = 1.0
+    scaled::Bool = false # Scales step. alpha ← min(alpha,||s||_2) / ||s||_2
 end
 
-(ls::Static)(df, x, s, x_scratch, lsr, alpha, mayterminate) =
-        _static!(df, x, s, x_scratch, lsr, ls.alpha, mayterminate)
+function (ls::Static)(df, x, s, x_scratch, lsr, alpha, mayterminate)
+    # NOTE: alpha is ignored here, and we use ls.alpha instead
+
+    if ls.scaled == true && (ns = norm(s)) > zero(typeof(ls.alpha))
+        scaledalpha = min(ls.alpha, ns) / ns
+        retval = _static!(df, x, s, x_scratch, lsr, scaledalpha, mayterminate)
+    else
+        retval = _static!(df, x, s, x_scratch, lsr, ls.alpha, mayterminate)
+    end
+    return retval
+end
 
 function _static!(df,
                 x::Array{T},
