@@ -15,7 +15,7 @@ function alphainit(alpha::Real,
       dep_alphainit[] = true
     end
     if isnan(alpha)
-        alpha = _hzI0(x,gr,f_x,psi0)
+        alpha = LineSearches._hzI0(x,gr,f_x,psi0)
     end
     alpha
 end
@@ -37,5 +37,5 @@ function alphatry(alpha::T,
       dep_alphatry[] = true
     end
 
-    _hzI12(alpha, df, x, s, xtmp, lsr, psi1, psi2, psi3, iterfinitemax, alphamax, verbose)
+    LineSearches._hzI12(alpha, df, x, s, xtmp, lsr, psi1, psi2, psi3, alphamax, verbose, iterfinitemax)
 end

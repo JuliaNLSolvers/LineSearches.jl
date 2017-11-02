@@ -16,7 +16,6 @@ export BackTracking, HagerZhang, Static, MoreThuente, StrongWolfe
 export InitialHagerZhang
 
 include("types.jl")
-include("api.jl")
 
 # Line Search Methods
 include("backtracking.jl")
