@@ -8,9 +8,20 @@ lstypes =  (Static(), Static(scaled=true), HagerZhang(), StrongWolfe(), MoreThue
             BackTracking(), BackTracking(order=2) )
 
 my_tests = [
+    "initial.jl",
     "api.jl",
     "alphacalc.jl"
 ]
+
+mutable struct StateDummy
+    alpha
+    x
+    x_ls
+    f_x_previous
+    s
+    lsr::LineSearchResults
+    mayterminate::Bool
+end
 
 for my_test in my_tests
     println("\n * $(my_test)")
