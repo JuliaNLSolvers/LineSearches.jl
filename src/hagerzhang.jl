@@ -555,7 +555,7 @@ function _hzI12(alpha::T,
     alphatest = psi1 * alpha
     alphatest = min(alphatest, alphamax)
 
-    xtmp = x .+ alphatest .* s
+    @. xtmp = x + alphatest * s
     phitest = NLSolversBase.value!(df, xtmp)
 
     iterfinite = 1
