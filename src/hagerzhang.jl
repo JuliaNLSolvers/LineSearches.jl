@@ -626,7 +626,7 @@ function _hzI0(x::Array{T},
     alpha = one(T)
     gr_max = maximum(abs, gr)
     if gr_max != 0.0
-        x_max = maximum(abs, gr)
+        x_max = maximum(abs, x)
         if x_max != 0.0
             alpha = psi0 * x_max / gr_max
         elseif f_x != 0.0
