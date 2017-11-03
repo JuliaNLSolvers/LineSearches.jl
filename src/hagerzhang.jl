@@ -110,8 +110,11 @@ function _hagerzhang!(df,
                      gamma::Real = convert(T,0.66),
                      linesearchmax::Integer = 50,
                      psi3::Real = convert(T,0.1),
-                     display::Integer = 0,
-                     iterfinitemax::Integer = ceil(Integer, -log2(eps(T))) ) where T
+                     display::Integer = 0) where T
+    # Prevent values of `xtmp` that are likely to make
+    # df.f(xtmp) infinite
+    iterfinitemax::Int = ceil(Int, -log2(eps(T)))
+
     if display & LINESEARCH > 0
         println("New linesearch")
     end
@@ -542,16 +545,19 @@ end
 # Pick the initial step size (HZ #I1-I2)
 function _hzI12(alpha::T,
                 df,
-                x::Array,
-                s::Array,
-                xtmp::Array,
+                x::Array{T},
+                s::Array{T},
+                xtmp::Array{T},
                 lsr::LineSearchResults,
                 psi1::Real = convert(T,0.2),
                 psi2::Real = convert(T,2.0),
                 psi3::Real = convert(T,0.1),
                 alphamax::Real = convert(T, Inf),
-                verbose::Bool = false,
-                iterfinitemax::Integer = ceil(Integer, -log2(eps(T)))) where T
+                verbose::Bool = false) where T
+
+    # Prevent values of `xtmp` that are likely to make
+    # df.f(xtmp) infinite
+    iterfinitemax::Int = ceil(Int, -log2(eps(T)))
 
     phi0 = lsr.value[1]
     dphi0 = lsr.slope[1]
