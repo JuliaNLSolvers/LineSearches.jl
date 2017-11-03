@@ -13,7 +13,8 @@ export clear!, alphatry, alphainit
 
 export BackTracking, HagerZhang, Static, MoreThuente, StrongWolfe
 
-export InitialHagerZhang, InitialStatic, InitialPrevious
+export InitialHagerZhang, InitialStatic, InitialPrevious,
+    InitialQuadratic, InitialConstantChange
 
 include("types.jl")
 
