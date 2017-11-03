@@ -48,12 +48,12 @@
 
     # Test Previous
     state = getstate()
-    state.mayterminate = true
     alpha = state.alpha
+    state.mayterminate = true
     is = InitialPrevious()
     is(state, dphi0, df)
     @test state.alpha == alpha
-    @test state.mayterminate == false
+    @test state.mayterminate == true
 
     # Test Previous NaN
     state = getstate()
