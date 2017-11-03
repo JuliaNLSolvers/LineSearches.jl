@@ -23,7 +23,7 @@
     is = InitialHagerZhang()
     is(state, dphi0, df)
     @test state.alpha == 0.005
-    @test state.mayterminate == true
+    @test state.mayterminate == false
 
     # Test HagerZhang I12
     state = getstate()
@@ -37,18 +37,18 @@
     is = InitialStatic()
     is(state, dphi0, df)
     @test state.alpha == is.alpha
-    @test state.mayterminate == true
+    @test state.mayterminate == false
 
     # Test Static scaled
     state = getstate()
     is = InitialStatic(alpha = 0.5, scaled = true)
     is(state, dphi0, df)
     @test state.alpha == 0.08838834764831843
-    @test state.mayterminate == true
+    @test state.mayterminate == false
 
     # Test Previous
     state = getstate()
-    state.mayterminate = false
+    state.mayterminate = true
     alpha = state.alpha
     is = InitialPrevious()
     is(state, dphi0, df)
@@ -58,18 +58,18 @@
     # Test Previous NaN
     state = getstate()
     state.alpha = NaN
-    state.mayterminate = false
+    state.mayterminate = true
     is = InitialPrevious()
     is(state, dphi0, df)
     @test state.alpha == is.alpha
-    @test state.mayterminate == true
+    @test state.mayterminate == false
 
     # Test Quadratic NaN
     state = getstate()
     is = InitialQuadratic()
     is(state, dphi0, df)
     @test state.alpha == is.α0
-    @test state.mayterminate == true
+    @test state.mayterminate == false
 
     # Test Quadratic
     state = getstate()
@@ -77,14 +77,14 @@
     is = InitialQuadratic()
     is(state, dphi0, df)
     @test state.alpha == 0.8282
-    @test state.mayterminate == true
+    @test state.mayterminate == false
 
     # Test ConstantChange NaN
     state = getstate()
     is = InitialConstantChange()
     is(state, dphi0, df)
     @test state.alpha == is.α0
-    @test state.mayterminate == true
+    @test state.mayterminate == false
 
     # Test ConstantChange
     state = getstate()
@@ -92,5 +92,5 @@
     is = InitialConstantChange()
     is(state, dphi0, df)
     @test state.alpha == 0.101
-    @test state.mayterminate == true
+    @test state.mayterminate == false
 end

@@ -19,7 +19,7 @@ function (is::InitialStatic{T})(state, dphi0, df) where T
         state.alpha *= min(is.alpha, ns) / ns
     end
     # TODO: Should `mayterminate` be true or false? Does it depend on which line search we use?
-    state.mayterminate = true
+    state.mayterminate = false
 end
 
 """
@@ -35,7 +35,7 @@ function (is::InitialPrevious)(state, dphi0, df)
     if isnan(state.alpha)
         state.alpha = is.alpha
         # TODO: Should `mayterminate` be true or false? Does it depend on which line search we use?
-        state.mayterminate = true
+        state.mayterminate = false
     end
 end
 
@@ -69,7 +69,7 @@ function (is::InitialQuadratic{T})(state, dphi0, df) where T
     end
     state.alpha = αguess
     # TODO: Should `mayterminate` be true or false? Does it depend on which line search we use?
-    state.mayterminate = true
+    state.mayterminate = false
 end
 
 """
@@ -104,5 +104,5 @@ function (is::InitialConstantChange{T})(state, dphi0, df) where T
     end
     state.alpha = αguess
     # TODO: Should `mayterminate` be true or false? Does it depend on which line search we use?
-    state.mayterminate = true
+    state.mayterminate = false
 end

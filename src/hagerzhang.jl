@@ -533,7 +533,7 @@ function (is::InitialHagerZhang)(state, dphi0, df)
         state.alpha = _hzI0(state.x, NLSolversBase.gradient(df),
                             NLSolversBase.value(df),
                             convert(eltype(state.x), is.ψ0)) # Hack to deal with type instability between is{T} and state.x
-        state.mayterminate = true
+        state.mayterminate = false
     else
         # Pick the initial step size according to HZ #I1-2
         state.alpha, state.mayterminate =
