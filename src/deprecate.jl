@@ -37,5 +37,5 @@ function alphatry(alpha::T,
       dep_alphatry[] = true
     end
 
-    LineSearches._hzI12(alpha, df, x, s, xtmp, lsr, psi1, psi2, psi3, alphamax, verbose, iterfinitemax)
+    LineSearches._hzI12(alpha, df, x, s, xtmp, lsr, psi1, psi2, psi3, alphamax, verbose)
 end
