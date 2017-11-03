@@ -15,7 +15,7 @@
     function getstate()
         lsr = LineSearchResults(eltype(x))
         push!(lsr, zero(phi0), phi0, dphi0)
-        state = StateDummy(1.0,  x, similar(x), NaN, p, lsr, false)
+        state = StateDummy(1.0,  x, similar(x), NaN, p, lsr, false, NaN)
     end
 
     # Test HagerZhang I0
@@ -62,5 +62,35 @@
     is = InitialPrevious()
     is(state, dphi0, df)
     @test state.alpha == is.alpha
+    @test state.mayterminate == true
+
+    # Test Quadratic NaN
+    state = getstate()
+    is = InitialQuadratic()
+    is(state, dphi0, df)
+    @test state.alpha == is.α0
+    @test state.mayterminate == true
+
+    # Test Quadratic
+    state = getstate()
+    state.f_x_previous = 2*phi0
+    is = InitialQuadratic()
+    is(state, dphi0, df)
+    @test state.alpha == 0.8282
+    @test state.mayterminate == true
+
+    # Test ConstantChange NaN
+    state = getstate()
+    is = InitialConstantChange()
+    is(state, dphi0, df)
+    @test state.alpha == is.α0
+    @test state.mayterminate == true
+
+    # Test ConstantChange
+    state = getstate()
+    state.dphi0_previous = 0.1*dphi0
+    is = InitialConstantChange()
+    is(state, dphi0, df)
+    @test state.alpha == 0.101
     @test state.mayterminate == true
 end

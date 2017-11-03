@@ -21,6 +21,7 @@ mutable struct StateDummy
     s
     lsr::LineSearchResults
     mayterminate::Bool
+    dphi0_previous
 end
 
 for my_test in my_tests
