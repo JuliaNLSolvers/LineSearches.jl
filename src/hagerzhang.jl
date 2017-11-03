@@ -531,7 +531,8 @@ function (is::InitialHagerZhang)(state, dphi0, df)
         # then we
         # pick the initial step size according to HZ #I0
         state.alpha = _hzI0(state.x, NLSolversBase.gradient(df),
-                            NLSolversBase.value(df), is.ψ0)
+                            NLSolversBase.value(df),
+                            convert(eltype(state.x), is.ψ0)) # Hack to deal with type instability between is{T} and state.x
         state.mayterminate = true
     else
         # Pick the initial step size according to HZ #I1-2
@@ -623,9 +624,9 @@ function _hzI0(x::Array{T},
                f_x::T,
                psi0::T = convert(T,0.01)) where T
     alpha = one(T)
-    gr_max = norm(gr, Inf)
+    gr_max = maximum(abs, gr)
     if gr_max != 0.0
-        x_max = norm(x, Inf)
+        x_max = maximum(abs, gr)
         if x_max != 0.0
             alpha = psi0 * x_max / gr_max
         elseif f_x != 0.0
