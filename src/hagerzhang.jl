@@ -132,7 +132,7 @@ function _hagerzhang!(df,
         phic, dphic = linefunc!(df, x, s, c, xtmp, true)
     end
     if !(isfinite(phic) && isfinite(dphic))
-        Base.warn("Failed to achieve finite new evaluation point, using alpha=0")
+        warn("Failed to achieve finite new evaluation point, using alpha=0")
         return zero(T) # phi0
     end
     push!(lsr, c, phic, dphic)
@@ -523,11 +523,15 @@ end
 
 function (is::InitialHagerZhang)(state, dphi0, df)
     if isnan(state.f_x_previous) && isnan(is.α0)
-        # Pick the initial step size (HZ #I0)
+        # If we're at the first iteration (isnan check)
+        # and the user has not provided an initial step size (is.α0),
+        # then we
+        # pick the initial step size according to HZ #I0
         state.alpha = _hzI0(state.x, NLSolversBase.gradient(df),
                             NLSolversBase.value(df), is.ψ0)
         state.mayterminate = true
     else
+        # Pick the initial step size according to HZ #I1-2
         state.alpha, state.mayterminate =
             _hzI12(state.alpha, df, state.x, state.s, state.x_ls, state.lsr,
                    is.ψ1, is.ψ2, is.ψ3, is.αmax, is.verbose)
@@ -608,10 +612,9 @@ function _hzI12(alpha::T,
 end
 
 # Generate initial guess for step size (HZ, stage I0)
-# TODO: deal with different types for the inputs
 function _hzI0(x::Array{T},
-               gr::Array,
-               f_x::Real,
+               gr::Array{T},
+               f_x::T,
                psi0::T = convert(T,0.01)) where T
     alpha = one(T)
     gr_max = norm(gr, Inf)

@@ -12,9 +12,9 @@ is scaled with the `l_2` norm of the step direction.
     scaled::Bool = false # Scales step. alpha ← min(alpha,||s||_2) / ||s||_2
 end
 
-function (is::InitialStatic)(state, dphi0, df)
+function (is::InitialStatic{T})(state, dphi0, df) where T
     state.alpha = is.alpha
-    if is.scaled == true && (ns = norm(state.s)) > zero(typeof(is.alpha))
+    if is.scaled == true && (ns = norm(state.s)) > zero(T)
         # TODO: Type instability if there's a type mismatch between is.alpha and ns
         state.alpha *= min(is.alpha, ns) / ns
     end
