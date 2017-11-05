@@ -512,6 +512,9 @@ Initial step size algorithm from
   W. W. Hager and H. Zhang (2006) Algorithm 851: CG_DESCENT, a
     conjugate gradient method with guaranteed descent. ACM
     Transactions on Mathematical Software 32: 113–137.
+
+If α0 is NaN, then procedure I0 is called at the first iteration,
+otherwise, we select according to procedure I1-2, with starting value α0.
 """
 @with_kw struct InitialHagerZhang{T}
     ψ0::T         = 0.01
@@ -519,15 +522,15 @@ Initial step size algorithm from
     ψ2::T         = 2.0
     ψ3::T         = 0.1
     αmax::T       = Inf
-    α0::T         = NaN # Initial alpha guess. NaN => algorithm calculates
+    α0::T         = 1.0 # Initial alpha guess. NaN => algorithm calculates
     verbose::Bool = false
 end
 
 
 function (is::InitialHagerZhang)(state, dphi0, df)
     if isnan(state.f_x_previous) && isnan(is.α0)
-        # If we're at the first iteration (isnan check)
-        # and the user has not provided an initial step size (is.α0),
+        # If we're at the first iteration (f_x_previous is NaN)
+        # and the user has not provided an initial step size (is.α0 is NaN),
         # then we
         # pick the initial step size according to HZ #I0
         state.alpha = _hzI0(state.x, NLSolversBase.gradient(df),
