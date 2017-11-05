@@ -73,7 +73,7 @@ function _backtracking!(df,
 
         # Shrink proposed step-size:
         if order == 2 || iteration == 1
-            # backtracking via interpolation:
+            # backtracking via quadratic interpolation:
             # This interpolates the available data
             #    f(0), f'(0), f(α)
             # with a quadractic which is then minimised; this comes with a
@@ -82,6 +82,7 @@ function _backtracking!(df,
             # of the function guarantees at least a backtracking factor rho.
             alphatmp = - (gxp * alpha^2) / ( 2.0 * (f_x_scratch - f_x - gxp*alpha) )
         else
+            # Backtracking via cubic interpolation
             alpha0 = lsr.alpha[end-1]
             alpha1 = lsr.alpha[end]
             phi0 = lsr.value[end-1]
@@ -98,8 +99,8 @@ function _backtracking!(df,
                 alphatmp = (-b + sqrt(discr)) / (3.0*a)
             end
         end
-        alphatmp =  min(alphatmp, alpha*rhohi) # avoid too small reductions
-        alphatmp = max(alphatmp, alpha*rholo) # avoid too big reductions
+        alphatmp =  NaNMath.min(alphatmp, alpha*rhohi) # avoid too small reductions
+        alphatmp = NaNMath.max(alphatmp, alpha*rholo) # avoid too big reductions
 
         # enforce a maximum step alpha * s (application specific, default is Inf)
         alpha = min(alphatmp, maxstep / vecnorm(s, Inf))
