@@ -2,7 +2,7 @@ isdefined(Base, :__precompile__) && __precompile__()
 
 module LineSearches
 
-using Parameters
+using Parameters, NaNMath
 
 import NLSolversBase
 import Base.clear!
