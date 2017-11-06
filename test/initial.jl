@@ -20,7 +20,7 @@
 
     # Test HagerZhang I0
     state = getstate()
-    is = InitialHagerZhang()
+    is = InitialHagerZhang(α0 = NaN)
     is(state, dphi0, df)
     @test state.alpha == 0.005
     @test state.mayterminate == false
