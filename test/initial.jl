@@ -91,6 +91,6 @@
     state.dphi0_previous = 0.1*dphi0
     is = InitialConstantChange()
     is(state, dphi0, df)
-    @test state.alpha == 0.101
+    @test state.alpha == 0.2525
     @test state.mayterminate == false
 end
