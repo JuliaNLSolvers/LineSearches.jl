@@ -23,12 +23,16 @@ function (is::InitialStatic{T})(state, dphi0, df) where T
 end
 
 """
-Use previous step length as initial guess.
+Use previous step length as initial guess,
+within the bounds [alphamin, alphamax]
+
 
 If state.alpha is NaN, then return fallback value is.alpha
 """
 @with_kw struct InitialPrevious{T}
     alpha::T = 1.0
+    alphamin::T = 0.0
+    alphamax::T = Inf
 end
 
 function (is::InitialPrevious)(state, dphi0, df)
@@ -37,6 +41,8 @@ function (is::InitialPrevious)(state, dphi0, df)
         # TODO: Should `mayterminate` be true or false? Does it depend on which line search we use?
         state.mayterminate = false
     end
+    state.alpha = min(is.alphamax, state.alpha)
+    state.alpha = max(is.alphamin, state.alpha)
 end
 
 
