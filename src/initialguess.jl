@@ -61,6 +61,7 @@ Sets initial guess to the parameter `α0` at the first iteration (default 1.0).
 """
 @with_kw struct InitialQuadratic{T}
     αmin::T = 0.1 # Minimum initial step size (value somewhat arbitrary)
+    αmax::T = 1.0 # Maximum initial step size (advised by Nocedal+Wright)
     α0::T   = 1.0 # Fallback at first iteration
 end
 
@@ -70,7 +71,7 @@ function (is::InitialQuadratic{T})(state, dphi0, df) where T
         αguess = is.α0
     else
         αguess = 2.0 * (NLSolversBase.value(df) - state.f_x_previous) / dphi0
-        αguess = min(one(T), 1.01*αguess) # See Nocedal+Wright
+        αguess = min(is.αmax, 1.01*αguess) # See Nocedal + Wright, using is.αmax = 1.0
         αguess = max(is.αmin, αguess)
     end
     state.alpha = αguess
