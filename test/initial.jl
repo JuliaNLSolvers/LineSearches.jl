@@ -74,9 +74,17 @@
     # Test Quadratic
     state = getstate()
     state.f_x_previous = 2*phi0
-    is = InitialQuadratic()
+    is = InitialQuadratic(snap2one=(0.9,Inf))
     is(state, dphi0, df)
-    @test state.alpha == 0.8282
+    @test state.alpha == 0.8200000000000001
+    @test state.mayterminate == false
+
+    # Test Quadratic snap2one
+    state = getstate()
+    state.f_x_previous = 2*phi0
+    is = InitialQuadratic(snap2one=(0.75,Inf))
+    is(state, dphi0, df)
+    @test state.alpha == 1.0
     @test state.mayterminate == false
 
     # Test ConstantChange NaN
@@ -91,6 +99,14 @@
     state.dphi0_previous = 0.1*dphi0
     is = InitialConstantChange()
     is(state, dphi0, df)
-    @test state.alpha == 0.2525
+    @test state.alpha == 0.25
+    @test state.mayterminate == false
+
+    # Test ConstantChange snap2one
+    state = getstate()
+    state.dphi0_previous = 0.1*dphi0
+    is = InitialConstantChange(snap2one=(0.25,1.0))
+    is(state, dphi0, df)
+    @test state.alpha == 1.0
     @test state.mayterminate == false
 end
