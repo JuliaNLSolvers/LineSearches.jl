@@ -23,18 +23,20 @@ end
 
 
 function _backtracking!(df,
-                       x::Array{T},
-                       s::Array{T},
-                       x_scratch::Array{T},
-                       lsr::LineSearchResults,
-                       alpha::Real = 1.0,
-                       mayterminate::Bool = false,
-                       c1::Real = 1e-4,
-                       rhohi::Real = 0.5,
-                       rholo::Real = 0.1,
-                       iterations::Integer = 1_000,
-                       order::Int = 3,
-                       maxstep::Real = Inf) where T
+                        x::Array{T},
+                        s::Array{T},
+                        x_scratch::Array{T},
+                        lsr::LineSearchResults,
+                        alpha::Real = 1.0,
+                        mayterminate::Bool = false,
+                        c1::Real = 1e-4,
+                        rhohi::Real = 0.5,
+                        rholo::Real = 0.1,
+                        iterations::Integer = 1_000,
+                        order::Int = 3,
+                        maxstep::Real = Inf) where T
+    iterfinitemax = -log2(eps(T))
+
     @assert order in (2,3)
     # Check the input is valid, and modify otherwise
     #backtrack_condition = 1.0 - 1.0/(2*rho) # want guaranteed backtrack factor
@@ -61,6 +63,20 @@ function _backtracking!(df,
     # Backtrack until we satisfy sufficient decrease condition
     f_x_scratch = NLSolversBase.value!(df, x_scratch)
     push!(lsr.value, f_x_scratch)
+
+    iterfinite = 0
+    while !isfinite(f_x_scratch) && iterfinite < iterfinitemax
+        iterfinite += 1
+        alpha *= 0.5
+        # Tentatively move a distance of alpha in the direction of s
+        x_scratch .= x .+ alpha.*s
+        push!(lsr.alpha, alpha)
+
+        # Backtrack until we satisfy sufficient decrease condition
+        f_x_scratch = NLSolversBase.value!(df, x_scratch)
+        push!(lsr.value, f_x_scratch)
+    end
+
     while f_x_scratch > f_x + c1 * alpha * gxp
         # Increment the number of steps we've had to perform
         iteration += 1

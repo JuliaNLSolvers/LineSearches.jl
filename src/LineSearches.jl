@@ -13,15 +13,20 @@ export clear!, alphatry, alphainit
 
 export BackTracking, HagerZhang, Static, MoreThuente, StrongWolfe
 
+export InitialHagerZhang, InitialStatic, InitialPrevious,
+    InitialQuadratic, InitialConstantChange
+
 include("types.jl")
-include("api.jl")
 
 # Line Search Methods
 include("backtracking.jl")
 include("strongwolfe.jl")
 include("morethuente.jl")
-include("hagerzhang.jl")
+include("hagerzhang.jl") # Also includes InitialHagerZhang
 include("static.jl")
+
+# Initial guess methods
+include("initialguess.jl")
 
 include("deprecate.jl")
 
