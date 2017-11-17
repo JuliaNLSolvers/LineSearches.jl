@@ -53,8 +53,8 @@ function _backtracking!(df,
     n = length(x)
 
     # read f_x and slope from LineSearchResults
-    f_x = lsr.value[end]
-    gxp = lsr.slope[end]
+    @inbounds f_x = lsr.value[end]
+    @inbounds gxp = lsr.slope[end]
 
     # Tentatively move a distance of alpha in the direction of s
     x_scratch .= x .+ alpha.*s
@@ -99,19 +99,19 @@ function _backtracking!(df,
             alphatmp = - (gxp * alpha^2) / ( 2.0 * (f_x_scratch - f_x - gxp*alpha) )
         else
             # Backtracking via cubic interpolation
-            alpha0 = lsr.alpha[end-1]
-            alpha1 = lsr.alpha[end]
-            phi0 = lsr.value[end-1]
-            phi1 = lsr.value[end]
+            @inbounds alpha0 = lsr.alpha[end-1]
+            @inbounds alpha1 = lsr.alpha[end]
+            @inbounds phi0 = lsr.value[end-1]
+            @inbounds phi1 = lsr.value[end]
 
-            div = 1.0/(alpha0^2*alpha1^2*(alpha1-alpha0))
+            div = one(alpha) / (alpha0^2 * alpha1^2 * (alpha1 - alpha0))
             a = (alpha0^2*(phi1-f_x-gxp*alpha1)-alpha1^2*(phi0-f_x-gxp*alpha0))*div
             b = (-alpha0^3*(phi1-f_x-gxp*alpha1)+alpha1^3*(phi0-f_x-gxp*alpha0))*div
 
-            if isapprox(a,0)
+            if isapprox(a, zero(a))
                 alphatmp = gxp / (2.0*b)
             else
-                discr = max(b^2-3*a*gxp, 0.)
+                discr = max(b^2-3*a*gxp, zero(alpha))
                 alphatmp = (-b + sqrt(discr)) / (3.0*a)
             end
         end
