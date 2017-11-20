@@ -257,6 +257,8 @@ function _morethuente!(df,
         f = NLSolversBase.value_gradient!(df, x_new)
         gdf = NLSolversBase.gradient(df)
 
+        # Ensure that the step provides finite function values
+        # This is not part of the original FORTRAN code
         iterfinite = 0
         while (!isfinite(f) || any(.!isfinite.(gdf))) && iterfinite < iterfinitemax
             stp = 0.5*stp
