@@ -218,11 +218,15 @@ function _morethuente!(df,
 
     # START: Ensure that the initial step provides finite function values
     # This is not part of the original FORTRAN code
-    @. x_new = x + stp*s
+    if !isfinite(stp)
+        stp = one(T)
+    end
     stmin = stx
     stmax = stp + 4 * (stp - stx) # Why 4?
     stp = max(stp, stpmin)
     stp = min(stp, stpmax)
+
+    @. x_new = x + stp*s
 
     f = NLSolversBase.value_gradient!(df, x_new)
     gdf = NLSolversBase.gradient(df)
@@ -233,6 +237,8 @@ function _morethuente!(df,
         @. x_new = x + stp*s
         f = NLSolversBase.value_gradient!(df, x_new)
         gdf = NLSolversBase.gradient(df)
+        # Make stpmax = (3/2)*stp < 2stp in the first iteration below
+        stx = (7/8)*stp
     end
     # END: Ensure that the initial step provides finite function values
 
@@ -249,6 +255,13 @@ function _morethuente!(df,
             stmin = stx
             stmax = stp + 4 * (stp - stx) # Why 4?
         end
+
+        #
+        # Ensure stmin and stmax (used in cstep) don't violate stpmin and stpmax
+        # Not part of original FORTRAN translation
+        #
+        stmin = max(stpmin,stmin)
+        stmax = min(stpmax,stmax)
 
         #
         # Force the step to be within the bounds stpmax and stpmin
