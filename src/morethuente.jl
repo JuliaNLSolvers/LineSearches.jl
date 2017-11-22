@@ -496,7 +496,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       bound = true
       theta = 3 * (fx - f) / (stp - stx) + dgx + dg
       # Original code from FORTRAN implementation
-      # s = maxabs(theta, dgx, dg)
+      # s = maximum(abs,[theta, dgx, dg])
       # gamma = s * sqrt((theta / s)^2 - (dgx / s) * (dg / s))
       # The s cancels if you move it inside the sqrt?????
       gamma = sqrt(theta^2 - dgx * dg)
@@ -527,7 +527,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       bound = false
       theta = 3 * (fx - f) / (stp - stx) + dgx + dg
       # Original code from FORTRAN implementation
-      # s = maxabs(theta, dgx, dg)
+      # s = maximum(abs,[theta, dgx, dg])
       # gamma = s * sqrt((theta / s)^2 - (dgx / s) * (dg / s))
       # The s cancels if you move it inside the sqrt?????
       gamma = sqrt(theta^2 - dgx * dg)
@@ -563,7 +563,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       bound = true
       theta = 3 * (fx - f) / (stp - stx) + dgx + dg
       # Original code from FORTRAN implementation
-      # s = maxabs(theta, dgx, dg)
+      # s = maximum(abs,[theta, dgx, dg])
       # #
       # # The case gamma = 0 only arises if the cubic does not tend
       # # to infinity in the direction of the step
@@ -613,7 +613,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       if bracketed
          theta = 3 * (f - fy) / (sty - stp) + dgy + dg
          # Original code from FORTRAN implementation
-         # s = maxabs(theta, dgy, dg)
+         # s = maximum(abs,[theta, dgy, dg])
          # gamma = s * sqrt((theta / s)^2 - (dgy / s) * (dg / s))
          # The s cancels if you move it inside the sqrt?????
          gamma = sqrt(theta^2 - dgy * dg)
