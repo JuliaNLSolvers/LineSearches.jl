@@ -134,8 +134,8 @@
 
 
 @with_kw struct MoreThuente{T}
-    f_tol::T = 1e-4
-    gtol::T = 0.9
+    f_tol::T = 1e-4 # c_1 Wolfe sufficient decrease condition
+    gtol::T = 0.9   # c_2 Wolfe curvature condition
     x_tol::T = 1e-8
     stpmin::T = 1e-16
     stpmax::T = 65536.0
@@ -160,10 +160,11 @@ function _morethuente!(df,
                       x_tol::Real = 1e-8,
                       stpmin::Real = 1e-16,
                       stpmax::Real = 65536.0,
-                      maxfev::Integer = 100) where T
+                       maxfev::Integer = 100) where T
     if norm(s) == 0
         Base.error("Step direction is zero.")
     end
+    iterfinitemax = -log2(eps(T))
     info = 0
     info_cstep = 1 # Info from step
 
@@ -251,18 +252,27 @@ function _morethuente!(df,
         # Evaluate the function and gradient at stp
         # and compute the directional derivative.
         #
-
-        for i in 1:n
-            x_new[i] = x[i] + stp * s[i]
-        end
+        @. x_new = x + stp*s
 
         f = NLSolversBase.value_gradient!(df, x_new)
-        if isapprox(norm(NLSolversBase.gradient(df)), 0) # TODO: this should be tested vs Optim's gtol
+        gdf = NLSolversBase.gradient(df)
+
+        # Ensure that the step provides finite function values
+        # This is not part of the original FORTRAN code
+        iterfinite = 0
+        while (!isfinite(f) || any(.!isfinite.(gdf))) && iterfinite < iterfinitemax
+            stp = 0.5*stp
+            @. x_new = x + stp*s
+            f = NLSolversBase.value_gradient!(df, x_new)
+            gdf = NLSolversBase.gradient(df)
+        end
+
+        if isapprox(norm(gdf), 0.0) # TODO: this should be tested vs Optim's g_tol
             return stp
         end
 
         nfev += 1 # This includes calls to f() and g!()
-        dg = vecdot(NLSolversBase.gradient(df), s)
+        dg = vecdot(gdf, s)
         push!(lsr, stp, f, dg)
         ftest1 = finit + stp * dgtest
 
@@ -392,7 +402,7 @@ end # function
 #
 # subroutine cstep(stx, fx, dgx,
 #                  sty, fy, dgy,
-#                  stp, f, dp,
+#                  stp, f, dg,
 #                  bracketed, stpmin, stpmax, info)
 #
 # where
@@ -408,7 +418,7 @@ end # function
 #   the interval of uncertainty. On output these parameters are
 #   updated appropriately
 #
-# stp, f, and dp are variables which specify the step,
+# stp, f, and dg are variables which specify the step,
 #   the function, and the derivative at the current step.
 #   If bracketed is set true then on input stp must be
 #   between stx and sty. On output stp is set to the new step
