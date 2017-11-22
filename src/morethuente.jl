@@ -216,6 +216,26 @@ function _morethuente!(df,
     fy = finit
     dgy = dginit
 
+    # START: Ensure that the initial step provides finite function values
+    # This is not part of the original FORTRAN code
+    @. x_new = x + stp*s
+    stmin = stx
+    stmax = stp + 4 * (stp - stx) # Why 4?
+    stp = max(stp, stpmin)
+    stp = min(stp, stpmax)
+
+    f = NLSolversBase.value_gradient!(df, x_new)
+    gdf = NLSolversBase.gradient(df)
+    iterfinite = 0
+    while (!isfinite(f) || any(.!isfinite.(gdf))) && iterfinite < iterfinitemax
+        iterfinite += 1
+        stp = 0.5*stp
+        @. x_new = x + stp*s
+        f = NLSolversBase.value_gradient!(df, x_new)
+        gdf = NLSolversBase.gradient(df)
+    end
+    # END: Ensure that the initial step provides finite function values
+
     while true
         #
         # Set the minimum and maximum steps to correspond
@@ -256,16 +276,6 @@ function _morethuente!(df,
 
         f = NLSolversBase.value_gradient!(df, x_new)
         gdf = NLSolversBase.gradient(df)
-
-        # Ensure that the step provides finite function values
-        # This is not part of the original FORTRAN code
-        iterfinite = 0
-        while (!isfinite(f) || any(.!isfinite.(gdf))) && iterfinite < iterfinitemax
-            stp = 0.5*stp
-            @. x_new = x + stp*s
-            f = NLSolversBase.value_gradient!(df, x_new)
-            gdf = NLSolversBase.gradient(df)
-        end
 
         if isapprox(norm(gdf), 0.0) # TODO: this should be tested vs Optim's g_tol
             return stp
