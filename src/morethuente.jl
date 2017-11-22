@@ -495,8 +495,11 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       info = 1
       bound = true
       theta = 3 * (fx - f) / (stp - stx) + dgx + dg
-      s = max(theta, dgx, dg)
-      gamma = s * sqrt((theta / s)^2 - (dgx / s) * (dg / s))
+      # Original code from FORTRAN implementation
+      # s = maxabs(theta, dgx, dg)
+      # gamma = s * sqrt((theta / s)^2 - (dgx / s) * (dg / s))
+      # The s cancels if you move it inside the sqrt?????
+      gamma = sqrt(theta^2 - dgx * dg)
       if stp < stx
           gamma = -gamma
       end
@@ -504,11 +507,11 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       q = gamma - dgx + gamma + dg
       r = p / q
       stpc = stx + r * (stp - stx)
-      stpq = stx + ((dgx / ((fx - f) / (stp - stx) + dgx)) / 2) * (stp - stx)
+      stpq = stx + 0.5 * (dgx / ((fx - f) / (stp - stx) + dgx)) * (stp - stx)
       if abs(stpc - stx) < abs(stpq - stx)
          stpf = stpc
       else
-         stpf = stpc + (stpq - stpc) / 2
+         stpf = 0.5*(stpc + stpq)
       end
       bracketed = true
 
@@ -523,8 +526,12 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       info = 2
       bound = false
       theta = 3 * (fx - f) / (stp - stx) + dgx + dg
-      s = max(theta, dgx, dg)
-      gamma = s * sqrt((theta / s)^2 - (dgx / s) * (dg / s))
+      # Original code from FORTRAN implementation
+      # s = maxabs(theta, dgx, dg)
+      # gamma = s * sqrt((theta / s)^2 - (dgx / s) * (dg / s))
+      # The s cancels if you move it inside the sqrt?????
+      gamma = sqrt(theta^2 - dgx * dg)
+
       if stp > stx
          gamma = -gamma
       end
@@ -555,12 +562,16 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       info = 3
       bound = true
       theta = 3 * (fx - f) / (stp - stx) + dgx + dg
-      s = max(theta, dgx, dg)
-      #
-      # The case gamma = 0 only arises if the cubic does not tend
-      # to infinity in the direction of the step
-      #
-      gamma = s * sqrt(max(0.0, (theta / s)^2 - (dgx / s) * (dg / s)))
+      # Original code from FORTRAN implementation
+      # s = maxabs(theta, dgx, dg)
+      # #
+      # # The case gamma = 0 only arises if the cubic does not tend
+      # # to infinity in the direction of the step
+      # #
+      # gamma = s * sqrt(max(0.0, (theta / s)^2 - (dgx / s) * (dg / s)))
+      # The s cancels if you move it inside the sqrt?????
+      gamma = sqrt(max(zero(theta), theta^2 - dgx * dg))
+
       if stp > stx
           gamma = -gamma
       end
@@ -601,8 +612,12 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       bound = false
       if bracketed
          theta = 3 * (f - fy) / (sty - stp) + dgy + dg
-         s = max(theta, dgy, dg)
-         gamma = s * sqrt((theta / s)^2 - (dgy / s) * (dg / s))
+         # Original code from FORTRAN implementation
+         # s = maxabs(theta, dgy, dg)
+         # gamma = s * sqrt((theta / s)^2 - (dgy / s) * (dg / s))
+         # The s cancels if you move it inside the sqrt?????
+         gamma = sqrt(theta^2 - dgy * dg)
+
          if stp > sty
              gamma = -gamma
          end
