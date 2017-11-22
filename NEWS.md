@@ -1,3 +1,6 @@
+# LineSearches v3.2.2 release notes
+- Ensure finite initial values and fix typos in original MoreThuente translation from MATLAB/FORTRAN implementations. See [#75](https://github.com/anriseth/LineSearches.jl/pull/75)
+
 # LineSearches v3.2.0 release notes
 - Introduce initial step length procedures. See [#70](https://github.com/anriseth/LineSearches.jl/pull/70)
 
