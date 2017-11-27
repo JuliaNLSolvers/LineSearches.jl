@@ -216,6 +216,32 @@ function _morethuente!(df,
     fy = finit
     dgy = dginit
 
+    # START: Ensure that the initial step provides finite function values
+    # This is not part of the original FORTRAN code
+    if !isfinite(stp)
+        stp = one(T)
+    end
+    stmin = stx
+    stmax = stp + 4 * (stp - stx) # Why 4?
+    stp = max(stp, stpmin)
+    stp = min(stp, stpmax)
+
+    @. x_new = x + stp*s
+
+    f = NLSolversBase.value_gradient!(df, x_new)
+    gdf = NLSolversBase.gradient(df)
+    iterfinite = 0
+    while (!isfinite(f) || any(.!isfinite.(gdf))) && iterfinite < iterfinitemax
+        iterfinite += 1
+        stp = 0.5*stp
+        @. x_new = x + stp*s
+        f = NLSolversBase.value_gradient!(df, x_new)
+        gdf = NLSolversBase.gradient(df)
+        # Make stpmax = (3/2)*stp < 2stp in the first iteration below
+        stx = (7/8)*stp
+    end
+    # END: Ensure that the initial step provides finite function values
+
     while true
         #
         # Set the minimum and maximum steps to correspond
@@ -229,6 +255,13 @@ function _morethuente!(df,
             stmin = stx
             stmax = stp + 4 * (stp - stx) # Why 4?
         end
+
+        #
+        # Ensure stmin and stmax (used in cstep) don't violate stpmin and stpmax
+        # Not part of original FORTRAN translation
+        #
+        stmin = max(stpmin,stmin)
+        stmax = min(stpmax,stmax)
 
         #
         # Force the step to be within the bounds stpmax and stpmin
@@ -256,16 +289,6 @@ function _morethuente!(df,
 
         f = NLSolversBase.value_gradient!(df, x_new)
         gdf = NLSolversBase.gradient(df)
-
-        # Ensure that the step provides finite function values
-        # This is not part of the original FORTRAN code
-        iterfinite = 0
-        while (!isfinite(f) || any(.!isfinite.(gdf))) && iterfinite < iterfinitemax
-            stp = 0.5*stp
-            @. x_new = x + stp*s
-            f = NLSolversBase.value_gradient!(df, x_new)
-            gdf = NLSolversBase.gradient(df)
-        end
 
         if isapprox(norm(gdf), 0.0) # TODO: this should be tested vs Optim's g_tol
             return stp
@@ -472,7 +495,8 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       info = 1
       bound = true
       theta = 3 * (fx - f) / (stp - stx) + dgx + dg
-      s = max(theta, dgx, dg)
+      # Use s to prevent overflow/underflow of theta^2 and dgx * dg
+      s = max(abs(theta), abs(dgx), abs(dg))
       gamma = s * sqrt((theta / s)^2 - (dgx / s) * (dg / s))
       if stp < stx
           gamma = -gamma
@@ -481,11 +505,11 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       q = gamma - dgx + gamma + dg
       r = p / q
       stpc = stx + r * (stp - stx)
-      stpq = stx + ((dgx / ((fx - f) / (stp - stx) + dgx)) / 2) * (stp - stx)
+      stpq = stx + 0.5 * (dgx / ((fx - f) / (stp - stx) + dgx)) * (stp - stx)
       if abs(stpc - stx) < abs(stpq - stx)
          stpf = stpc
       else
-         stpf = stpc + (stpq - stpc) / 2
+         stpf = 0.5*(stpc + stpq)
       end
       bracketed = true
 
@@ -500,8 +524,10 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       info = 2
       bound = false
       theta = 3 * (fx - f) / (stp - stx) + dgx + dg
-      s = max(theta, dgx, dg)
+      # Use s to prevent overflow/underflow of theta^2 and dgx * dg
+      s = max(abs(theta), abs(dgx), abs(dg))
       gamma = s * sqrt((theta / s)^2 - (dgx / s) * (dg / s))
+
       if stp > stx
          gamma = -gamma
       end
@@ -532,12 +558,15 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       info = 3
       bound = true
       theta = 3 * (fx - f) / (stp - stx) + dgx + dg
-      s = max(theta, dgx, dg)
+      # Use s to prevent overflow/underflow of theta^2 and dgx * dg
+      s = max(abs(theta), abs(dgx), abs(dg))
       #
       # The case gamma = 0 only arises if the cubic does not tend
       # to infinity in the direction of the step
       #
-      gamma = s * sqrt(max(0.0, (theta / s)^2 - (dgx / s) * (dg / s)))
+      #
+      gamma = (s > zero(s)) ? s * sqrt((theta / s)^2 - (dgx / s) * (dg / s)) : zero(s)
+
       if stp > stx
           gamma = -gamma
       end
@@ -578,8 +607,10 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       bound = false
       if bracketed
          theta = 3 * (f - fy) / (sty - stp) + dgy + dg
-         s = max(theta, dgy, dg)
+         # Use s to prevent overflow/underflow of theta^2 and dgy * dg
+         s = max(abs(theta), abs(dgy), abs(dg))
          gamma = s * sqrt((theta / s)^2 - (dgy / s) * (dg / s))
+
          if stp > sty
              gamma = -gamma
          end
