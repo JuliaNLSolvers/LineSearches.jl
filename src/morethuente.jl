@@ -230,6 +230,7 @@ function _morethuente!(df,
 
     f = NLSolversBase.value_gradient!(df, x_new)
     gdf = NLSolversBase.gradient(df)
+    nfev += 1 # This includes calls to f() and g!()
     iterfinite = 0
     while (!isfinite(f) || any(.!isfinite.(gdf))) && iterfinite < iterfinitemax
         iterfinite += 1
@@ -237,6 +238,8 @@ function _morethuente!(df,
         @. x_new = x + stp*s
         f = NLSolversBase.value_gradient!(df, x_new)
         gdf = NLSolversBase.gradient(df)
+        nfev += 1 # This includes calls to f() and g!()
+
         # Make stpmax = (3/2)*stp < 2stp in the first iteration below
         stx = (7/8)*stp
     end
@@ -289,12 +292,12 @@ function _morethuente!(df,
 
         f = NLSolversBase.value_gradient!(df, x_new)
         gdf = NLSolversBase.gradient(df)
+        nfev += 1 # This includes calls to f() and g!()
 
         if isapprox(norm(gdf), 0.0) # TODO: this should be tested vs Optim's g_tol
             return stp
         end
 
-        nfev += 1 # This includes calls to f() and g!()
         dg = vecdot(gdf, s)
         push!(lsr, stp, f, dg)
         ftest1 = finit + stp * dgtest
