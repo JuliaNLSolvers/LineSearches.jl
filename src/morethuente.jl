@@ -567,8 +567,8 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       # The case gamma = 0 only arises if the cubic does not tend
       # to infinity in the direction of the step
       #
-      #
-      gamma = (s > zero(s)) ? s * sqrt((theta / s)^2 - (dgx / s) * (dg / s)) : zero(s)
+      # # Use NaNMath in case s == zero(s)
+      gamma = s * sqrt(NaNMath.max(zero(s), (theta / s)^2 - (dgx / s) * (dg / s)))
 
       if stp > stx
           gamma = -gamma
