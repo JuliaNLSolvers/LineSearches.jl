@@ -54,10 +54,13 @@ Results of Optimization Algorithm
  * Minimum: 3.081488e-31
  * Iterations: 14
  * Convergence: true
-   * |x - x'| < 1.0e-32: false
-   * |f(x) - f(x')| / |f(x)| < 1.0e-32: false
-   * |g(x)| < 1.0e-08: true
-   * f(x) > f(x'): false
+   * |x - x'| ≤ 1.0e-32: false 
+     |x - x'| = 3.06e-09 
+   * |f(x) - f(x')| ≤ 1.0e-32 |f(x)|: false
+     |f(x) - f(x')| = 3.03e+13 |f(x)|
+   * |g(x)| ≤ 1.0e-08: true 
+     |g(x)| = 1.11e-15 
+   * Stopped by an increasing objective: false
    * Reached Maximum Number of Iterations: false
  * Objective Calls: 44
  * Gradient Calls: 44
@@ -79,10 +82,13 @@ Results of Optimization Algorithm
  * Minimum: 1.667699e-17
  * Iterations: 14
  * Convergence: true
-   * |x - x'| < 1.0e-32: false
-   * |f(x) - f(x')| / |f(x)| < 1.0e-32: false
-   * |g(x)| < 1.0e-08: true
-   * f(x) > f(x'): false
+   * |x - x'| ≤ 1.0e-32: false 
+     |x - x'| = 1.36e-05 
+   * |f(x) - f(x')| ≤ 1.0e-32 |f(x)|: false
+     |f(x) - f(x')| = 1.21e+08 |f(x)|
+   * |g(x)| ≤ 1.0e-08: true 
+     |g(x)| = 4.16e-09 
+   * Stopped by an increasing objective: false
    * Reached Maximum Number of Iterations: false
  * Objective Calls: 19
  * Gradient Calls: 15
@@ -99,7 +105,7 @@ using Optim, LineSearches
 prob = Optim.UnconstrainedProblems.examples["Rosenbrock"]
 
 algo_st = Newton(alphaguess = InitialStatic(), linesearch = HagerZhang())
-res_st = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_ts)
+res_st = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_st)
 ```
 
 This gives the result
@@ -111,10 +117,13 @@ Results of Optimization Algorithm
  * Minimum: 3.081488e-31
  * Iterations: 14
  * Convergence: true
-   * |x - x'| < 1.0e-32: false
-   * |f(x) - f(x')| / |f(x)| < 1.0e-32: false
-   * |g(x)| < 1.0e-08: true
-   * f(x) > f(x'): false
+   * |x - x'| ≤ 1.0e-32: false 
+     |x - x'| = 3.06e-09 
+   * |f(x) - f(x')| ≤ 1.0e-32 |f(x)|: false
+     |f(x) - f(x')| = 3.03e+13 |f(x)|
+   * |g(x)| ≤ 1.0e-08: true 
+     |g(x)| = 1.11e-15 
+   * Stopped by an increasing objective: false
    * Reached Maximum Number of Iterations: false
  * Objective Calls: 44
  * Gradient Calls: 44
@@ -136,13 +145,13 @@ Results of Optimization Algorithm
  * Minimum: 6.535152e-18
  * Iterations: 15
  * Convergence: true
-   * |x - x'| < 1.0e-32: false
-     |x - x'| = 1.09e-05
-   * |f(x) - f(x')| / |f(x)| < 1.0e-32: false
-     |f(x) - f(x')| / |f(x)| = 8.61e+08
-   * |g(x)| < 1.0e-08: true
-     |g(x)| = 4.41e-09
-   * stopped by an increasing objective: false
+   * |x - x'| ≤ 1.0e-32: false 
+     |x - x'| = 1.09e-05 
+   * |f(x) - f(x')| ≤ 1.0e-32 |f(x)|: false
+     |f(x) - f(x')| = 8.61e+08 |f(x)|
+   * |g(x)| ≤ 1.0e-08: true 
+     |g(x)| = 4.41e-09 
+   * Stopped by an increasing objective: false
    * Reached Maximum Number of Iterations: false
  * Objective Calls: 36
  * Gradient Calls: 21
