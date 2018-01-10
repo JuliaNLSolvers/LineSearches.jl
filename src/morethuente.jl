@@ -135,7 +135,7 @@
 
 @with_kw struct MoreThuente{T}
     f_tol::T = 1e-4 # c_1 Wolfe sufficient decrease condition
-    gtol::T = 0.9   # c_2 Wolfe curvature condition
+    gtol::T = 0.9   # c_2 Wolfe curvature condition (Recommend 0.1 for GradientDescent)
     x_tol::T = 1e-8
     stpmin::T = 1e-16
     stpmax::T = 65536.0

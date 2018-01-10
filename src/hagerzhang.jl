@@ -60,8 +60,10 @@ const BISECT      = one64 << 12
 const BARRIERCOEF = one64 << 13
 display_nextbit = 14
 
-const DEFAULTDELTA = 0.1
-const DEFAULTSIGMA = 0.9
+
+const DEFAULTDELTA = 0.1 # Values taken from HZ paper (Nocedal & Wright recommends 0.01?)
+const DEFAULTSIGMA = 0.9 # Values taken from HZ paper (Nocedal & Wright recommends 0.1 for GradientDescent)
+
 
 # NOTE:
 #   [1] The type `T` in the `HagerZhang{T}` need not be the same `T` as in
@@ -79,8 +81,8 @@ Conjugate gradient line search implementation from:
     Transactions on Mathematical Software 32: 113–137.
 """
 @with_kw struct HagerZhang{T}
-   delta::T = DEFAULTDELTA
-   sigma::T = DEFAULTSIGMA
+   delta::T = DEFAULTDELTA # c_1 Wolfe sufficient decrease condition
+   sigma::T = DEFAULTSIGMA # c_2 Wolfe curvature condition (Recommend 0.1 for GradientDescent)
    alphamax::T = Inf
    rho::T = 5.0
    epsilon::T = 1e-6
