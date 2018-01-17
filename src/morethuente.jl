@@ -161,7 +161,7 @@ function _morethuente!(df,
                       stpmin::Real = 1e-16,
                       stpmax::Real = 65536.0,
                        maxfev::Integer = 100) where T
-    if norm(s) == 0
+    if vecnorm(s) == 0
         Base.error("Step direction is zero.")
     end
     iterfinitemax = -log2(eps(T))
@@ -294,7 +294,7 @@ function _morethuente!(df,
         gdf = NLSolversBase.gradient(df)
         nfev += 1 # This includes calls to f() and g!()
 
-        if isapprox(norm(gdf), 0.0) # TODO: this should be tested vs Optim's g_tol
+        if isapprox(vecnorm(gdf), 0.0) # TODO: this should be tested vs Optim's g_tol
             return stp
         end
 
