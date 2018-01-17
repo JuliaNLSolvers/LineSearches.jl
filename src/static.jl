@@ -18,7 +18,7 @@ end
 function (ls::Static)(df, x, s, x_scratch, lsr, alpha, mayterminate)
     # NOTE: alpha is ignored here, and we use ls.alpha instead
 
-    if ls.scaled == true && (ns = norm(s)) > zero(typeof(ls.alpha))
+    if ls.scaled == true && (ns = vecnorm(s)) > zero(typeof(ls.alpha))
         scaledalpha = min(ls.alpha, ns) / ns
         retval = _static!(df, x, s, x_scratch, lsr, scaledalpha, mayterminate)
     else
