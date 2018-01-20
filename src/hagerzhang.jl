@@ -336,7 +336,7 @@ function secant2!(df,
     if !(dphia < 0 && dphib >= 0)
         error(string("Search direction is not a direction of descent; ",
                      "this error may indicate that user-provided derivatives are inaccurate. ",
-                      @sprintf "(dphia = %f; dphib = %f)" dphia dphib))
+                      "(dphia = $dphia, dphib = $dphib)"))
     end
     c = secant(a, b, dphia, dphib)
     if display & SECANT2 > 0
