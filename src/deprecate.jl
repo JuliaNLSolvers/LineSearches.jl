@@ -6,8 +6,8 @@ const dep_alphatry = Ref(false)
 const dep_alphainit = Ref(false)
 
 function alphainit(alpha::Real,
-                   x::Array{T},
-                   gr::Array,
+                   x::AbstractArray{T},
+                   gr::AbstractArray,
                    f_x::Real,
                    psi0::T = convert(T,0.01)) where T
     if dep_alphainit[] == false
@@ -22,9 +22,9 @@ end
 
 function alphatry(alpha::T,
                   df,
-                  x::Array,
-                  s::Array,
-                  xtmp::Array,
+                  x::AbstractArray,
+                  s::AbstractArray,
+                  xtmp::AbstractArray,
                   lsr::LineSearchResults,
                   psi1::Real = convert(T,0.2),
                   psi2::Real = convert(T,2),

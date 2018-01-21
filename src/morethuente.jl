@@ -66,18 +66,18 @@
 #  n is a positive integer input variable set to the number
 #   of variables.
 #
-# x is an array of length n. On input it must contain the
+# x is an Abstractarray of length n. On input it must contain the
 #   base point for the line search. On output it contains
 #    x + stp * s.
 #
 # f is a variable. On input it must contain the value of f
 #    at x. On output it contains the value of f at x + stp * s.
 #
-# g is an array of length n. On input it must contain the
+# g is an Abstractarray of length n. On input it must contain the
 #    gradient of f at x. On output it contains the gradient
 #    of f at x + stp * s.
 #
-# s is an input array of length n which specifies the
+# s is an input Abstractarray of length n which specifies the
 #    search direction.
 #
 # stp is a nonnegative variable. On input stp contains an
@@ -148,9 +148,9 @@ end
                    stpmax=ls.stpmax, maxfev=ls.maxfev)
 
 function _morethuente!(df,
-                      x::Array{T},
-                      s::Array{T},
-                      x_new::Array{T},
+                      x::AbstractArray{T},
+                      s::AbstractArray{T},
+                      x_new::AbstractArray{T},
                       lsr::LineSearchResults{T},
                       stp::Real,
                       mayterminate::Bool;

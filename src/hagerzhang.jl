@@ -96,9 +96,9 @@ end
 
 
 function _hagerzhang!(df,
-                     x::Array{T},
-                     s::Array{T},
-                     xtmp::Array{T},
+                     x::AbstractArray{T},
+                     s::AbstractArray{T},
+                     xtmp::AbstractArray{T},
                      lsr::LineSearchResults{T},
                      c::Real,
                      mayterminate::Bool,
@@ -315,9 +315,9 @@ function secant(lsr::LineSearchResults, ia::Integer, ib::Integer)
 end
 # phi
 function secant2!(df,
-                  x::Array,
-                  s::Array,
-                  xtmp::Array,
+                  x::AbstractArray,
+                  s::AbstractArray,
+                  xtmp::AbstractArray,
                   lsr::LineSearchResults{T},
                   ia::Integer,
                   ib::Integer,
@@ -396,9 +396,9 @@ end
 # around the minimum (as defined by HZ, eq. 29)
 # b will be the upper bound, and a the lower bound
 function update!(df,
-                 x::Array,
-                 s::Array,
-                 xtmp::Array,
+                 x::AbstractArray,
+                 s::AbstractArray,
+                 xtmp::AbstractArray,
                  lsr::LineSearchResults,
                  ia::Integer,
                  ib::Integer,
@@ -445,9 +445,9 @@ end
 
 # HZ, stage U3 (with theta=0.5)
 function bisect!(df,
-                 x::Array,
-                 s::Array,
-                 xtmp::Array,
+                 x::AbstractArray,
+                 s::AbstractArray,
+                 xtmp::AbstractArray,
                  lsr::LineSearchResults{T},
                  ia::Integer,
                  ib::Integer,
@@ -487,10 +487,10 @@ end
 
 # Define one-parameter function for line searches
 function linefunc!(df,
-                   x::Array,
-                   s::Array,
+                   x::AbstractArray,
+                   s::AbstractArray,
                    alpha::Real,
-                   xtmp::Array,
+                   xtmp::AbstractArray,
                    calc_grad::Bool)
     for i = 1:length(x)
         xtmp[i] = x[i] + alpha * s[i]
@@ -549,9 +549,9 @@ end
 # Pick the initial step size (HZ #I1-I2)
 function _hzI12(alpha::T,
                 df,
-                x::Array{T},
-                s::Array{T},
-                xtmp::Array{T},
+                x::AbstractArray{T},
+                s::AbstractArray{T},
+                xtmp::AbstractArray{T},
                 lsr::LineSearchResults,
                 psi1::Real = convert(T,0.2),
                 psi2::Real = convert(T,2.0),
@@ -622,8 +622,8 @@ function _hzI12(alpha::T,
 end
 
 # Generate initial guess for step size (HZ, stage I0)
-function _hzI0(x::Array{T},
-               gr::Array{T},
+function _hzI0(x::AbstractArray{T},
+               gr::AbstractArray{T},
                f_x::T,
                psi0::T = convert(T,0.01)) where T
     alpha = one(T)

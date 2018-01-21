@@ -24,9 +24,9 @@ end
         _strongwolfe!(args...; c1=ls.c1, c2=ls.c2, rho=ls.rho)
 
 function _strongwolfe!(df,
-                      x::Array{T},
-                      p::Array{T},
-                      x_new::Array{T},
+                      x::AbstractArray{T},
+                      p::AbstractArray{T},
+                      x_new::AbstractArray{T},
                       lsr::LineSearchResults{T},
                       alpha0::Real,
                       mayterminate::Bool;
@@ -107,9 +107,9 @@ function zoom(a_lo::Real,
               phiprime_0::Real,
               phi_0::Real,
               df,
-              x::Array,
-              p::Array,
-              x_new::Array,
+              x::AbstractArray,
+              p::AbstractArray,
+              x_new::AbstractArray,
               c1::Real = 1e-4,
               c2::Real = 0.9)
 
