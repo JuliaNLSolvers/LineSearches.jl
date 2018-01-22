@@ -36,15 +36,15 @@ function _static!(df,
                 mayterminate::Bool = false) where T
     @assert alpha > 0
     push!(lsr.alpha, alpha)
-
+    
     # Count number of parameters
     n = length(x)
     # Move a distance of alpha in the direction of s
     x_scratch .= x .+ alpha.*s
-
+    
     # Evaluate f(x) at new position
     f_x_scratch = NLSolversBase.value!(df, x_scratch)
     push!(lsr.value, f_x_scratch)
-
+    
     return alpha
 end
