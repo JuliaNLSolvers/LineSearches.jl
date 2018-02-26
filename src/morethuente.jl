@@ -42,7 +42,7 @@
 #     The subroutine statement is
 #
 #        subroutine cvsrch(df,n,x,f,s,stp,f_tol,gtol,x_tol,
-#                          stpmin,stpmax,maxfev,info,nfev,wa)
+#                          alphamin,alphamax,maxfev,info,nfev,wa)
 #
 #     where
 #
@@ -92,7 +92,7 @@
 #    when the relative width of the interval of uncertainty
 #   is at most x_tol.
 #
-# stpmin and stpmax are nonnegative input variables which
+# alphamin and alphamax are nonnegative input variables which
 #   specify lower and upper bounds for the step.
 #
 # maxfev is a positive integer input variable. Termination
@@ -111,9 +111,9 @@
 #
 #   info = 3  Number of calls to df has reached maxfev.
 #
-#   info = 4  The step is at the lower bound stpmin.
+#   info = 4  The step is at the lower bound alphamin.
 #
-#   info = 5  The step is at the upper bound stpmax.
+#   info = 5  The step is at the upper bound alphamax.
 #
 #   info = 6  Rounding errors prevent further progress.
 #              There may not be a step which satisfies the
@@ -137,22 +137,18 @@
     f_tol::T = 1e-4 # c_1 Wolfe sufficient decrease condition
     gtol::T = 0.9   # c_2 Wolfe curvature condition (Recommend 0.1 for GradientDescent)
     x_tol::T = 1e-8
-    stpmin::T = 1e-16
-    stpmax::T = 65536.0
+    alphamin::T = 1e-16
+    alphamax::T = 65536.0
     maxfev::Int = 100
 end
-
-(ls::MoreThuente)(args...) =
-       _morethuente!(args...;
-                   f_tol=ls.f_tol, gtol=ls.gtol, x_tol=ls.x_tol, stpmin=ls.stpmin,
-                   stpmax=ls.stpmax, maxfev=ls.maxfev)
 
 function _morethuente!(df,
                       x::AbstractArray{T},
                       s::AbstractArray{T},
                       x_new::AbstractArray{T},
-                      lsr::LineSearchResults{T},
-                      stp::Real,
+                      phi_0,
+                      dphi_0,
+                      alpha::Real,
                       mayterminate::Bool;
                       n::Integer = length(x),
                       f_tol::Real = 1e-4,
@@ -161,6 +157,9 @@ function _morethuente!(df,
                       stpmin::Real = 1e-16,
                       stpmax::Real = 65536.0,
                        maxfev::Integer = 100) where T
+
+    alphamin = stpmin # rename, should deprecate keyword
+    alphamax = stpmax # rename, should deprecate keyword
     if vecnorm(s) == 0
         Base.error("Step direction is zero.")
     end
@@ -172,16 +171,16 @@ function _morethuente!(df,
     # Check the input parameters for errors.
     #
 
-    if n <= 0 || stp <= 0.0 || f_tol < 0.0 || gtol < 0.0 ||
-        x_tol < 0.0 || stpmin < 0.0 || stpmax < stpmin || maxfev <= 0
+    if n <= 0 || alpha <= 0.0 || f_tol < 0.0 || gtol < 0.0 ||
+        x_tol < 0.0 || alphamin < 0.0 || alphamax < alphamin || maxfev <= 0
         throw(ArgumentError("Invalid parameters to morethuente"))
     end
 
 
     # read finit and slope from LineSearchResults
-    f = lsr.value[end]
-    dginit = lsr.slope[end] # dot(gradient(df),s)
-    if dginit >= 0.0
+    f = phi_0
+    dphi_0 = dphi_0 # dot(gradient(df),s)
+    if dphi_0 >= 0.0
         throw(ArgumentError("Search direction is not a direction of descent"))
     end
 
@@ -193,8 +192,8 @@ function _morethuente!(df,
     stage1 = true
     nfev = 0
     finit = f
-    dgtest = f_tol * dginit
-    width = stpmax - stpmin
+    dgtest = f_tol * dphi_0
+    width = alphamax - alphamin
     width1 = 2 * width
     copy!(x_new, x)
     # Keep this across calls
@@ -205,28 +204,28 @@ function _morethuente!(df,
     # The variables sty, fy, dgy contain the value of the step,
     # function, and derivative at the other endpoint of
     # the interval of uncertainty.
-    # The variables stp, f, dg contain the values of the step,
+    # The variables alpha, f, dg contain the values of the step,
     # function, and derivative at the current step.
     #
 
     stx = 0.0
     fx = finit
-    dgx = dginit
+    dgx = dphi_0
     sty = 0.0
     fy = finit
-    dgy = dginit
+    dgy = dphi_0
 
     # START: Ensure that the initial step provides finite function values
     # This is not part of the original FORTRAN code
-    if !isfinite(stp)
-        stp = one(T)
+    if !isfinite(alpha)
+        alpha = one(T)
     end
     stmin = stx
-    stmax = stp + 4 * (stp - stx) # Why 4?
-    stp = max(stp, stpmin)
-    stp = min(stp, stpmax)
+    stmax = alpha + 4 * (alpha - stx) # Why 4?
+    alpha = max(alpha, alphamin)
+    alpha = min(alpha, alphamax)
 
-    @. x_new = x + stp*s
+    @. x_new = x + alpha*s
 
     f = NLSolversBase.value_gradient!(df, x_new)
     gdf = NLSolversBase.gradient(df)
@@ -234,14 +233,14 @@ function _morethuente!(df,
     iterfinite = 0
     while (!isfinite(f) || any(.!isfinite.(gdf))) && iterfinite < iterfinitemax
         iterfinite += 1
-        stp = 0.5*stp
-        @. x_new = x + stp*s
+        alpha = 0.5*alpha
+        @. x_new = x + alpha*s
         f = NLSolversBase.value_gradient!(df, x_new)
         gdf = NLSolversBase.gradient(df)
         nfev += 1 # This includes calls to f() and g!()
 
-        # Make stpmax = (3/2)*stp < 2stp in the first iteration below
-        stx = (7/8)*stp
+        # Make stmax = (3/2)*alpha < 2alpha in the first iteration below
+        stx = (7/8)*alpha
     end
     # END: Ensure that the initial step provides finite function values
 
@@ -256,51 +255,51 @@ function _morethuente!(df,
             stmax = max(stx, sty)
         else
             stmin = stx
-            stmax = stp + 4 * (stp - stx) # Why 4?
+            stmax = alpha + 4 * (alpha - stx) # Why 4?
         end
 
         #
-        # Ensure stmin and stmax (used in cstep) don't violate stpmin and stpmax
+        # Ensure stmin and stmax (used in cstep) don't violate alphamin and alphamax
         # Not part of original FORTRAN translation
         #
-        stmin = max(stpmin,stmin)
-        stmax = min(stpmax,stmax)
+        stmin = max(alphamin,stmin)
+        stmax = min(alphamax,stmax)
 
         #
-        # Force the step to be within the bounds stpmax and stpmin
+        # Force the step to be within the bounds alphamax and alphamin
         #
 
-        stp = max(stp, stpmin)
-        stp = min(stp, stpmax)
+        alpha = max(alpha, alphamin)
+        alpha = min(alpha, alphamax)
 
         #
         # If an unusual termination is to occur then let
-        # stp be the lowest point obtained so far.
+        # alpha be the lowest point obtained so far.
         #
 
-        if (bracketed && (stp <= stmin || stp >= stmax)) ||
+        if (bracketed && (alpha <= stmin || alpha >= stmax)) ||
             nfev >= maxfev-1 || info_cstep == 0 ||
             (bracketed && stmax - stmin <= x_tol * stmax)
-            stp = stx
+            alpha = stx
         end
 
         #
-        # Evaluate the function and gradient at stp
+        # Evaluate the function and gradient at alpha
         # and compute the directional derivative.
         #
-        @. x_new = x + stp*s
+        @. x_new = x + alpha*s
 
         f = NLSolversBase.value_gradient!(df, x_new)
         gdf = NLSolversBase.gradient(df)
         nfev += 1 # This includes calls to f() and g!()
 
         if isapprox(vecnorm(gdf), 0.0) # TODO: this should be tested vs Optim's g_tol
-            return stp
+            return alpha
         end
 
         dg = vecdot(gdf, s)
-        push!(lsr, stp, f, dg)
-        ftest1 = finit + stp * dgtest
+
+        ftest1 = finit + alpha * dgtest
 
         #
         # Test for convergence.
@@ -308,13 +307,13 @@ function _morethuente!(df,
 
         # What does info_cstep stand for?
 
-        if (bracketed && (stp <= stmin || stp >= stmax)) || info_cstep == 0
+        if (bracketed && (alpha <= stmin || alpha >= stmax)) || info_cstep == 0
             info = 6
         end
-        if stp == stpmax && f <= ftest1 && dg <= dgtest
+        if alpha == alphamax && f <= ftest1 && dg <= dgtest
             info = 5
         end
-        if stp == stpmin && (f > ftest1 || dg >= dgtest)
+        if alpha == alphamin && (f > ftest1 || dg >= dgtest)
             info = 4
         end
         if nfev >= maxfev
@@ -323,7 +322,7 @@ function _morethuente!(df,
         if bracketed && stmax - stmin <= x_tol * stmax
             info = 2
         end
-        if f <= ftest1 && abs(dg) <= -gtol * dginit
+        if f <= ftest1 && abs(dg) <= -gtol * dphi_0
             info = 1
         end
 
@@ -332,7 +331,7 @@ function _morethuente!(df,
         #
 
         if info != 0
-            return stp
+            return alpha
         end
 
         #
@@ -340,7 +339,7 @@ function _morethuente!(df,
         # function has a nonpositive value and nonnegative derivative.
         #
 
-        if stage1 && f <= ftest1 && dg >= min(f_tol, gtol) * dginit
+        if stage1 && f <= ftest1 && dg >= min(f_tol, gtol) * dphi_0
             stage1 = false
         end
 
@@ -356,7 +355,7 @@ function _morethuente!(df,
             #
             # Define the modified function and derivative values.
             #
-            fm = f - stp * dgtest
+            fm = f - alpha * dgtest
             fxm = fx - stx * dgtest
             fym = fy - sty * dgtest
             dgm = dg - dgtest
@@ -368,10 +367,10 @@ function _morethuente!(df,
             #
             stx, fxm, dgxm,
             sty, fym, dgym,
-            stp, fm, dgm,
+            alpha, fm, dgm,
             bracketed, info_cstep =
                 cstep(stx, fxm, dgxm, sty, fym, dgym,
-                      stp, fm, dgm, bracketed, stmin, stmax)
+                      alpha, fm, dgm, bracketed, stmin, stmax)
             #
             # Reset the function and gradient values for f.
             #
@@ -386,10 +385,10 @@ function _morethuente!(df,
             #
             stx, fx, dgx,
             sty, fy, dgy,
-            stp, f, dg,
+            alpha, f, dg,
             bracketed, info_cstep =
                 cstep(stx, fx, dgx, sty, fy, dgy,
-                      stp, f, dg, bracketed, stmin, stmax)
+                      alpha, f, dg, bracketed, stmin, stmax)
         end
 
         #
@@ -399,7 +398,7 @@ function _morethuente!(df,
 
         if bracketed
             if abs(sty - stx) >= 0.66 * width1
-                stp = stx + 0.5 * (sty - stx)
+                alpha = stx + 0.5 * (sty - stx)
             end
             width1 = width
             width = abs(sty - stx)
@@ -429,7 +428,7 @@ end # function
 # subroutine cstep(stx, fx, dgx,
 #                  sty, fy, dgy,
 #                  stp, f, dg,
-#                  bracketed, stpmin, stpmax, info)
+#                  bracketed, alphamin, alphamax, info)
 #
 # where
 #
@@ -454,7 +453,7 @@ end # function
 #   then on input bracketed must be set false. If the minimizer
 #   is bracketed then on output bracketed is set true
 #
-# stpmin and stpmax are input variables which specify lower
+# alphamin and alphamax are input variables which specify lower
 #   and upper bounds for the step
 #
 # info is an integer output variable set as follows:
@@ -468,7 +467,7 @@ end # function
 function cstep(stx::Real, fx::Real, dgx::Real,
                sty::Real, fy::Real, dgy::Real,
                stp::Real, f::Real, dg::Real,
-               bracketed::Bool, stpmin::Real, stpmax::Real)
+               bracketed::Bool, alphamin::Real, alphamax::Real)
 
    info = 0
 
@@ -477,7 +476,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    #
 
    if (bracketed && (stp <= min(stx, sty) || stp >= max(stx, sty))) ||
-        dgx * (stp - stx) >= 0.0 || stpmax < stpmin
+        dgx * (stp - stx) >= 0.0 || alphamax < alphamin
       throw(ArgumentError("Minimizer not bracketed"))
    end
 
@@ -552,7 +551,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    # The cubic step is only used if the cubic tends to infinity
    # in the direction of the step or if the minimum of the cubic
    # is beyond stp. Otherwise the cubic step is defined to be
-   # either stpmin or stpmax. The quadratic (secant) step is also
+   # either alphamin or alphamax. The quadratic (secant) step is also
    # computed and if the minimum is bracketed then the the step
    # closest to stx is taken, else the step farthest away is taken
    #
@@ -579,9 +578,9 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       if r < 0.0 && gamma != 0.0
          stpc = stp + r * (stx - stp)
       elseif stp > stx
-         stpc = stpmax
+         stpc = alphamax
       else
-         stpc = stpmin
+         stpc = alphamin
       end
       stpq = stp + (dg / (dg - dgx)) * (stx - stp)
       if bracketed
@@ -602,7 +601,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    # Fourth case. A lower function value, derivatives of the
    # same sign, and the magnitude of the derivative does
    # not decrease. If the minimum is not bracketed, the step
-   # is either stpmin or stpmax, else the cubic step is taken
+   # is either alphamin or alphamax, else the cubic step is taken
    #
 
    else
@@ -623,9 +622,9 @@ function cstep(stx::Real, fx::Real, dgx::Real,
          stpc = stp + r * (sty - stp)
          stpf = stpc
       elseif stp > stx
-         stpf = stpmax
+         stpf = alphamax
       else
-         stpf = stpmin
+         stpf = alphamin
       end
    end
 
@@ -653,8 +652,8 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    # Compute the new step and safeguard it
    #
 
-   stpf = min(stpmax, stpf)
-   stpf = max(stpmin, stpf)
+   stpf = min(alphamax, stpf)
+   stpf = max(alphamin, stpf)
    stp = stpf
    if bracketed && bound
       if sty > stx

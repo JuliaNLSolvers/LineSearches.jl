@@ -15,36 +15,33 @@ This will then use a steps-size alpha ← min(ls.alpha,||s||_2) / ||s||_2
     scaled::Bool = false # Scales step. alpha ← min(alpha,||s||_2) / ||s||_2
 end
 
-function (ls::Static)(df, x, s, x_scratch, lsr, alpha, mayterminate)
+function (ls::Static)(df, x, s, x_scratch, alpha)
     # NOTE: alpha is ignored here, and we use ls.alpha instead
 
     if ls.scaled == true && (ns = vecnorm(s)) > zero(typeof(ls.alpha))
         scaledalpha = min(ls.alpha, ns) / ns
-        retval = _static!(df, x, s, x_scratch, lsr, scaledalpha, mayterminate)
+        retval = _static!(df, x, s, x_scratch, scaledalpha)
     else
-        retval = _static!(df, x, s, x_scratch, lsr, ls.alpha, mayterminate)
+        retval = _static!(df, x, s, x_scratch, ls.alpha)
     end
     return retval
 end
+
 
 function _static!(df,
                 x::AbstractArray{T},
                 s::AbstractArray{T},
                 x_scratch::AbstractArray{T},
-                lsr::LineSearchResults,
-                alpha::Real = 1.0,
-                mayterminate::Bool = false) where T
+                alpha::Real = 1.0) where T
     @assert alpha > 0
-    push!(lsr.alpha, alpha)
-    
+
     # Count number of parameters
     n = length(x)
     # Move a distance of alpha in the direction of s
     x_scratch .= x .+ alpha.*s
-    
+
     # Evaluate f(x) at new position
     f_x_scratch = NLSolversBase.value!(df, x_scratch)
-    push!(lsr.value, f_x_scratch)
-    
+
     return alpha
 end

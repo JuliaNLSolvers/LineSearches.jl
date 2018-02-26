@@ -27,7 +27,8 @@ function _strongwolfe!(df,
                       x::AbstractArray{T},
                       p::AbstractArray{T},
                       x_new::AbstractArray{T},
-                      lsr::LineSearchResults{T},
+                      phi_0,
+                      dphi_0,
                       alpha0::Real,
                       mayterminate::Bool;
                       c1::Real = 1e-4,
@@ -43,13 +44,11 @@ function _strongwolfe!(df,
     a_max = 65536.0
 
     # phi(alpha) = df.f(x + alpha * p)
-    phi_0 = lsr.value[end]
     phi_a_iminus1 = phi_0
     phi_a_i = NaN
 
     # phi'(alpha) = vecdot(g(x + alpha * p), p)
-    phiprime_0 = lsr.slope[end]
-    phiprime_a_i = NaN
+    dphi_a_i = NaN
 
     # Iteration counter
     i = 1
@@ -61,10 +60,10 @@ function _strongwolfe!(df,
         phi_a_i = NLSolversBase.value!(df, x_new)
 
         # Test Wolfe conditions
-        if (phi_a_i > phi_0 + c1 * a_i * phiprime_0) ||
+        if (phi_a_i > phi_0 + c1 * a_i * dphi_0) ||
             (phi_a_i >= phi_a_iminus1 && i > 1)
             a_star = zoom(a_iminus1, a_i,
-                          phiprime_0, phi_0,
+                          dphi_0, phi_0,
                           df, x, p, x_new)
             return a_star
         end
@@ -72,17 +71,17 @@ function _strongwolfe!(df,
         # Evaluate phi'(a_i)
         NLSolversBase.gradient!(df, x_new)
 
-        phiprime_a_i = vecdot(NLSolversBase.gradient(df), p)
+        dphi_a_i = vecdot(NLSolversBase.gradient(df), p)
 
         # Check condition 2
-        if abs(phiprime_a_i) <= -c2 * phiprime_0
+        if abs(dphi_a_i) <= -c2 * dphi_0
             return a_i
         end
 
         # Check condition 3
-        if phiprime_a_i >= 0.0
+        if dphi_a_i >= 0.0
             a_star = zoom(a_i, a_iminus1,
-                          phiprime_0, phi_0,
+                          dphi_0, phi_0,
                           df, x, p, x_new)
             return a_star
         end
@@ -104,7 +103,7 @@ end
 
 function zoom(a_lo::Real,
               a_hi::Real,
-              phiprime_0::Real,
+              dphi_0::Real,
               phi_0::Real,
               df,
               x::AbstractArray,
@@ -155,7 +154,7 @@ function zoom(a_lo::Real,
         phi_a_j = NLSolversBase.value!(df, x_new)
 
         # Check Armijo
-        if (phi_a_j > phi_0 + c1 * a_j * phiprime_0) ||
+        if (phi_a_j > phi_0 + c1 * a_j * dphi_0) ||
             (phi_a_j > phi_a_lo)
             a_hi = a_j
         else
@@ -163,7 +162,7 @@ function zoom(a_lo::Real,
             NLSolversBase.gradient!(df, x_new)
             phiprime_a_j = vecdot(NLSolversBase.gradient(df), p)
 
-            if abs(phiprime_a_j) <= -c2 * phiprime_0
+            if abs(phiprime_a_j) <= -c2 * dphi_0
                 return a_j
             end
 
@@ -183,11 +182,11 @@ end
 # a_hi = a_{i}
 function interpolate(a_i1::Real, a_i::Real,
                      phi_a_i1::Real, phi_a_i::Real,
-                     phiprime_a_i1::Real, phiprime_a_i::Real)
-    d1 = phiprime_a_i1 + phiprime_a_i -
+                     dphi_a_i1::Real, dphi_a_i::Real)
+    d1 = dphi_a_i1 + dphi_a_i -
         3.0 * (phi_a_i1 - phi_a_i) / (a_i1 - a_i)
-    d2 = sqrt(d1 * d1 - phiprime_a_i1 * phiprime_a_i)
+    d2 = sqrt(d1 * d1 - dphi_a_i1 * dphi_a_i)
     return a_i - (a_i - a_i1) *
-        ((phiprime_a_i + d2 - d1) /
-         (phiprime_a_i - phiprime_a_i1 + 2.0 * d2))
+        ((dphi_a_i + d2 - d1) /
+         (dphi_a_i - dphi_a_i1 + 2.0 * d2))
 end
