@@ -21,28 +21,28 @@
     # Test HagerZhang I0
     state = getstate()
     is = InitialHagerZhang(α0 = NaN)
-    is(state, dphi0, df)
+    is(state, phi0, dphi0, df)
     @test state.alpha == 0.005
     @test state.mayterminate == false
 
     # Test HagerZhang I12
     state = getstate()
     is = InitialHagerZhang(α0 = 1.0)
-    is(state, dphi0, df)
+    is(state, phi0, dphi0, df)
     @test state.alpha == 0.4999999999999999
     @test state.mayterminate == true
 
     # Test Static unscaled
     state = getstate()
     is = InitialStatic()
-    is(state, dphi0, df)
+    is(state, phi0, dphi0, df)
     @test state.alpha == is.alpha
     @test state.mayterminate == false
 
     # Test Static scaled
     state = getstate()
     is = InitialStatic(alpha = 0.5, scaled = true)
-    is(state, dphi0, df)
+    is(state, phi0, dphi0, df)
     @test state.alpha == 0.08838834764831843
     @test state.mayterminate == false
 
@@ -51,7 +51,7 @@
     alpha = state.alpha
     state.mayterminate = true
     is = InitialPrevious()
-    is(state, dphi0, df)
+    is(state, phi0, dphi0, df)
     @test state.alpha == alpha
     @test state.mayterminate == true
 
@@ -60,14 +60,14 @@
     state.alpha = NaN
     state.mayterminate = true
     is = InitialPrevious()
-    is(state, dphi0, df)
+    is(state, phi0, dphi0, df)
     @test state.alpha == is.alpha
     @test state.mayterminate == false
 
     # Test Quadratic NaN
     state = getstate()
     is = InitialQuadratic()
-    is(state, dphi0, df)
+    is(state, phi0, dphi0, df)
     @test state.alpha == is.α0
     @test state.mayterminate == false
 
@@ -75,7 +75,7 @@
     state = getstate()
     state.f_x_previous = 2*phi0
     is = InitialQuadratic(snap2one=(0.9,Inf))
-    is(state, dphi0, df)
+    is(state, phi0, dphi0, df)
     @test state.alpha == 0.8200000000000001
     @test state.mayterminate == false
 
@@ -83,30 +83,30 @@
     state = getstate()
     state.f_x_previous = 2*phi0
     is = InitialQuadratic(snap2one=(0.75,Inf))
-    is(state, dphi0, df)
+    is(state, phi0, dphi0, df)
     @test state.alpha == 1.0
     @test state.mayterminate == false
 
     # Test ConstantChange NaN
     state = getstate()
     is = InitialConstantChange()
-    is(state, dphi0, df)
+    is(state, phi0, dphi0, df)
     @test state.alpha == is.α0
     @test state.mayterminate == false
 
     # Test ConstantChange
     state = getstate()
-    state.dphi0_previous = 0.1*dphi0
+    state.dphi_0_previous = 0.1*dphi0
     is = InitialConstantChange()
-    is(state, dphi0, df)
+    is(state, phi0, dphi0, df)
     @test state.alpha == 0.25
     @test state.mayterminate == false
 
     # Test ConstantChange snap2one
     state = getstate()
-    state.dphi0_previous = 0.1*dphi0
+    state.dphi_0_previous = 0.1*dphi0
     is = InitialConstantChange(snap2one=(0.25,1.0))
-    is(state, dphi0, df)
+    is(state, phi0, dphi0, df)
     @test state.alpha == 1.0
     @test state.mayterminate == false
 end
