@@ -39,3 +39,27 @@ function alphatry(alpha::T,
 
     LineSearches._hzI12(alpha, df, x, s, xtmp, lsr, psi1, psi2, psi3, alphamax, verbose)
 end
+
+
+(ls::Static)(df, x, s, x_scratch, lsr, alpha, mayterminate) = (ls::Static)(df, x, s, x_scratch, alpha)
+
+_static!(df, x::AbstractArray{T}, s::AbstractArray{T}, lsr::LineSearchResults,
+         x_scratch::AbstractArray{T}, alpha::Real = 1.0, mayterminate::Bool = false) where T =
+_static!(df, x, s, x_scratch, alpha)
+
+(ls::MoreThuente)(df, x, s, x_new, lsr::LineSearchResults, stp, mayterminate) = _morethuente!(df, x, s, x_new, lsr.value[1], lsr.slope[1], stp, mayterminate; f_tol=ls.f_tol, gtol=ls.gtol, x_tol=ls.x_tol, stpmin=ls.alphamin, stpmax=ls.alphamax, maxfev=ls.maxfev)
+
+(ls::BackTracking)(df, x, s, x_scratch, lsr::LineSearchResults, alpha, mayterminate) = _backtracking!(df, x, s, x_scratch, lsr.value[1], lsr.slope[1], alpha, mayterminate, ls.c1, ls.rhohi, ls.rholo, ls.iterations, ls.order, ls.maxstep)
+
+
+_strongwolfe!(df, x, p, x_new, lsr::LineSearchResults, alpha0, mayterminate; c1 = 1e-4, c2 = 0.9, rho = 2.0) = _strongwolfe!(df, x, p, x_new, lsr.value[1], lsr.slope[1], alpha0, mayterminate; c1 = 1e-4, c2 = 0.9, rho = 2.0)
+
+_hagerzhang!(df, x, s, xtmp, lsr::LineSearchResults{T}, c, mayterminate, delta = DEFAULTDELTA,
+                       sigma = DEFAULTSIGMA, alphamax = convert(T,Inf), rho = convert(T,5),
+                       epsilon = convert(T,1e-6), gamma = convert(T,0.66),
+                       linesearchmax = 50, psi3 = convert(T,0.1), display = 0) where T = _hagerzhang!(df, x, s, xtmp, lsr.value[1], lsr.slope[1],  c, mayterminate, delta, sigma, alphamax, rho ,epsilon,gamma ,linesearchmax,psi3,display)
+
+_hzI12(alpha::T, df, x, s, xtmp, lsr::LineSearchResults{T}, psi1 = convert(T,0.2),
+              psi2 = convert(T,2.0), psi3 = convert(T,0.1), alphamax = convert(T, Inf),
+              verbose = false) where T = _hzI12(alpha, df, x, s, xtmp,
+              lsr.value[1], lsr.slope[1], psi1, psi2, psi3, alphamax, verbose)

@@ -17,17 +17,17 @@ This is a modification of the algorithm described in Nocedal Wright (2nd ed), Se
     maxstep::TF = Inf
 end
 
-(ls::BackTracking)(df, x, s, x_scratch, lsr, alpha, mayterminate) =
-    _backtracking!(df, x, s, x_scratch, lsr, alpha, mayterminate,
+(ls::BackTracking)(df, x, s, x_scratch, phi_0, dphi_0, alpha, mayterminate) =
+    _backtracking!(df, x, s, x_scratch, phi_0, dphi_0, alpha, mayterminate,
              ls.c1, ls.rhohi, ls.rholo, ls.iterations, ls.order, ls.maxstep)
-
 
 function _backtracking!(df,
                         x::AbstractArray{T},
                         s::AbstractArray{T},
                         x_scratch::AbstractArray{T},
-                        lsr::LineSearchResults,
-                        alpha::Real = 1.0,
+                        phi_0,
+                        dphi_0,
+                        initial_alpha::Real = 1.0,
                         mayterminate::Bool = false,
                         c1::Real = 1e-4,
                         rhohi::Real = 0.5,
@@ -35,6 +35,8 @@ function _backtracking!(df,
                         iterations::Integer = 1_000,
                         order::Int = 3,
                         maxstep::Real = Inf) where T
+
+    Tα = typeof(initial_alpha)
     iterfinitemax = -log2(eps(T))
 
     @assert order in (2,3)
@@ -52,39 +54,40 @@ function _backtracking!(df,
     # Count number of parameters
     n = length(x)
 
-    # read f_x and slope from LineSearchResults
-    @inbounds f_x = lsr.value[end]
-    @inbounds gxp = lsr.slope[end]
+    f_x = phi_0
+    gxp = dphi_0
 
+    alpha0 = initial_alpha
+    alpha1 = alpha0
     # Tentatively move a distance of alpha in the direction of s
-    x_scratch .= x .+ alpha.*s
-    push!(lsr.alpha, alpha)
+    x_scratch .= x .+ alpha0.*s
 
     # Backtrack until we satisfy sufficient decrease condition
     f_x_scratch = NLSolversBase.value!(df, x_scratch)
-    push!(lsr.value, f_x_scratch)
+    values = [f_x_scratch]
 
     iterfinite = 0
+
     while !isfinite(f_x_scratch) && iterfinite < iterfinitemax
         iterfinite += 1
-        alpha *= 0.5
+        alpha0 = alpha1
+        alpha1 = 0.5*alpha0
         # Tentatively move a distance of alpha in the direction of s
-        x_scratch .= x .+ alpha.*s
-        push!(lsr.alpha, alpha)
+        x_scratch .= x .+ alpha1.*s
 
         # Backtrack until we satisfy sufficient decrease condition
         f_x_scratch = NLSolversBase.value!(df, x_scratch)
-        push!(lsr.value, f_x_scratch)
+        push!(values, f_x_scratch)
     end
 
-    while f_x_scratch > f_x + c1 * alpha * gxp
+    while f_x_scratch > f_x + c1 * alpha1 * gxp
         # Increment the number of steps we've had to perform
         iteration += 1
 
         # Ensure termination
         if iteration > iterations
             throw(LineSearchException("Linesearch failed to converge, reached maximum iterations $(iterations).",
-                                      lsr.alpha[end], lsr))
+                                      alpha1))
         end
 
         # Shrink proposed step-size:
@@ -96,40 +99,37 @@ function _backtracking!(df,
             # guaranteed backtracking factor 0.5 * (1-c1)^{-1} which is < 1
             # provided that c1 < 1/2; the backtrack_condition at the beginning
             # of the function guarantees at least a backtracking factor rho.
-            alphatmp = - (gxp * alpha^2) / ( 2.0 * (f_x_scratch - f_x - gxp*alpha) )
+            alphatmp = - (gxp * alpha1^2) / ( 2.0 * (f_x_scratch - f_x - gxp*alpha1) )
         else
             # Backtracking via cubic interpolation
-            @inbounds alpha0 = lsr.alpha[end-1]
-            @inbounds alpha1 = lsr.alpha[end]
-            @inbounds phi0 = lsr.value[end-1]
-            @inbounds phi1 = lsr.value[end]
+            @inbounds phi_0 = values[end-1]
+            @inbounds phi1 = values[end]
 
-            div = one(alpha) / (alpha0^2 * alpha1^2 * (alpha1 - alpha0))
-            a = (alpha0^2*(phi1-f_x-gxp*alpha1)-alpha1^2*(phi0-f_x-gxp*alpha0))*div
-            b = (-alpha0^3*(phi1-f_x-gxp*alpha1)+alpha1^3*(phi0-f_x-gxp*alpha0))*div
+            div = one(Tα) / (alpha0^2 * alpha1^2 * (alpha1 - alpha0))
+            a = (alpha0^2*(phi1-f_x-gxp*alpha1)-alpha1^2*(phi_0-f_x-gxp*alpha0))*div
+            b = (-alpha0^3*(phi1-f_x-gxp*alpha1)+alpha1^3*(phi_0-f_x-gxp*alpha0))*div
 
             if isapprox(a, zero(a))
                 alphatmp = gxp / (2.0*b)
             else
-                discr = max(b^2-3*a*gxp, zero(alpha))
+                discr = max(b^2-3*a*gxp, zero(Tα))
                 alphatmp = (-b + sqrt(discr)) / (3.0*a)
             end
         end
-        alphatmp =  NaNMath.min(alphatmp, alpha*rhohi) # avoid too small reductions
-        alphatmp = NaNMath.max(alphatmp, alpha*rholo) # avoid too big reductions
+        alphatmp = NaNMath.min(alphatmp, alpha1*rhohi) # avoid too small reductions
+        alphatmp = NaNMath.max(alphatmp, alpha1*rholo) # avoid too big reductions
 
         # enforce a maximum step alpha * s (application specific, default is Inf)
-        alpha = min(alphatmp, maxstep / vecnorm(s, Inf))
-
-        push!(lsr.alpha, alpha)
+        alpha0 = alpha1
+        alpha1 = min(alphatmp, maxstep / vecnorm(s, Inf))
 
         # Update proposed position
-        x_scratch .= x .+ alpha.*s
+        x_scratch .= x .+ alpha1.*s
 
         # Evaluate f(x) at proposed position
         f_x_scratch = NLSolversBase.value!(df, x_scratch)
-        push!(lsr.value, f_x_scratch)
+        push!(values, f_x_scratch)
     end
 
-    return alpha
+    return alpha1
 end
