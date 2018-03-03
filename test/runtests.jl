@@ -9,7 +9,6 @@ lstypes =  (Static(), Static(scaled=true), HagerZhang(), StrongWolfe(), MoreThue
 
 my_tests = [
     "initial.jl",
-    "api.jl",
     "alphacalc.jl"
 ]
 
@@ -19,7 +18,6 @@ mutable struct StateDummy
     x_ls
     f_x_previous
     s
-    lsr::LineSearchResults
     mayterminate::Bool
     dphi_0_previous
 end
