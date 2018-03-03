@@ -59,6 +59,27 @@ _hagerzhang!(df, x, s, xtmp, lsr::LineSearchResults{T}, c, mayterminate, delta =
                        epsilon = convert(T,1e-6), gamma = convert(T,0.66),
                        linesearchmax = 50, psi3 = convert(T,0.1), display = 0) where T = _hagerzhang!(df, x, s, xtmp, lsr.value[1], lsr.slope[1],  c, mayterminate, delta, sigma, alphamax, rho ,epsilon,gamma ,linesearchmax,psi3,display)
 
+# This one will have state.lsr
+function (is::InitialHagerZhang)(state, dphi_0, df)
+   if isnan(state.f_x_previous) && isnan(is.α0)
+       # If we're at the first iteration (f_x_previous is NaN)
+       # and the user has not provided an initial step size (is.α0 is NaN),
+       # then we
+       # pick the initial step size according to HZ #I0
+       state.alpha = _hzI0(state.x, NLSolversBase.gradient(df),
+                           NLSolversBase.value(df),
+                           convert(eltype(state.x), is.ψ0)) # Hack to deal with type instability between is{T} and state.x
+       state.mayterminate = false
+   else
+       # Pick the initial step size according to HZ #I1-2
+       state.alpha, state.mayterminate =
+           _hzI12(state.alpha, df, state.x, state.s, state.x_ls, state.lsr,
+                  is.ψ1, is.ψ2, is.ψ3, is.αmax, is.verbose)
+   end
+   return state.alpha
+end
+
+
 _hzI12(alpha::T, df, x, s, xtmp, lsr::LineSearchResults{T}, psi1 = convert(T,0.2),
               psi2 = convert(T,2.0), psi3 = convert(T,0.1), alphamax = convert(T, Inf),
               verbose = false) where T = _hzI12(alpha, df, x, s, xtmp,
