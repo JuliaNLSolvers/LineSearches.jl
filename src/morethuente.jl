@@ -142,6 +142,11 @@
     maxfev::Int = 100
 end
 
+(ls::MoreThuente)(args...) =
+       _morethuente!(args...;
+                   f_tol=ls.f_tol, gtol=ls.gtol, x_tol=ls.x_tol, stpmin=ls.alphamin,
+                   stpmax=ls.alphamax, maxfev=ls.maxfev)
+
 function _morethuente!(df,
                       x::AbstractArray{T},
                       s::AbstractArray{T},

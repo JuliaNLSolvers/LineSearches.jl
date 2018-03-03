@@ -281,7 +281,7 @@ function _hagerzhang!(df,
                 println("Linesearch: secant failed, using bisection")
             end
             c = (A + B) / convert(T, 2)
-            
+
             phi_c, dphi_c = linefunc!(df, x, s, c, xtmp, true)
             @assert isfinite(phi_c) && isfinite(dphi_c)
             push!(alphas, c)
@@ -579,8 +579,8 @@ function _hzI12(alpha::T,
                 x::AbstractArray{T},
                 s::AbstractArray{T},
                 xtmp::AbstractArray{T},
-                phi_0,
-                dphi_0,
+                phi_0::T,
+                dphi_0::T,
                 psi1::Real = convert(T,0.2),
                 psi2::Real = convert(T,2.0),
                 psi3::Real = convert(T,0.1),
