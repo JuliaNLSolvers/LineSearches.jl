@@ -466,7 +466,7 @@ end # function
 
 function cstep(stx::Real, fx::Real, dgx::Real,
                sty::Real, fy::Real, dgy::Real,
-               stp::Real, f::Real, dg::Real,
+               alpha::Real, f::Real, dg::Real,
                bracketed::Bool, alphamin::Real, alphamax::Real)
 
    info = 0
@@ -475,8 +475,8 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    # Check the input parameters for error
    #
 
-   if (bracketed && (stp <= min(stx, sty) || stp >= max(stx, sty))) ||
-        dgx * (stp - stx) >= 0.0 || alphamax < alphamin
+   if (bracketed && (alpha <= min(stx, sty) || alpha >= max(stx, sty))) ||
+        dgx * (alpha - stx) >= 0.0 || alphamax < alphamin
       throw(ArgumentError("Minimizer not bracketed"))
    end
 
@@ -496,22 +496,22 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    if f > fx
       info = 1
       bound = true
-      theta = 3 * (fx - f) / (stp - stx) + dgx + dg
+      theta = 3 * (fx - f) / (alpha - stx) + dgx + dg
       # Use s to prevent overflow/underflow of theta^2 and dgx * dg
       s = max(abs(theta), abs(dgx), abs(dg))
       gamma = s * sqrt((theta / s)^2 - (dgx / s) * (dg / s))
-      if stp < stx
+      if alpha < stx
           gamma = -gamma
       end
       p = gamma - dgx + theta
       q = gamma - dgx + gamma + dg
       r = p / q
-      stpc = stx + r * (stp - stx)
-      stpq = stx + 0.5 * (dgx / ((fx - f) / (stp - stx) + dgx)) * (stp - stx)
-      if abs(stpc - stx) < abs(stpq - stx)
-         stpf = stpc
+      alphac = stx + r * (alpha - stx)
+      alphaq = stx + 0.5 * (dgx / ((fx - f) / (alpha - stx) + dgx)) * (alpha - stx)
+      if abs(alphac - stx) < abs(alphaq - stx)
+         alphaf = alphac
       else
-         stpf = 0.5*(stpc + stpq)
+         alphaf = 0.5*(alphac + alphaq)
       end
       bracketed = true
 
@@ -525,23 +525,23 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    elseif sgnd < 0.0
       info = 2
       bound = false
-      theta = 3 * (fx - f) / (stp - stx) + dgx + dg
+      theta = 3 * (fx - f) / (alpha - stx) + dgx + dg
       # Use s to prevent overflow/underflow of theta^2 and dgx * dg
       s = max(abs(theta), abs(dgx), abs(dg))
       gamma = s * sqrt((theta / s)^2 - (dgx / s) * (dg / s))
 
-      if stp > stx
+      if alpha > stx
          gamma = -gamma
       end
       p = gamma - dg + theta
       q = gamma - dg + gamma + dgx
       r = p / q
-      stpc = stp + r * (stx - stp)
-      stpq = stp + (dg / (dg - dgx)) * (stx - stp)
-      if abs(stpc - stp) > abs(stpq - stp)
-         stpf = stpc
+      alphac = alpha + r * (stx - alpha)
+      alphaq = alpha + (dg / (dg - dgx)) * (stx - alpha)
+      if abs(alphac - alpha) > abs(alphaq - alpha)
+         alphaf = alphac
       else
-         stpf = stpq
+         alphaf = alphaq
       end
       bracketed = true
 
@@ -550,7 +550,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    # same sign, and the magnitude of the derivative decreases.
    # The cubic step is only used if the cubic tends to infinity
    # in the direction of the step or if the minimum of the cubic
-   # is beyond stp. Otherwise the cubic step is defined to be
+   # is beyond alpha. Otherwise the cubic step is defined to be
    # either alphamin or alphamax. The quadratic (secant) step is also
    # computed and if the minimum is bracketed then the the step
    # closest to stx is taken, else the step farthest away is taken
@@ -559,7 +559,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    elseif abs(dg) < abs(dgx)
       info = 3
       bound = true
-      theta = 3 * (fx - f) / (stp - stx) + dgx + dg
+      theta = 3 * (fx - f) / (alpha - stx) + dgx + dg
       # Use s to prevent overflow/underflow of theta^2 and dgx * dg
       s = max(abs(theta), abs(dgx), abs(dg))
       #
@@ -569,31 +569,31 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       # # Use NaNMath in case s == zero(s)
       gamma = s * sqrt(NaNMath.max(zero(s), (theta / s)^2 - (dgx / s) * (dg / s)))
 
-      if stp > stx
+      if alpha > stx
           gamma = -gamma
       end
       p = gamma - dg + theta
       q = gamma + dgx - dg + gamma
       r = p / q
       if r < 0.0 && gamma != 0.0
-         stpc = stp + r * (stx - stp)
-      elseif stp > stx
-         stpc = alphamax
+         alphac = alpha + r * (stx - alpha)
+     elseif alpha > stx
+         alphac = alphamax
       else
-         stpc = alphamin
+         alphac = alphamin
       end
-      stpq = stp + (dg / (dg - dgx)) * (stx - stp)
+      alphaq = alpha + (dg / (dg - dgx)) * (stx - alpha)
       if bracketed
-         if abs(stp - stpc) < abs(stp - stpq)
-            stpf = stpc
+         if abs(alpha - alphac) < abs(alpha - alphaq)
+            alphaf = alphac
          else
-            stpf = stpq
+            alphaf = alphaq
          end
       else
-         if abs(stp - stpc) > abs(stp - stpq)
-            stpf = stpc
+         if abs(alpha - alphac) > abs(alpha - alphaq)
+            alphaf = alphac
          else
-            stpf = stpq
+            alphaf = alphaq
          end
       end
 
@@ -608,23 +608,23 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       info = 4
       bound = false
       if bracketed
-         theta = 3 * (f - fy) / (sty - stp) + dgy + dg
+         theta = 3 * (f - fy) / (sty - alpha) + dgy + dg
          # Use s to prevent overflow/underflow of theta^2 and dgy * dg
          s = max(abs(theta), abs(dgy), abs(dg))
          gamma = s * sqrt((theta / s)^2 - (dgy / s) * (dg / s))
 
-         if stp > sty
+         if alpha > sty
              gamma = -gamma
          end
          p = gamma - dg + theta
          q = gamma - dg + gamma + dgy
          r = p / q
-         stpc = stp + r * (sty - stp)
-         stpf = stpc
-      elseif stp > stx
-         stpf = alphamax
+         alphac = alpha + r * (sty - alpha)
+         alphaf = alphac
+     elseif alpha > stx
+         alphaf = alphamax
       else
-         stpf = alphamin
+         alphaf = alphamin
       end
    end
 
@@ -634,7 +634,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    #
 
    if f > fx
-      sty = stp
+      sty = alpha
       fy = f
       dgy = dg
    else
@@ -643,7 +643,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
          fy = fx
          dgy = dgx
       end
-      stx = stp
+      stx = alpha
       fx = f
       dgx = dg
    end
@@ -652,16 +652,16 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    # Compute the new step and safeguard it
    #
 
-   stpf = min(alphamax, stpf)
-   stpf = max(alphamin, stpf)
-   stp = stpf
+   alphaf = min(alphamax, alphaf)
+   alphaf = max(alphamin, alphaf)
+   alpha = alphaf
    if bracketed && bound
       if sty > stx
-         stp = min(stx + 0.66 * (sty - stx), stp)
+         alpha = min(stx + 0.66 * (sty - stx), alpha)
       else
-         stp = max(stx + 0.66 * (sty - stx), stp)
+         alpha = max(stx + 0.66 * (sty - stx), alpha)
       end
    end
 
-   return stx, fx, dgx, sty, fy, dgy, stp, f, dg, bracketed, info
+   return stx, fx, dgx, sty, fy, dgy, alpha, f, dg, bracketed, info
 end

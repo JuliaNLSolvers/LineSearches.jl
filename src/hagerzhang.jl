@@ -281,7 +281,7 @@ function _hagerzhang!(df,
                 println("Linesearch: secant failed, using bisection")
             end
             c = (A + B) / convert(T, 2)
-            # phi_c = phi(gphi, c) # TODO: Replace
+            
             phi_c, dphi_c = linefunc!(df, x, s, c, xtmp, true)
             @assert isfinite(phi_c) && isfinite(dphi_c)
             push!(alphas, c)
