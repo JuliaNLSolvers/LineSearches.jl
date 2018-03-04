@@ -2,7 +2,7 @@ using LineSearches
 using Base.Test
 using OptimTestProblems
 
-debug_printing = false
+debug_printing = true
 
 lstypes =  (Static(), Static(scaled=true), HagerZhang(), StrongWolfe(), MoreThuente(),
             BackTracking(), BackTracking(order=2) )
