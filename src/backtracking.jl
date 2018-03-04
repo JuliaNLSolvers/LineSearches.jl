@@ -9,85 +9,67 @@ there exists a factor ρ = ρ(c₁) such that α' ≦ ρ α.
 This is a modification of the algorithm described in Nocedal Wright (2nd ed), Sec. 3.5.
 """
 @with_kw struct BackTracking{TF, TI}
-    c1::TF = 1e-4
-    rhohi::TF = 0.5
-    rholo::TF = 0.1
+    c_1::TF = 1e-4
+    ρ_hi::TF = 0.5
+    ρ_lo::TF = 0.1
     iterations::TI = 1_000
     order::TI = 3
     maxstep::TF = Inf
 end
 
-(ls::BackTracking)(df, x, s, x_scratch, phi_0, dphi_0, alpha, mayterminate) =
-    _backtracking!(df, x, s, x_scratch, phi_0, dphi_0, alpha, mayterminate,
-             ls.c1, ls.rhohi, ls.rholo, ls.iterations, ls.order, ls.maxstep)
+function (ls::BackTracking)(df, x::AbstractArray{T}, s::AbstractArray{T},
+                            x_1::AbstractArray{T},
+                            ϕ_0, dϕ_0, α_0::Tα = 1.0, alphamax = convert(T, Inf)) where {T, Tα}
 
-function _backtracking!(df,
-                        x::AbstractArray{T},
-                        s::AbstractArray{T},
-                        x_scratch::AbstractArray{T},
-                        phi_0,
-                        dphi_0,
-                        initial_alpha::Real = 1.0,
-                        mayterminate::Bool = false,
-                        c1::Real = 1e-4,
-                        rhohi::Real = 0.5,
-                        rholo::Real = 0.1,
-                        iterations::Integer = 1_000,
-                        order::Int = 3,
-                        maxstep::Real = Inf) where T
+    @unpack c_1, ρ_hi, ρ_lo, iterations, order, maxstep = ls
 
-    Tα = typeof(initial_alpha)
     iterfinitemax = -log2(eps(T))
 
     @assert order in (2,3)
     # Check the input is valid, and modify otherwise
-    #backtrack_condition = 1.0 - 1.0/(2*rho) # want guaranteed backtrack factor
-    #if c1 >= backtrack_condition
-    #    warn("""The Armijo constant c1 is too large; replacing it with
+    #backtrack_condition = 1.0 - 1.0/(2*ρ) # want guaranteed backtrack factor
+    #if c_1 >= backtrack_condition
+    #    warn("""The Armijo constant c_1 is too large; replacing it with
     #                   $(backtrack_condition)""")
-    #   c1 = backtrack_condition
+    #   c_1 = backtrack_condition
     #end
 
     # Count the total number of iterations
     iteration = 0
 
-    # Count number of parameters
-    n = length(x)
+    ϕx_0 = ϕ_0
+    ϕx_1 = ϕ_0
 
-    f_x = phi_0
-    gxp = dphi_0
+    α_1 = α_0
+    α_2 = α_1
 
-    alpha0 = initial_alpha
-    alpha1 = alpha0
     # Tentatively move a distance of alpha in the direction of s
-    x_scratch .= x .+ alpha0.*s
+    x_1 .= x .+ α_1.*s
 
     # Backtrack until we satisfy sufficient decrease condition
-    f_x_scratch = NLSolversBase.value!(df, x_scratch)
-    values = [f_x_scratch]
+    ϕx_1 = NLSolversBase.value!(df, x_1)
 
     iterfinite = 0
 
-    while !isfinite(f_x_scratch) && iterfinite < iterfinitemax
+    while !isfinite(ϕx_1) && iterfinite < iterfinitemax
         iterfinite += 1
-        alpha0 = alpha1
-        alpha1 = 0.5*alpha0
+        α_1 = α_2
+        α_2 = 0.5*α_1
         # Tentatively move a distance of alpha in the direction of s
-        x_scratch .= x .+ alpha1.*s
+        x_1 .= x .+ α_2.*s
 
         # Backtrack until we satisfy sufficient decrease condition
-        f_x_scratch = NLSolversBase.value!(df, x_scratch)
-        push!(values, f_x_scratch)
+        ϕx_1 = NLSolversBase.value!(df, x_1)
     end
 
-    while f_x_scratch > f_x + c1 * alpha1 * gxp
+    while ϕx_1 > ϕx_0 + c_1 * α_2 * dϕ_0
         # Increment the number of steps we've had to perform
         iteration += 1
 
         # Ensure termination
         if iteration > iterations
             throw(LineSearchException("Linesearch failed to converge, reached maximum iterations $(iterations).",
-                                      alpha1))
+                                      α_2))
         end
 
         # Shrink proposed step-size:
@@ -96,40 +78,37 @@ function _backtracking!(df,
             # This interpolates the available data
             #    f(0), f'(0), f(α)
             # with a quadractic which is then minimised; this comes with a
-            # guaranteed backtracking factor 0.5 * (1-c1)^{-1} which is < 1
-            # provided that c1 < 1/2; the backtrack_condition at the beginning
-            # of the function guarantees at least a backtracking factor rho.
-            alphatmp = - (gxp * alpha1^2) / ( 2.0 * (f_x_scratch - f_x - gxp*alpha1) )
+            # guaranteed backtracking factor 0.5 * (1-c_1)^{-1} which is < 1
+            # provided that c_1 < 1/2; the backtrack_condition at the beginning
+            # of the function guarantees at least a backtracking factor ρ.
+            α_tmp = - (dϕ_0 * α_2^2) / ( 2.0 * (ϕx_1 - ϕx_0 - dϕ_0*α_2) )
         else
-            # Backtracking via cubic interpolation
-            @inbounds phi_0 = values[end-1]
-            @inbounds phi1 = values[end]
-
-            div = one(Tα) / (alpha0^2 * alpha1^2 * (alpha1 - alpha0))
-            a = (alpha0^2*(phi1-f_x-gxp*alpha1)-alpha1^2*(phi_0-f_x-gxp*alpha0))*div
-            b = (-alpha0^3*(phi1-f_x-gxp*alpha1)+alpha1^3*(phi_0-f_x-gxp*alpha0))*div
+            div = one(Tα) / (α_1^2 * α_2^2 * (α_2 - α_1))
+            a = (α_1^2*(ϕ_1 - ϕx_0 - dϕ_0*α_2) - α_2^2*(ϕ_0 - ϕx_0 - dϕ_0*α_1))*div
+            b = (-α_1^3*(ϕ_1 - ϕx_0 - dϕ_0*α_2) + α_2^3*(ϕ_0 - ϕx_0 - dϕ_0*α_1))*div
 
             if isapprox(a, zero(a))
-                alphatmp = gxp / (2.0*b)
+                α_tmp = dϕ_0 / (2.0*b)
             else
-                discr = max(b^2-3*a*gxp, zero(Tα))
-                alphatmp = (-b + sqrt(discr)) / (3.0*a)
+                # discriminant
+                d = max(b^2 - 3*a*dϕ_0, zero(Tα))
+                # quadratic equation root
+                α_tmp = (-b + sqrt(d)) / (3.0*a)
             end
         end
-        alphatmp = NaNMath.min(alphatmp, alpha1*rhohi) # avoid too small reductions
-        alphatmp = NaNMath.max(alphatmp, alpha1*rholo) # avoid too big reductions
+        α_tmp = NaNMath.min(α_tmp, α_2*ρ_hi) # avoid too small reductions
+        α_tmp = NaNMath.max(α_tmp, α_2*ρ_lo) # avoid too big reductions
 
         # enforce a maximum step alpha * s (application specific, default is Inf)
-        alpha0 = alpha1
-        alpha1 = min(alphatmp, maxstep / vecnorm(s, Inf))
+        α_1 = α_2
+        α_2 = min(α_tmp, maxstep / vecnorm(s, Inf))
 
         # Update proposed position
-        x_scratch .= x .+ alpha1.*s
+        x_1 .= x .+ α_2.*s
 
         # Evaluate f(x) at proposed position
-        f_x_scratch = NLSolversBase.value!(df, x_scratch)
-        push!(values, f_x_scratch)
+        ϕx_0, ϕx_1 = ϕx_1, NLSolversBase.value!(df, x_1)
     end
 
-    return alpha1
+    return α_2
 end
