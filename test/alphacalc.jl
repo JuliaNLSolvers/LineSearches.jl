@@ -16,18 +16,15 @@
             df = NLSolversBase.OnceDifferentiable(f,g!,x)
 
             xtmp = copy(x)
-            phi0 = NLSolversBase.value_gradient!(df, x)
+            phi_0 = NLSolversBase.value_gradient!(df, x)
             grtmp = NLSolversBase.gradient(df)
             p = -grtmp
-            dphi0 = dot(p, grtmp)
-
-            lsr = LineSearchResults(eltype(x))
-            push!(lsr, 0.0, phi0, dphi0)
+            dphi_0 = dot(p, grtmp)
 
             alpha = 1.0
             mayterminate = false
 
-            alpha = linesearch!(df, x, p, xtmp, lsr, alpha, mayterminate)
+            alpha = linesearch!(df, x, p, xtmp, phi_0, dphi_0, alpha, mayterminate)
             #xnew = x + alpha*p
 
             @test alpha ≈ lsalphas[i]
@@ -43,21 +40,18 @@
             df = NLSolversBase.OnceDifferentiable(f,g!,x)
 
             xtmp = copy(x)
-            phi0 = NLSolversBase.value_gradient!(df, x)
+            phi_0 = NLSolversBase.value_gradient!(df, x)
             grtmp = NLSolversBase.gradient(df)
             p = -grtmp
-            dphi0 = dot(p, grtmp)
-
-            lsr = LineSearchResults(eltype(x))
-            push!(lsr, 0.0, phi0, dphi0)
+            dphi_0 = dot(p, grtmp)
 
             alpha = 1.0
             mayterminate = false
 
             if linesearch! == HagerZhang() || linesearch! == MoreThuente()
-                @test_throws ErrorException alpha = linesearch!(df, x, p, xtmp, lsr, alpha, mayterminate)
+                @test_throws ErrorException alpha = linesearch!(df, x, p, xtmp, phi_0, dphi_0, alpha, mayterminate)
             else
-                alpha = linesearch!(df, x, p, xtmp, lsr, alpha, mayterminate)
+                alpha = linesearch!(df, x, p, xtmp, phi_0, dphi_0, alpha, mayterminate)
                 @test alpha == 1.0 # Is this what we want for non-descent directions?
             end
         end
@@ -82,11 +76,13 @@
                      0.010000000000000002] # BT(3)
         for (i, ls) in enumerate(lstypes)
             debug_printing && println("Testing $(string(ls))")
-            lsr = LineSearchResults(eltype(x0))
-            push!(lsr, 0.0, 26.0, -2088.0)
+
+            phi_0 = 26.0
+            dphi_0 = -2088.0
+
             df = NLSolversBase.OnceDifferentiable(pr.f, pr.g!, x0)
 
-            stepsize = ls(df, x0, s, xtmp, lsr, alpha, mayterminate)
+            stepsize = ls(df, x0, s, xtmp, phi_0, dphi_0, alpha, mayterminate)
 
             @test stepsize ≈ lsalphas[i]
         end

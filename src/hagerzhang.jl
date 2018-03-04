@@ -553,8 +553,7 @@ otherwise, we select according to procedure I1-2, with starting value α0.
     verbose::Bool = false
 end
 
-
-function (is::InitialHagerZhang)(state, dphi_0, df)
+function (is::InitialHagerZhang)(state, phi_0, dphi_0, df)
     if isnan(state.f_x_previous) && isnan(is.α0)
         # If we're at the first iteration (f_x_previous is NaN)
         # and the user has not provided an initial step size (is.α0 is NaN),
@@ -567,7 +566,7 @@ function (is::InitialHagerZhang)(state, dphi_0, df)
     else
         # Pick the initial step size according to HZ #I1-2
         state.alpha, state.mayterminate =
-            _hzI12(state.alpha, df, state.x, state.s, state.x_ls, state.lsr,
+            _hzI12(state.alpha, df, state.x, state.s, state.x_ls, phi_0, dphi_0,
                    is.ψ1, is.ψ2, is.ψ3, is.αmax, is.verbose)
     end
     return state.alpha

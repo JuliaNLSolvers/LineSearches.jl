@@ -12,7 +12,7 @@ is scaled with the `l_2` norm of the step direction.
     scaled::Bool = false # Scales step. alpha ← min(alpha,||s||_2) / ||s||_2
 end
 
-function (is::InitialStatic{T})(state, dphi0, df) where T
+function (is::InitialStatic{T})(state, phi_0, dphi_0, df) where T
     state.alpha = is.alpha
     if is.scaled == true && (ns = vecnorm(state.s)) > zero(T)
         # TODO: Type instability if there's a type mismatch between is.alpha and ns
@@ -35,7 +35,7 @@ If state.alpha is NaN, then return fallback value is.alpha
     alphamax::T = Inf
 end
 
-function (is::InitialPrevious)(state, dphi0, df)
+function (is::InitialPrevious)(state, phi_0, dphi_0, df)
     if isnan(state.alpha)
         state.alpha = is.alpha
         # TODO: Should `mayterminate` be true or false? Does it depend on which line search we use?
@@ -71,12 +71,12 @@ If αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.
     snap2one::Tuple{T,T} = (0.75, Inf) # Set everything in this (closed) interval to 1.0
 end
 
-function (is::InitialQuadratic{T})(state, dphi0, df) where T
-    if !isfinite(state.f_x_previous) || dphi0 ≈ zero(T)
+function (is::InitialQuadratic{T})(state, phi_0, dphi_0, df) where T
+    if !isfinite(state.f_x_previous) || dphi_0 ≈ zero(T)
         # If we're at the first iteration
         αguess = is.α0
     else
-        αguess = 2.0 * (NLSolversBase.value(df) - state.f_x_previous) / dphi0
+        αguess = 2.0 * (NLSolversBase.value(df) - state.f_x_previous) / dphi_0
         αguess = NaNMath.max(is.αmin, state.alpha*is.ρ, αguess)
         αguess = NaNMath.min(is.αmax, αguess)
         # if αguess ≈ 1, then make it 1 (Newton-type behaviour)
@@ -116,13 +116,13 @@ If αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.
     snap2one::Tuple{T,T} = (0.75, Inf) # Set everything in this (closed) interval to 1.0
 end
 
-function (is::InitialConstantChange{T})(state, dphi0, df) where T
-    if !isfinite(state.dphi0_previous) || !isfinite(state.alpha) || dphi0 ≈ zero(T)
+function (is::InitialConstantChange{T})(state, phi_0, dphi_0, df) where T
+    if !isfinite(state.dphi_0_previous) || !isfinite(state.alpha) || dphi_0 ≈ zero(T)
         # If we're at the first iteration
         αguess = is.α0
     else
         # state.alpha is the previously used step length
-        αguess = state.alpha * state.dphi0_previous / dphi0
+        αguess = state.alpha * state.dphi_0_previous / dphi_0
         αguess = NaNMath.max(is.αmin, state.alpha*is.ρ, αguess)
         αguess = NaNMath.min(is.αmax, αguess)
         # if αguess ≈ 1, then make it 1 (Newton-type behaviour)

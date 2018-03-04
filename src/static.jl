@@ -15,6 +15,7 @@ This will then use a steps-size alpha ← min(ls.alpha,||s||_2) / ||s||_2
     scaled::Bool = false # Scales step. alpha ← min(alpha,||s||_2) / ||s||_2
 end
 
+(ls::Static)(df, x, s, x_scratch, phi0, dphi0, alpha, mayterminate) = (ls::Static)(df, x, s, x_scratch, alpha)
 function (ls::Static)(df, x, s, x_scratch, alpha)
     # NOTE: alpha is ignored here, and we use ls.alpha instead
 
