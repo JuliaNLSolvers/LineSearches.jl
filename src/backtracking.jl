@@ -37,11 +37,9 @@ function (ls::BackTracking)(df, x::AbstractArray{T}, s::AbstractArray{T},
     # Count the total number of iterations
     iteration = 0
 
-    ϕx_0 = ϕ_0
-    ϕx_1 = ϕ_0
+    ϕx_0, ϕx_1 = ϕ_0, ϕ_0
 
-    α_1 = α_0
-    α_2 = α_1
+    α_1, α_2 = α_0, α_0
 
     # Tentatively move a distance of alpha in the direction of s
     x_1 .= x .+ α_1.*s
@@ -62,7 +60,7 @@ function (ls::BackTracking)(df, x::AbstractArray{T}, s::AbstractArray{T},
         ϕx_1 = NLSolversBase.value!(df, x_1)
     end
 
-    while ϕx_1 > ϕx_0 + c_1 * α_2 * dϕ_0
+    while ϕx_1 > ϕ_0 + c_1 * α_2 * dϕ_0
         # Increment the number of steps we've had to perform
         iteration += 1
 
@@ -81,11 +79,11 @@ function (ls::BackTracking)(df, x::AbstractArray{T}, s::AbstractArray{T},
             # guaranteed backtracking factor 0.5 * (1-c_1)^{-1} which is < 1
             # provided that c_1 < 1/2; the backtrack_condition at the beginning
             # of the function guarantees at least a backtracking factor ρ.
-            α_tmp = - (dϕ_0 * α_2^2) / ( 2.0 * (ϕx_1 - ϕx_0 - dϕ_0*α_2) )
+            α_tmp = - (dϕ_0 * α_2^2) / ( 2.0 * (ϕx_1 - ϕ_0 - dϕ_0*α_2) )
         else
             div = one(Tα) / (α_1^2 * α_2^2 * (α_2 - α_1))
-            a = (α_1^2*(ϕ_1 - ϕx_0 - dϕ_0*α_2) - α_2^2*(ϕ_0 - ϕx_0 - dϕ_0*α_1))*div
-            b = (-α_1^3*(ϕ_1 - ϕx_0 - dϕ_0*α_2) + α_2^3*(ϕ_0 - ϕx_0 - dϕ_0*α_1))*div
+            a = (α_1^2*(ϕx_1 - ϕ_0 - dϕ_0*α_2) - α_2^2*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
+            b = (-α_1^3*(ϕx_1 - ϕ_0 - dϕ_0*α_2) + α_2^3*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
 
             if isapprox(a, zero(a))
                 α_tmp = dϕ_0 / (2.0*b)
