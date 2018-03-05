@@ -21,7 +21,7 @@ function make_ϕ(df, x_new, x, s)
         # Move a distance of alpha in the direction of s
         x_new .= x .+ α.*s
 
-        # Evaluate f(x) at new position
+        # Evaluate f(x+α*s)
         NLSolversBase.value!(df, x_new)
     end
     ϕ
@@ -44,7 +44,7 @@ function make_ϕ_dϕ_ϕdϕ(df, x_new, x, s)
         # Move a distance of alpha in the direction of s
         x_new .= x .+ α.*s
 
-        # Evaluate ∇f(x+α*s)
+        # Evaluate f(x+α*s) and ∇f(x+α*s)
         NLSolversBase.gradient!(df, x_new)
 
         # Calculate ϕ'(a_i)
