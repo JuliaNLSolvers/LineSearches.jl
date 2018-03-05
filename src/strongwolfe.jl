@@ -28,7 +28,7 @@ function (ls::StrongWolfe)(df, x::AbstractArray{T},
                   alpha0::Real, mayterminate) where T
     @unpack c_1, c_2, ρ = ls
 
-    ϕ, dϕ = make_ϕ_dϕ(df, x_new, x, p)
+    ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, p)
 
     # Step-sizes
     a_0 = 0.0
@@ -54,7 +54,7 @@ function (ls::StrongWolfe)(df, x::AbstractArray{T},
             (ϕ_a_i >= ϕ_a_iminus1 && i > 1)
             a_star = zoom(a_iminus1, a_i,
                           dϕ_0, ϕ_0,
-                          ϕ, dϕ, x, p, x_new)
+                          ϕ, dϕ, ϕdϕ, x, p, x_new)
             return a_star
         end
 
@@ -66,10 +66,10 @@ function (ls::StrongWolfe)(df, x::AbstractArray{T},
         end
 
         # Check condition 3
-        if dϕ_a_i >= 0.0
+        if dϕ_a_i >= 0.0 # FIXME untested!
             a_star = zoom(a_i, a_iminus1,
-                          dϕ_0, ϕ_0,
-                          df, x, p, x_new)
+                          dϕ_0, ϕ_0, ϕ, dϕ, ϕdϕ,
+                          x, p, x_new)
             return a_star
         end
 
@@ -94,6 +94,7 @@ function zoom(a_lo::T,
               ϕ_0::Real,
               ϕ,
               dϕ,
+              ϕdϕ,
               x::AbstractArray,
               p::AbstractArray,
               x_new::AbstractArray,
@@ -111,14 +112,9 @@ function zoom(a_lo::T,
     while iteration < max_iterations
         iteration += 1
 
-        # Cache ϕ_a_lo
-        x_new .= x .+ a_lo .* p
-        ϕ_a_lo = ϕ(a_lo)
-        ϕprime_a_lo = dϕ(a_lo)
+        ϕ_a_lo, ϕprime_a_lo = ϕdϕ(a_lo)
 
-        # Cache ϕ_a_hi
-        ϕ_a_hi = ϕ(a_hi)
-        ϕprime_a_hi = dϕ(a_hi)
+        ϕ_a_hi, ϕprime_a_hi = ϕdϕ(a_hi)
 
         # Interpolate a_j
         if a_lo < a_hi

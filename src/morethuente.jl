@@ -142,29 +142,17 @@
     maxfev::Int = 100
 end
 
-(ls::MoreThuente)(args...) =
-       _morethuente!(args...;
-                   f_tol=ls.f_tol, gtol=ls.gtol, x_tol=ls.x_tol, stpmin=ls.alphamin,
-                   stpmax=ls.alphamax, maxfev=ls.maxfev)
+function (ls::MoreThuente)(df,
+                  x::AbstractArray{T},
+                  s::AbstractArray{T},
+                  x_new::AbstractArray{T},
+                  phi_0,
+                  dphi_0,
+                  alpha::Real,
+                  mayterminate::Bool) where T
 
-function _morethuente!(df,
-                      x::AbstractArray{T},
-                      s::AbstractArray{T},
-                      x_new::AbstractArray{T},
-                      phi_0,
-                      dphi_0,
-                      alpha::Real,
-                      mayterminate::Bool;
-                      n::Integer = length(x),
-                      f_tol::Real = 1e-4,
-                      gtol::Real = 0.9,
-                      x_tol::Real = 1e-8,
-                      stpmin::Real = 1e-16,
-                      stpmax::Real = 65536.0,
-                       maxfev::Integer = 100) where T
+    @unpack f_tol, gtol, x_tol, alphamin, alphamax, maxfev = ls
 
-    alphamin = stpmin # rename, should deprecate keyword
-    alphamax = stpmax # rename, should deprecate keyword
     if vecnorm(s) == 0
         Base.error("Step direction is zero.")
     end
@@ -176,7 +164,7 @@ function _morethuente!(df,
     # Check the input parameters for errors.
     #
 
-    if n <= 0 || alpha <= 0.0 || f_tol < 0.0 || gtol < 0.0 ||
+    if  alpha <= 0.0 || f_tol < 0.0 || gtol < 0.0 ||
         x_tol < 0.0 || alphamin < 0.0 || alphamax < alphamin || maxfev <= 0
         throw(ArgumentError("Invalid parameters to morethuente"))
     end

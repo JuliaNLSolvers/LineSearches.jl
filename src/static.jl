@@ -10,7 +10,7 @@ with `Static(alpha = 0.3141)` for fixed step-size 0.3141. Default is 1.0.
 
 You can also make this independent of the size of the step `s`, by using
 `Static(scaled = true)`.
-This will then use a steps-size alpha ← min(alpha,||s||_2) / ||s||_2
+This will then use a step-size alpha ← min(alpha,||s||_2) / ||s||_2
 """
 @with_kw struct Static{T}
     alpha::T = 1.0
