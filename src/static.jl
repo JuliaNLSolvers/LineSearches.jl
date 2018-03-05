@@ -1,6 +1,8 @@
 # This linesearch does not perform a search at all, but takes the step
 # alpha in the search direction. By default, alpha = 1.0 is the full step.
 # This algorithm is intended for methods with well-scaled updates; i.e. Newton, on well-behaved problems.
+# NOTE: alpha passed from outside is ignored here, but can be passed to allow
+# for generic use. We use ls.alpha instead.
 
 """
 `Static`: defines a static linesearch, i.e. with fixed step-size. E.g., initialise
@@ -8,41 +10,28 @@ with `Static(alpha = 0.3141)` for fixed step-size 0.3141. Default is 1.0.
 
 You can also make this independent of the size of the step `s`, by using
 `Static(scaled = true)`.
-This will then use a steps-size alpha ← min(ls.alpha,||s||_2) / ||s||_2
+This will then use a steps-size alpha ← min(alpha,||s||_2) / ||s||_2
 """
 @with_kw struct Static{T}
     alpha::T = 1.0
     scaled::Bool = false # Scales step. alpha ← min(alpha,||s||_2) / ||s||_2
 end
 
-(ls::Static)(df, x, s, x_scratch, phi0, dphi0, alpha, mayterminate) = (ls::Static)(df, x, s, x_scratch, alpha)
-function (ls::Static)(df, x, s, x_scratch, alpha)
-    # NOTE: alpha is ignored here, and we use ls.alpha instead
+(ls::Static)(df, x, s, x_new, phi0, dphi0, alpha, mayterminate) = (ls::Static)(df, x, s, x_new)
 
-    if ls.scaled == true && (ns = vecnorm(s)) > zero(typeof(ls.alpha))
-        scaledalpha = min(ls.alpha, ns) / ns
-        retval = _static!(df, x, s, x_scratch, scaledalpha)
-    else
-        retval = _static!(df, x, s, x_scratch, ls.alpha)
+function (ls::Static)(df, x, s, x_new)
+    @unpack alpha, scaled = ls
+    @assert alpha > 0 # This should really be done at the constructor level
+
+    ϕ = make_ϕ(df, x_new, x, s)
+
+    if scaled == true && (ns = vecnorm(s)) > zero(typeof(alpha))
+        alpha = min(alpha, ns) / ns
     end
-    return retval
-end
 
-
-function _static!(df,
-                x::AbstractArray{T},
-                s::AbstractArray{T},
-                x_scratch::AbstractArray{T},
-                alpha::Real = 1.0) where T
-    @assert alpha > 0
-
-    # Count number of parameters
-    n = length(x)
-    # Move a distance of alpha in the direction of s
-    x_scratch .= x .+ alpha.*s
-
-    # Evaluate f(x) at new position
-    f_x_scratch = NLSolversBase.value!(df, x_scratch)
+    # All line searches are assume to have evaluated the function at
+    # the last value. We will change this to actually be returned instead
+    ϕx = ϕ(alpha)
 
     return alpha
 end

@@ -16,6 +16,30 @@ export BackTracking, HagerZhang, Static, MoreThuente, StrongWolfe
 export InitialHagerZhang, InitialStatic, InitialPrevious,
     InitialQuadratic, InitialConstantChange
 
+function make_ϕ(df, x_new, x, s)
+    function ϕ(α)
+        # Move a distance of alpha in the direction of s
+        x_new .= x .+ α.*s
+
+        # Evaluate f(x) at new position
+        NLSolversBase.value!(df, x_new)
+    end
+    ϕ
+end
+function make_ϕ_dϕ(df, x_new, x, s)
+    function dϕ(α)
+        # Move a distance of alpha in the direction of s
+        x_new .= x .+ α.*s
+
+        # Evaluate ∇f(x+α*s)
+        NLSolversBase.gradient!(df, x_new)
+
+        # Calculate ϕ'(a_i)
+        vecdot(NLSolversBase.gradient(df), s)
+    end
+    make_ϕ(df, x_new, x, s), dϕ
+end
+
 include("types.jl")
 
 # Line Search Methods
