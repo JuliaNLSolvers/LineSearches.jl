@@ -153,9 +153,12 @@ function (ls::MoreThuente)(df,
 
     @unpack f_tol, gtol, x_tol, alphamin, alphamax, maxfev = ls
 
+    ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, s)
+
     if vecnorm(s) == 0
         Base.error("Step direction is zero.")
     end
+
     iterfinitemax = -log2(eps(T))
     info = 0
     info_cstep = 1 # Info from step
@@ -169,10 +172,6 @@ function (ls::MoreThuente)(df,
         throw(ArgumentError("Invalid parameters to morethuente"))
     end
 
-
-    # read finit and slope from LineSearchResults
-    f = phi_0
-    dphi_0 = dphi_0 # dot(gradient(df),s)
     if dphi_0 >= 0.0
         throw(ArgumentError("Search direction is not a direction of descent"))
     end
@@ -184,11 +183,11 @@ function (ls::MoreThuente)(df,
     bracketed = false
     stage1 = true
     nfev = 0
-    finit = f
+    finit = phi_0
     dgtest = f_tol * dphi_0
     width = alphamax - alphamin
     width1 = 2 * width
-    copy!(x_new, x)
+
     # Keep this across calls
 
     #
@@ -218,18 +217,14 @@ function (ls::MoreThuente)(df,
     alpha = max(alpha, alphamin)
     alpha = min(alpha, alphamax)
 
-    @. x_new = x + alpha*s
-
-    f = NLSolversBase.value_gradient!(df, x_new)
-    gdf = NLSolversBase.gradient(df)
+    f, dg = ϕdϕ(alpha)
     nfev += 1 # This includes calls to f() and g!()
     iterfinite = 0
-    while (!isfinite(f) || any(.!isfinite.(gdf))) && iterfinite < iterfinitemax
+    while (!isfinite(f) || !isfinite(dg)) && iterfinite < iterfinitemax
         iterfinite += 1
         alpha = 0.5*alpha
-        @. x_new = x + alpha*s
-        f = NLSolversBase.value_gradient!(df, x_new)
-        gdf = NLSolversBase.gradient(df)
+
+        f, dg = ϕdϕ(alpha)
         nfev += 1 # This includes calls to f() and g!()
 
         # Make stmax = (3/2)*alpha < 2alpha in the first iteration below
@@ -280,17 +275,12 @@ function (ls::MoreThuente)(df,
         # Evaluate the function and gradient at alpha
         # and compute the directional derivative.
         #
-        @. x_new = x + alpha*s
-
-        f = NLSolversBase.value_gradient!(df, x_new)
-        gdf = NLSolversBase.gradient(df)
+        f, dg = ϕdϕ(alpha)
         nfev += 1 # This includes calls to f() and g!()
 
-        if isapprox(vecnorm(gdf), 0.0) # TODO: this should be tested vs Optim's g_tol
+        if isapprox(dg, 0.0)
             return alpha
         end
-
-        dg = vecdot(gdf, s)
 
         ftest1 = finit + alpha * dgtest
 
