@@ -100,7 +100,7 @@ end
 function _hagerzhang!(df,
                      x::AbstractArray{T},
                      s::AbstractArray{T},
-                     xtmp::AbstractArray{T},
+                     x_new::AbstractArray{T},
                      phi_0,
                      dphi_0,
                      c::Real,
@@ -115,8 +115,10 @@ function _hagerzhang!(df,
                      psi3::Real = convert(T,0.1),
                      display::Integer = 0) where T
 
-    # Prevent values of `xtmp` that are likely to make
-    # df.f(xtmp) infinite
+    ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, s)
+
+    # Prevent values of `x_new` that are likely to make
+    # ϕ(x_new) infinite
     iterfinitemax::Int = ceil(Int, -log2(eps(T)))
     alphas = [T(0.0)] # for bisection
     values = [phi_0]
@@ -129,13 +131,13 @@ function _hagerzhang!(df,
     phi_lim = phi_0 + epsilon * abs(phi_0)
     @assert c > 0
     @assert isfinite(c) && c <= alphamax
-    phi_c, dphi_c = linefunc!(df, x, s, c, xtmp, true)
+    phi_c, dphi_c = ϕdϕ(c)
     iterfinite = 1
     while !(isfinite(phi_c) && isfinite(dphi_c)) && iterfinite < iterfinitemax
         mayterminate = false
         iterfinite += 1
         c *= psi3
-        phi_c, dphi_c = linefunc!(df, x, s, c, xtmp, true)
+        phi_c, dphi_c = ϕdϕ(c)
     end
     if !(isfinite(phi_c) && isfinite(dphi_c))
         warn("Failed to achieve finite new evaluation point, using alpha=0")
@@ -189,7 +191,7 @@ function _hagerzhang!(df,
                 error("c = ", c)
             end
             # ia, ib = bisect(phi, lsr, ia, ib, phi_lim) # TODO: Pass options
-            ia, ib = bisect!(df, x, s, xtmp, alphas, values, slopes, ia, ib, phi_lim, display)
+            ia, ib = bisect!(ϕdϕ, alphas, values, slopes, ia, ib, phi_lim, display)
             isbracketed = true
         else
             # We'll still going downhill, expand the interval and try again
@@ -205,7 +207,7 @@ function _hagerzhang!(df,
                     return cold
                 end
             end
-            phi_c, dphi_c = linefunc!(df, x, s, c, xtmp, true)
+            phi_c, dphi_c = ϕdϕ(c)
             iterfinite = 1
             while !(isfinite(phi_c) && isfinite(dphi_c)) && c > nextfloat(cold) && iterfinite < iterfinitemax
                 alphamax = c
@@ -214,7 +216,7 @@ function _hagerzhang!(df,
                     println("bracket: non-finite value, bisection")
                 end
                 c = (cold + c) / 2
-                phi_c, dphi_c = linefunc!(df, x, s, c, xtmp, true)
+                phi_c, dphi_c = ϕdϕ(c)
             end
             if !(isfinite(phi_c) && isfinite(dphi_c))
                 return cold
@@ -255,7 +257,7 @@ function _hagerzhang!(df,
         if b - a <= eps(b)
             return a # lsr.value[ia]
         end
-        iswolfe, iA, iB = secant2!(df, x, s, xtmp, alphas, values, slopes, ia, ib, phi_lim, delta, sigma, display)
+        iswolfe, iA, iB = secant2!(ϕdϕ, alphas, values, slopes, ia, ib, phi_lim, delta, sigma, display)
         if iswolfe
             return alphas[iA] # lsr.value[iA]
         end
@@ -282,13 +284,13 @@ function _hagerzhang!(df,
             end
             c = (A + B) / convert(T, 2)
 
-            phi_c, dphi_c = linefunc!(df, x, s, c, xtmp, true)
+            phi_c, dphi_c = ϕdϕ(c)
             @assert isfinite(phi_c) && isfinite(dphi_c)
             push!(alphas, c)
             push!(values, phi_c)
             push!(slopes, dphi_c)
-            # ia, ib = update(phi, lsr, iA, iB, length(lsr), phi_lim) # TODO: Pass options
-            ia, ib = update!(df, x, s, xtmp, alphas, values, slopes, iA, iB, length(alphas), phi_lim, display)
+
+            ia, ib = update!(ϕdϕ, alphas, values, slopes, iA, iB, length(alphas), phi_lim, display)
         end
         iter += 1
     end
@@ -323,10 +325,7 @@ function secant(alphas, values, slopes, ia::Integer, ib::Integer)
     return secant(alphas[ia], alphas[ib], slopes[ia], slopes[ib])
 end
 # phi
-function secant2!(df,
-                  x::AbstractArray,
-                  s::AbstractArray,
-                  xtmp::AbstractArray,
+function secant2!(ϕdϕ,
                   alphas,
                   values,
                   slopes,
@@ -353,7 +352,7 @@ function secant2!(df,
     end
     @assert isfinite(c)
     # phi_c = phi(tmpc, c) # Replace
-    phi_c, dphi_c = linefunc!(df, x, s, c, xtmp, true)
+    phi_c, dphi_c = ϕdϕ(c)
     @assert isfinite(phi_c) && isfinite(dphi_c)
 
     push!(alphas, c)
@@ -367,8 +366,8 @@ function secant2!(df,
         end
         return true, ic, ic
     end
-    # iA, iB = update(phi, lsr, ia, ib, ic, phi_lim)
-    iA, iB = update!(df, x, s, xtmp, alphas, values, slopes, ia, ib, ic, phi_lim, display)
+
+    iA, iB = update!(ϕdϕ, alphas, values, slopes, ia, ib, ic, phi_lim, display)
     if display & SECANT2 > 0
         println("secant2: iA = ", iA, ", iB = ", iB, ", ic = ", ic)
     end
@@ -387,7 +386,7 @@ function secant2!(df,
             println("secant2: second c = ", c)
         end
         # phi_c = phi(tmpc, c) # TODO: Replace
-        phi_c, dphi_c = linefunc!(df, x, s, c, xtmp, true)
+        phi_c, dphi_c = ϕdϕ(c)
         @assert isfinite(phi_c) && isfinite(dphi_c)
 
         push!(alphas, c)
@@ -402,7 +401,7 @@ function secant2!(df,
             end
             return true, ic, ic
         end
-        iA, iB = update!(df, x, s, xtmp, alphas, values, slopes, iA, iB, ic, phi_lim, display)
+        iA, iB = update!(ϕdϕ, alphas, values, slopes, iA, iB, ic, phi_lim, display)
     end
     if display & SECANT2 > 0
         println("secant2 output: a = ", alphas[iA], ", b = ", alphas[iB])
@@ -414,10 +413,7 @@ end
 # Given a third point, pick the best two that retain the bracket
 # around the minimum (as defined by HZ, eq. 29)
 # b will be the upper bound, and a the lower bound
-function update!(df,
-                 x::AbstractArray,
-                 s::AbstractArray,
-                 xtmp::AbstractArray,
+function update!(ϕdϕ,
                  alphas,
                  values,
                  slopes,
@@ -461,15 +457,12 @@ function update!(df,
     end
     # phi_c is bigger than phi_0, which implies that the minimum
     # lies between a and c. Find it via bisection.
-    return bisect!(df, x, s, xtmp, alphas, values, slopes, ia, ic, phi_lim, display)
+    return bisect!(ϕdϕ, alphas, values, slopes, ia, ic, phi_lim, display)
 end
 
 # HZ, stage U3 (with theta=0.5)
-function bisect!(df,
-                 x::AbstractArray{T},
-                 s::AbstractArray{T},
-                 xtmp::AbstractArray{T},
-                 alphas,
+function bisect!(ϕdϕ,
+                 alphas::AbstractArray{T},
                  values,
                  slopes,
                  ia::Integer,
@@ -490,7 +483,7 @@ function bisect!(df,
             println("bisect: a = ", a, ", b = ", b, ", b - a = ", b - a)
         end
         d = (a + b) / convert(T, 2)
-        phi_d, gphi = linefunc!(df, x, s, d, xtmp, true)
+        phi_d, gphi = ϕdϕ(d)
         @assert isfinite(phi_d) && isfinite(gphi)
 
         push!(alphas, d)
@@ -510,28 +503,6 @@ function bisect!(df,
         end
     end
     return ia, ib
-end
-
-# Define one-parameter function for line searches
-function linefunc!(df,
-                   x::AbstractArray,
-                   s::AbstractArray,
-                   alpha::Real,
-                   xtmp::AbstractArray,
-                   calc_grad::Bool)
-    for i = 1:length(x)
-        xtmp[i] = x[i] + alpha * s[i]
-    end
-    gphi = convert(eltype(s), NaN)
-    if calc_grad
-        val = NLSolversBase.value_gradient!(df,xtmp)
-        if isfinite(val)
-            gphi = vecdot(NLSolversBase.gradient(df), s)
-        end
-    else
-        val = value!(df, xtmp)
-    end
-    return val, gphi
 end
 
 """
@@ -554,6 +525,8 @@ otherwise, we select according to procedure I1-2, with starting value α0.
 end
 
 function (is::InitialHagerZhang)(state, phi_0, dphi_0, df)
+
+
     if isnan(state.f_x_previous) && isnan(is.α0)
         # If we're at the first iteration (f_x_previous is NaN)
         # and the user has not provided an initial step size (is.α0 is NaN),
@@ -577,7 +550,7 @@ function _hzI12(alpha::T,
                 df,
                 x::AbstractArray{T},
                 s::AbstractArray{T},
-                xtmp::AbstractArray{T},
+                x_new::AbstractArray{T},
                 phi_0::T,
                 dphi_0::T,
                 psi1::Real = convert(T,0.2),
@@ -586,21 +559,24 @@ function _hzI12(alpha::T,
                 alphamax::Real = convert(T, Inf),
                 verbose::Bool = false) where T
 
-    # Prevent values of `xtmp` that are likely to make
-    # df.f(xtmp) infinite
+
+     ϕ = make_ϕ(df, x_new, x, s)
+
+    # Prevent values of `x_new` that are likely to make
+    # ϕ(x_new) infinite
     iterfinitemax::Int = ceil(Int, -log2(eps(T)))
 
     alphatest = psi1 * alpha
     alphatest = min(alphatest, alphamax)
 
-    @. xtmp = x + alphatest * s
-    phitest = NLSolversBase.value!(df, xtmp)
+    phitest = ϕ(alphatest)
 
     iterfinite = 1
     while !isfinite(phitest)
         alphatest = psi3 * alphatest
-        @. xtmp = x + alphatest * s
-        phitest = NLSolversBase.value!(df, xtmp)
+
+        phitest = ϕ(alphatest)
+
         iterfinite += 1
         if iterfinite >= iterfinitemax
             return zero(T), true

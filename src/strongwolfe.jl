@@ -10,32 +10,25 @@ This algorithm is mostly of theoretical interest, users should most likely
 use `MoreThuente`, `HagerZhang` or `BackTracking`.
 
 ## Parameters:  (and defaults)
-* `c1 = 1e-4`: Armijo condition
-* `c2 = 0.9` : second (strong) Wolfe condition
-* `rho = 2.0` : bracket growth
+* `c_1 = 1e-4`: Armijo condition
+* `c_2 = 0.9` : second (strong) Wolfe condition
+* `ρ = 2.0` : bracket growth
 """
 @with_kw struct StrongWolfe{T}
-   c1::T = 1e-4
-   c2::T = 0.9
-   rho::T = 2.0
+   c_1::T = 1e-4
+   c_2::T = 0.9
+   ρ::T = 2.0
 end
 
-(ls::StrongWolfe)(args...) =
-        _strongwolfe!(args...; c1=ls.c1, c2=ls.c2, rho=ls.rho)
+function (ls::StrongWolfe)(df, x::AbstractArray{T},
+                  p::AbstractArray{T},
+                  x_new::AbstractArray{T},
+                  ϕ_0,
+                  dϕ_0,
+                  alpha0::Real, mayterminate) where T
+    @unpack c_1, c_2, ρ = ls
 
-function _strongwolfe!(df,
-                      x::AbstractArray{T},
-                      p::AbstractArray{T},
-                      x_new::AbstractArray{T},
-                      phi_0,
-                      dphi_0,
-                      alpha0::Real,
-                      mayterminate::Bool;
-                      c1::Real = 1e-4,
-                      c2::Real = 0.9,
-                      rho::Real = 2.0) where T
-    # Parameter space
-    n = length(x)
+    ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, p)
 
     # Step-sizes
     a_0 = 0.0
@@ -43,55 +36,49 @@ function _strongwolfe!(df,
     a_i = alpha0
     a_max = 65536.0
 
-    # phi(alpha) = df.f(x + alpha * p)
-    phi_a_iminus1 = phi_0
-    phi_a_i = NaN
+    # ϕ(alpha) = df.f(x + alpha * p)
+    ϕ_a_iminus1 = ϕ_0
+    ϕ_a_i = NaN
 
-    # phi'(alpha) = vecdot(g(x + alpha * p), p)
-    dphi_a_i = NaN
+    # ϕ'(alpha) = vecdot(g(x + alpha * p), p)
+    dϕ_a_i = NaN
 
     # Iteration counter
     i = 1
 
     while a_i < a_max
-        # Update x_new
-        x_new .= x .+ a_i .* p
-        # Evaluate phi(a_i)
-        phi_a_i = NLSolversBase.value!(df, x_new)
+        ϕ_a_i = ϕ(a_i)
 
         # Test Wolfe conditions
-        if (phi_a_i > phi_0 + c1 * a_i * dphi_0) ||
-            (phi_a_i >= phi_a_iminus1 && i > 1)
+        if (ϕ_a_i > ϕ_0 + c_1 * a_i * dϕ_0) ||
+            (ϕ_a_i >= ϕ_a_iminus1 && i > 1)
             a_star = zoom(a_iminus1, a_i,
-                          dphi_0, phi_0,
-                          df, x, p, x_new)
+                          dϕ_0, ϕ_0,
+                          ϕ, dϕ, ϕdϕ, x, p, x_new)
             return a_star
         end
 
-        # Evaluate phi'(a_i)
-        NLSolversBase.gradient!(df, x_new)
-
-        dphi_a_i = vecdot(NLSolversBase.gradient(df), p)
+        dϕ_a_i = dϕ(a_i)
 
         # Check condition 2
-        if abs(dphi_a_i) <= -c2 * dphi_0
+        if abs(dϕ_a_i) <= -c_2 * dϕ_0
             return a_i
         end
 
         # Check condition 3
-        if dphi_a_i >= 0.0
+        if dϕ_a_i >= 0.0 # FIXME untested!
             a_star = zoom(a_i, a_iminus1,
-                          dphi_0, phi_0,
-                          df, x, p, x_new)
+                          dϕ_0, ϕ_0, ϕ, dϕ, ϕdϕ,
+                          x, p, x_new)
             return a_star
         end
 
         # Choose a_iplus1 from the interval (a_i, a_max)
         a_iminus1 = a_i
-        a_i *= rho
+        a_i *= ρ
 
-        # Update phi_a_iminus1
-        phi_a_iminus1 = phi_a_i
+        # Update ϕ_a_iminus1
+        ϕ_a_iminus1 = ϕ_a_i
 
         # Update iteration count
         i += 1
@@ -101,22 +88,21 @@ function _strongwolfe!(df,
     return a_max
 end
 
-function zoom(a_lo::Real,
-              a_hi::Real,
-              dphi_0::Real,
-              phi_0::Real,
-              df,
+function zoom(a_lo::T,
+              a_hi::T,
+              dϕ_0::Real,
+              ϕ_0::Real,
+              ϕ,
+              dϕ,
+              ϕdϕ,
               x::AbstractArray,
               p::AbstractArray,
               x_new::AbstractArray,
-              c1::Real = 1e-4,
-              c2::Real = 0.9)
-
-    # Parameter space
-    n = length(x)
+              c_1::Real = 1e-4,
+              c_2::Real = 0.9) where T
 
     # Step-size
-    a_j = NaN
+    a_j = T(NaN)
 
     # Count iterations
     iteration = 0
@@ -126,47 +112,38 @@ function zoom(a_lo::Real,
     while iteration < max_iterations
         iteration += 1
 
-        # Cache phi_a_lo
-        x_new .= x .+ a_lo .* p
-        phi_a_lo = NLSolversBase.value_gradient!(df, x_new)
-        phiprime_a_lo = vecdot(NLSolversBase.gradient(df), p)
+        ϕ_a_lo, ϕprime_a_lo = ϕdϕ(a_lo)
 
-        # Cache phi_a_hi
-        x_new .= x .+ a_hi .* p
-        phi_a_hi = NLSolversBase.value_gradient!(df, x_new)
-        phiprime_a_hi = vecdot(NLSolversBase.gradient(df), p)
+        ϕ_a_hi, ϕprime_a_hi = ϕdϕ(a_hi)
 
         # Interpolate a_j
         if a_lo < a_hi
             a_j = interpolate(a_lo, a_hi,
-                              phi_a_lo, phi_a_hi,
-                              phiprime_a_lo, phiprime_a_hi)
+                              ϕ_a_lo, ϕ_a_hi,
+                              ϕprime_a_lo, ϕprime_a_hi)
         else
             # TODO: Check if this is needed
             a_j = interpolate(a_hi, a_lo,
-                              phi_a_hi, phi_a_lo,
-                              phiprime_a_hi, phiprime_a_lo)
+                              ϕ_a_hi, ϕ_a_lo,
+                              ϕprime_a_hi, ϕprime_a_lo)
         end
 
-        # Update x_new
-        x_new .= x .+ a_j .* p
-        # Evaluate phi(a_j)
-        phi_a_j = NLSolversBase.value!(df, x_new)
+        # Evaluate ϕ(a_j)
+        ϕ_a_j = ϕ(a_j)
 
         # Check Armijo
-        if (phi_a_j > phi_0 + c1 * a_j * dphi_0) ||
-            (phi_a_j > phi_a_lo)
+        if (ϕ_a_j > ϕ_0 + c_1 * a_j * dϕ_0) ||
+            (ϕ_a_j > ϕ_a_lo)
             a_hi = a_j
         else
-            # Evaluate phiprime(a_j)
-            NLSolversBase.gradient!(df, x_new)
-            phiprime_a_j = vecdot(NLSolversBase.gradient(df), p)
+            # Evaluate ϕprime(a_j)
+            ϕprime_a_j = dϕ(a_j)
 
-            if abs(phiprime_a_j) <= -c2 * dphi_0
+            if abs(ϕprime_a_j) <= -c_2 * dϕ_0
                 return a_j
             end
 
-            if phiprime_a_j * (a_hi - a_lo) >= 0.0
+            if ϕprime_a_j * (a_hi - a_lo) >= 0.0
                 a_hi = a_lo
             end
 
@@ -181,12 +158,12 @@ end
 # a_lo = a_{i - 1}
 # a_hi = a_{i}
 function interpolate(a_i1::Real, a_i::Real,
-                     phi_a_i1::Real, phi_a_i::Real,
-                     dphi_a_i1::Real, dphi_a_i::Real)
-    d1 = dphi_a_i1 + dphi_a_i -
-        3.0 * (phi_a_i1 - phi_a_i) / (a_i1 - a_i)
-    d2 = sqrt(d1 * d1 - dphi_a_i1 * dphi_a_i)
+                     ϕ_a_i1::Real, ϕ_a_i::Real,
+                     dϕ_a_i1::Real, dϕ_a_i::Real)
+    d1 = dϕ_a_i1 + dϕ_a_i -
+        3.0 * (ϕ_a_i1 - ϕ_a_i) / (a_i1 - a_i)
+    d2 = sqrt(d1 * d1 - dϕ_a_i1 * dϕ_a_i)
     return a_i - (a_i - a_i1) *
-        ((dphi_a_i + d2 - d1) /
-         (dphi_a_i - dphi_a_i1 + 2.0 * d2))
+        ((dϕ_a_i + d2 - d1) /
+         (dϕ_a_i - dϕ_a_i1 + 2.0 * d2))
 end

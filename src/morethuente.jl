@@ -142,32 +142,23 @@
     maxfev::Int = 100
 end
 
-(ls::MoreThuente)(args...) =
-       _morethuente!(args...;
-                   f_tol=ls.f_tol, gtol=ls.gtol, x_tol=ls.x_tol, stpmin=ls.alphamin,
-                   stpmax=ls.alphamax, maxfev=ls.maxfev)
+function (ls::MoreThuente)(df,
+                  x::AbstractArray{T},
+                  s::AbstractArray{T},
+                  x_new::AbstractArray{T},
+                  phi_0,
+                  dphi_0,
+                  alpha::Real,
+                  mayterminate::Bool) where T
 
-function _morethuente!(df,
-                      x::AbstractArray{T},
-                      s::AbstractArray{T},
-                      x_new::AbstractArray{T},
-                      phi_0,
-                      dphi_0,
-                      alpha::Real,
-                      mayterminate::Bool;
-                      n::Integer = length(x),
-                      f_tol::Real = 1e-4,
-                      gtol::Real = 0.9,
-                      x_tol::Real = 1e-8,
-                      stpmin::Real = 1e-16,
-                      stpmax::Real = 65536.0,
-                       maxfev::Integer = 100) where T
+    @unpack f_tol, gtol, x_tol, alphamin, alphamax, maxfev = ls
 
-    alphamin = stpmin # rename, should deprecate keyword
-    alphamax = stpmax # rename, should deprecate keyword
+    ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, s)
+
     if vecnorm(s) == 0
         Base.error("Step direction is zero.")
     end
+
     iterfinitemax = -log2(eps(T))
     info = 0
     info_cstep = 1 # Info from step
@@ -176,15 +167,11 @@ function _morethuente!(df,
     # Check the input parameters for errors.
     #
 
-    if n <= 0 || alpha <= 0.0 || f_tol < 0.0 || gtol < 0.0 ||
+    if  alpha <= 0.0 || f_tol < 0.0 || gtol < 0.0 ||
         x_tol < 0.0 || alphamin < 0.0 || alphamax < alphamin || maxfev <= 0
         throw(ArgumentError("Invalid parameters to morethuente"))
     end
 
-
-    # read finit and slope from LineSearchResults
-    f = phi_0
-    dphi_0 = dphi_0 # dot(gradient(df),s)
     if dphi_0 >= 0.0
         throw(ArgumentError("Search direction is not a direction of descent"))
     end
@@ -196,11 +183,11 @@ function _morethuente!(df,
     bracketed = false
     stage1 = true
     nfev = 0
-    finit = f
+    finit = phi_0
     dgtest = f_tol * dphi_0
     width = alphamax - alphamin
     width1 = 2 * width
-    copy!(x_new, x)
+
     # Keep this across calls
 
     #
@@ -230,18 +217,14 @@ function _morethuente!(df,
     alpha = max(alpha, alphamin)
     alpha = min(alpha, alphamax)
 
-    @. x_new = x + alpha*s
-
-    f = NLSolversBase.value_gradient!(df, x_new)
-    gdf = NLSolversBase.gradient(df)
+    f, dg = ϕdϕ(alpha)
     nfev += 1 # This includes calls to f() and g!()
     iterfinite = 0
-    while (!isfinite(f) || any(.!isfinite.(gdf))) && iterfinite < iterfinitemax
+    while (!isfinite(f) || !isfinite(dg)) && iterfinite < iterfinitemax
         iterfinite += 1
         alpha = 0.5*alpha
-        @. x_new = x + alpha*s
-        f = NLSolversBase.value_gradient!(df, x_new)
-        gdf = NLSolversBase.gradient(df)
+
+        f, dg = ϕdϕ(alpha)
         nfev += 1 # This includes calls to f() and g!()
 
         # Make stmax = (3/2)*alpha < 2alpha in the first iteration below
@@ -292,17 +275,12 @@ function _morethuente!(df,
         # Evaluate the function and gradient at alpha
         # and compute the directional derivative.
         #
-        @. x_new = x + alpha*s
-
-        f = NLSolversBase.value_gradient!(df, x_new)
-        gdf = NLSolversBase.gradient(df)
+        f, dg = ϕdϕ(alpha)
         nfev += 1 # This includes calls to f() and g!()
 
-        if isapprox(vecnorm(gdf), 0.0) # TODO: this should be tested vs Optim's g_tol
+        if isapprox(dg, 0.0)
             return alpha
         end
-
-        dg = vecdot(gdf, s)
 
         ftest1 = finit + alpha * dgtest
 

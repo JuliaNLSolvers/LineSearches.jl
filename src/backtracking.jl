@@ -18,10 +18,12 @@ This is a modification of the algorithm described in Nocedal Wright (2nd ed), Se
 end
 
 function (ls::BackTracking)(df, x::AbstractArray{T}, s::AbstractArray{T},
-                            x_1::AbstractArray{T},
+                            x_new::AbstractArray{T},
                             ϕ_0, dϕ_0, α_0::Tα = 1.0, alphamax = convert(T, Inf)) where {T, Tα}
 
     @unpack c_1, ρ_hi, ρ_lo, iterations, order, maxstep = ls
+
+    ϕ = make_ϕ(df, x_new, x, s)
 
     iterfinitemax = -log2(eps(T))
 
@@ -41,23 +43,18 @@ function (ls::BackTracking)(df, x::AbstractArray{T}, s::AbstractArray{T},
 
     α_1, α_2 = α_0, α_0
 
-    # Tentatively move a distance of alpha in the direction of s
-    x_1 .= x .+ α_1.*s
-
-    # Backtrack until we satisfy sufficient decrease condition
-    ϕx_1 = NLSolversBase.value!(df, x_1)
+    ϕx_1 = ϕ(α_1)
 
     iterfinite = 0
 
+    # Backtrack until we satisfy sufficient decrease condition
     while !isfinite(ϕx_1) && iterfinite < iterfinitemax
         iterfinite += 1
         α_1 = α_2
         α_2 = 0.5*α_1
-        # Tentatively move a distance of alpha in the direction of s
-        x_1 .= x .+ α_2.*s
 
         # Backtrack until we satisfy sufficient decrease condition
-        ϕx_1 = NLSolversBase.value!(df, x_1)
+        ϕx_1 = ϕ(α_2)
     end
 
     while ϕx_1 > ϕ_0 + c_1 * α_2 * dϕ_0
@@ -101,11 +98,8 @@ function (ls::BackTracking)(df, x::AbstractArray{T}, s::AbstractArray{T},
         α_1 = α_2
         α_2 = min(α_tmp, maxstep / vecnorm(s, Inf))
 
-        # Update proposed position
-        x_1 .= x .+ α_2.*s
-
         # Evaluate f(x) at proposed position
-        ϕx_0, ϕx_1 = ϕx_1, NLSolversBase.value!(df, x_1)
+        ϕx_0, ϕx_1 = ϕx_1, ϕ(α_2)
     end
 
     return α_2
