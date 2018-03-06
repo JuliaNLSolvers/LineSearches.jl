@@ -525,6 +525,8 @@ otherwise, we select according to procedure I1-2, with starting value α0.
 end
 
 function (is::InitialHagerZhang)(state, phi_0, dphi_0, df)
+
+
     if isnan(state.f_x_previous) && isnan(is.α0)
         # If we're at the first iteration (f_x_previous is NaN)
         # and the user has not provided an initial step size (is.α0 is NaN),
@@ -557,6 +559,9 @@ function _hzI12(alpha::T,
                 alphamax::Real = convert(T, Inf),
                 verbose::Bool = false) where T
 
+
+     ϕ = make_ϕ(df, x_new, x, s)
+
     # Prevent values of `x_new` that are likely to make
     # ϕ(x_new) infinite
     iterfinitemax::Int = ceil(Int, -log2(eps(T)))
@@ -564,14 +569,14 @@ function _hzI12(alpha::T,
     alphatest = psi1 * alpha
     alphatest = min(alphatest, alphamax)
 
-    @. x_new = x + alphatest * s
-    phitest = NLSolversBase.value!(df, x_new)
+    phitest = ϕ(alphatest)
 
     iterfinite = 1
     while !isfinite(phitest)
         alphatest = psi3 * alphatest
-        @. x_new = x + alphatest * s
-        phitest = NLSolversBase.value!(df, x_new)
+
+        phitest = ϕ(alphatest)
+
         iterfinite += 1
         if iterfinite >= iterfinitemax
             return zero(T), true
