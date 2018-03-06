@@ -118,7 +118,7 @@ function _hagerzhang!(df,
     ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, s)
 
     # Prevent values of `x_new` that are likely to make
-    # df.f(x_new) infinite
+    # ϕ(x_new) infinite
     iterfinitemax::Int = ceil(Int, -log2(eps(T)))
     alphas = [T(0.0)] # for bisection
     values = [phi_0]
@@ -558,7 +558,7 @@ function _hzI12(alpha::T,
                 verbose::Bool = false) where T
 
     # Prevent values of `x_new` that are likely to make
-    # df.f(x_new) infinite
+    # ϕ(x_new) infinite
     iterfinitemax::Int = ceil(Int, -log2(eps(T)))
 
     alphatest = psi1 * alpha
