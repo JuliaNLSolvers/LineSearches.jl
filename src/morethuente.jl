@@ -142,18 +142,18 @@
     maxfev::Int = 100
 end
 
-function (ls::MoreThuente)(df,
+(ls::MoreThuente)(df::AbstractObjective, x, s, x_new, ϕ_0, dϕ_0, alpha) =
+    (ls::MoreThuente)(make_ϕ_dϕ_ϕdϕ(df, x_new, x, s)..., x, s, x_new, ϕ_0, dϕ_0, alpha)
+
+function (ls::MoreThuente)(ϕ, dϕ, ϕdϕ,
                   x::AbstractArray{T},
                   s::AbstractArray{T},
                   x_new::AbstractArray{T},
-                  phi_0,
-                  dphi_0,
-                  alpha::Real,
-                  mayterminate::Bool) where T
+                  ϕ_0,
+                  dϕ_0,
+                  alpha::Real) where T
 
     @unpack f_tol, gtol, x_tol, alphamin, alphamax, maxfev = ls
-
-    ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, s)
 
     if vecnorm(s) == 0
         Base.error("Step direction is zero.")
@@ -172,7 +172,7 @@ function (ls::MoreThuente)(df,
         throw(ArgumentError("Invalid parameters to morethuente"))
     end
 
-    if dphi_0 >= 0.0
+    if dϕ_0 >= 0.0
         throw(ArgumentError("Search direction is not a direction of descent"))
     end
 
@@ -183,8 +183,8 @@ function (ls::MoreThuente)(df,
     bracketed = false
     stage1 = true
     nfev = 0
-    finit = phi_0
-    dgtest = f_tol * dphi_0
+    finit = ϕ_0
+    dgtest = f_tol * dϕ_0
     width = alphamax - alphamin
     width1 = 2 * width
 
@@ -202,10 +202,10 @@ function (ls::MoreThuente)(df,
 
     stx = 0.0
     fx = finit
-    dgx = dphi_0
+    dgx = dϕ_0
     sty = 0.0
     fy = finit
-    dgy = dphi_0
+    dgy = dϕ_0
 
     # START: Ensure that the initial step provides finite function values
     # This is not part of the original FORTRAN code
@@ -305,7 +305,7 @@ function (ls::MoreThuente)(df,
         if bracketed && stmax - stmin <= x_tol * stmax
             info = 2
         end
-        if f <= ftest1 && abs(dg) <= -gtol * dphi_0
+        if f <= ftest1 && abs(dg) <= -gtol * dϕ_0
             info = 1
         end
 
@@ -322,7 +322,7 @@ function (ls::MoreThuente)(df,
         # function has a nonpositive value and nonnegative derivative.
         #
 
-        if stage1 && f <= ftest1 && dg >= min(f_tol, gtol) * dphi_0
+        if stage1 && f <= ftest1 && dg >= min(f_tol, gtol) * dϕ_0
             stage1 = false
         end
 

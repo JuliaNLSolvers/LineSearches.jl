@@ -22,9 +22,11 @@
             dphi_0 = dot(p, grtmp)
 
             alpha = 1.0
-            mayterminate = false
+            if linesearch! == HagerZhang()
+                linesearch!.mayterminate[] = false
+            end
 
-            alpha = linesearch!(df, x, p, xtmp, phi_0, dphi_0, alpha, mayterminate)
+            alpha = linesearch!(df, x, p, xtmp, phi_0, dphi_0, alpha)
             #xnew = x + alpha*p
 
             @test alpha ≈ lsalphas[i]
@@ -46,12 +48,14 @@
             dphi_0 = dot(p, grtmp)
 
             alpha = 1.0
-            mayterminate = false
+            if linesearch! == HagerZhang()
+                linesearch!.mayterminate[] = false
+            end
 
-            if linesearch! == HagerZhang() || linesearch! == MoreThuente()
-                @test_throws ErrorException alpha = linesearch!(df, x, p, xtmp, phi_0, dphi_0, alpha, mayterminate)
+            if typeof(linesearch!) <: HagerZhang || typeof(linesearch!) <: MoreThuente
+                @test_throws ErrorException alpha = linesearch!(df, x, p, xtmp, phi_0, dphi_0, alpha)
             else
-                alpha = linesearch!(df, x, p, xtmp, phi_0, dphi_0, alpha, mayterminate)
+                alpha = linesearch!(df, x, p, xtmp, phi_0, dphi_0, alpha)
                 @test alpha == 1.0 # Is this what we want for non-descent directions?
             end
         end
@@ -65,7 +69,8 @@
 
         s = [42.0,18.0]
 
-        mayterminate = false; alpha = 1.0; xtmp = zeros(x0)
+        mayterminate = Ref{Bool}(false)
+        alpha = 1.0; xtmp = zeros(x0)
 
         lsalphas =  [1.0,                  # Static(scaled)
                      0.021884405476620426, # Static(scaled)
@@ -82,7 +87,7 @@
 
             df = NLSolversBase.OnceDifferentiable(pr.f, pr.g!, x0)
 
-            stepsize = ls(df, x0, s, xtmp, phi_0, dphi_0, alpha, mayterminate)
+            stepsize = ls(df, x0, s, xtmp, phi_0, dphi_0, alpha)
 
             @test stepsize ≈ lsalphas[i]
         end

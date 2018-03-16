@@ -17,7 +17,7 @@ This will then use a step-size alpha ← min(alpha,||s||_2) / ||s||_2
     scaled::Bool = false # Scales step. alpha ← min(alpha,||s||_2) / ||s||_2
 end
 
-(ls::Static)(df, x, s, x_new, phi0, dphi0, alpha, mayterminate) = (ls::Static)(df, x, s, x_new)
+(ls::Static)(df, x, s, x_new, phi0, dphi0, alpha) = (ls::Static)(df, x, s, x_new)
 
 function (ls::Static)(df, x, s, x_new)
     @unpack alpha, scaled = ls

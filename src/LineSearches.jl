@@ -5,6 +5,7 @@ module LineSearches
 using Parameters, NaNMath
 
 import NLSolversBase
+import NLSolversBase: AbstractObjective
 import Base.clear!
 
 export LineSearchResults, LineSearchException

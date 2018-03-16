@@ -18,7 +18,7 @@ mutable struct StateDummy
     x_ls
     f_x_previous
     s
-    mayterminate::Bool
+    mayterminate::Ref{Bool}
     dphi_0_previous
 end
 

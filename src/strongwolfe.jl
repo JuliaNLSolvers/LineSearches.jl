@@ -25,7 +25,7 @@ function (ls::StrongWolfe)(df, x::AbstractArray{T},
                   x_new::AbstractArray{T},
                   ϕ_0,
                   dϕ_0,
-                  alpha0::Real, mayterminate) where T
+                  alpha0::Real) where T
     @unpack c_1, c_2, ρ = ls
 
     ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, p)
