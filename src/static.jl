@@ -29,9 +29,7 @@ function (ls::Static)(df, x, s, x_new)
         alpha = min(alpha, ns) / ns
     end
 
-    # All line searches are assume to have evaluated the function at
-    # the last value. We will change this to actually be returned instead
-    ϕx = ϕ(alpha)
+    ϕα = ϕ(alpha)
 
-    return alpha
+    return alpha, ϕα
 end

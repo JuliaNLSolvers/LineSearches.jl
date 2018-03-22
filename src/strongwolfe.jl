@@ -55,14 +55,14 @@ function (ls::StrongWolfe)(df, x::AbstractArray{T},
             a_star = zoom(a_iminus1, a_i,
                           dϕ_0, ϕ_0,
                           ϕ, dϕ, ϕdϕ, x, p, x_new)
-            return a_star
+            return a_star, ϕ(a_star)
         end
 
         dϕ_a_i = dϕ(a_i)
 
         # Check condition 2
         if abs(dϕ_a_i) <= -c_2 * dϕ_0
-            return a_i
+            return a_i, dϕ_a_i
         end
 
         # Check condition 3
@@ -70,7 +70,7 @@ function (ls::StrongWolfe)(df, x::AbstractArray{T},
             a_star = zoom(a_i, a_iminus1,
                           dϕ_0, ϕ_0, ϕ, dϕ, ϕdϕ,
                           x, p, x_new)
-            return a_star
+            return a_star, ϕ(a_star)
         end
 
         # Choose a_iplus1 from the interval (a_i, a_max)
@@ -84,8 +84,8 @@ function (ls::StrongWolfe)(df, x::AbstractArray{T},
         i += 1
     end
 
-    # Quasi-error response
-    return a_max
+    # Quasi-error response TODO make this error instead
+    return a_max, ϕ(a_max)
 end
 
 function zoom(a_lo::T,

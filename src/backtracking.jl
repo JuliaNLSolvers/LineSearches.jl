@@ -102,5 +102,5 @@ function (ls::BackTracking)(df, x::AbstractArray{T}, s::AbstractArray{T},
         ϕx_0, ϕx_1 = ϕx_1, ϕ(α_2)
     end
 
-    return α_2
+    return α_2, ϕx_1
 end

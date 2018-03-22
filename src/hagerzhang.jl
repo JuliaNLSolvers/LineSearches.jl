@@ -131,7 +131,7 @@ function (ls::HagerZhang)(df,
     if !(isfinite(phi_c) && isfinite(dphi_c))
         warn("Failed to achieve finite new evaluation point, using alpha=0")
         mayterminate[] = false # reset in case another initial guess is used next
-        return zero(T) # phi_0
+        return T(0.0), ϕ(T(0.0)) # phi_0
     end
     push!(alphas, c)
     push!(values, phi_c)
@@ -145,7 +145,7 @@ function (ls::HagerZhang)(df,
             println("Wolfe condition satisfied on point alpha = ", c)
         end
         mayterminate[] = false # reset in case another initial guess is used next
-        return c # phi_c
+        return c, phi_c # phi_c
     end
     # Initial bracketing step (HZ, stages B0-B3)
     isbracketed = false
@@ -196,7 +196,7 @@ function (ls::HagerZhang)(df,
                 end
                 if c == cold || nextfloat(c) >= alphamax
                     mayterminate[] = false # reset in case another initial guess is used next
-                    return cold
+                    return cold, dphi_c
                 end
             end
             phi_c, dphi_c = ϕdϕ(c)
@@ -212,7 +212,7 @@ function (ls::HagerZhang)(df,
             end
             if !(isfinite(phi_c) && isfinite(dphi_c))
                 mayterminate[] = false # reset in case another initial guess is used next
-                return cold
+                return cold, ϕ(cold)
             elseif dphi_c < 0 && c == alphamax
                 # We're on the edge of the allowed region, and the
                 # value is still decreasing. This can be due to
@@ -228,7 +228,7 @@ function (ls::HagerZhang)(df,
                             ", dphi_c = ", dphi_c)
                 end
                 mayterminate[] = false # reset in case another initial guess is used next
-                return c
+                return c, phi_c
             end
             push!(alphas, c)
             push!(values, phi_c)
@@ -250,12 +250,12 @@ function (ls::HagerZhang)(df,
         end
         if b - a <= eps(b)
             mayterminate[] = false # reset in case another initial guess is used next
-            return a # lsr.value[ia]
+            return a, values[ia] # lsr.value[ia]
         end
         iswolfe, iA, iB = secant2!(ϕdϕ, alphas, values, slopes, ia, ib, phi_lim, delta, sigma, display)
         if iswolfe
             mayterminate[] = false # reset in case another initial guess is used next
-            return alphas[iA] # lsr.value[iA]
+            return alphas[iA], values[iA] # lsr.value[iA]
         end
         A = alphas[iA]
         B = alphas[iB]
@@ -270,7 +270,7 @@ function (ls::HagerZhang)(df,
                     println("Linesearch: secant suggests it's flat")
                 end
                 mayterminate[] = false # reset in case another initial guess is used next
-                return A
+                return A, values[iA]
             end
             ia = iA
             ib = iB

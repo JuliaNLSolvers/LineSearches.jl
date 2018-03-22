@@ -279,7 +279,7 @@ function (ls::MoreThuente)(ϕ, dϕ, ϕdϕ,
         nfev += 1 # This includes calls to f() and g!()
 
         if isapprox(dg, 0.0)
-            return alpha
+            return alpha, f
         end
 
         ftest1 = finit + alpha * dgtest
@@ -314,7 +314,7 @@ function (ls::MoreThuente)(ϕ, dϕ, ϕdϕ,
         #
 
         if info != 0
-            return alpha
+            return alpha, f
         end
 
         #
