@@ -17,13 +17,17 @@ This is a modification of the algorithm described in Nocedal Wright (2nd ed), Se
     maxstep::TF = Inf
 end
 
-function (ls::BackTracking)(df, x::AbstractArray{T}, s::AbstractArray{T},
+function (ls::BackTracking)(df::AbstractObjective, x::AbstractArray{T}, s::AbstractArray{T},
+                            x_new::AbstractArray{T}, ϕ_0, dϕ_0, α_0::Tα = 1.0, alphamax = convert(T, Inf)) where {T, Tα}
+    ϕ = make_ϕ(df, x_new, x, s)
+
+    ls(ϕ, x, s, x_new, ϕ_0, dϕ_0, α_0, alphamax)
+end
+function (ls::BackTracking)(ϕ, x::AbstractArray{T}, s::AbstractArray{T},
                             x_new::AbstractArray{T},
                             ϕ_0, dϕ_0, α_0::Tα = 1.0, alphamax = convert(T, Inf)) where {T, Tα}
 
     @unpack c_1, ρ_hi, ρ_lo, iterations, order, maxstep = ls
-
-    ϕ = make_ϕ(df, x_new, x, s)
 
     iterfinitemax = -log2(eps(T))
 

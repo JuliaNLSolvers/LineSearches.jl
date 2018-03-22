@@ -93,18 +93,22 @@ Conjugate gradient line search implementation from:
    mayterminate::Tm = Ref{Bool}(false)
 end
 
-function (ls::HagerZhang)(df,
+function (ls::HagerZhang)(df::AbstractObjective,  x::AbstractArray{T}, s::AbstractArray{T},
+                            x_new::AbstractArray{T}, args...) where T
+    ϕ, ϕdϕ = make_ϕ_ϕdϕ(df, x_new, x, s)
+    ls(ϕ, ϕdϕ, x, s, x_new, args...)
+end
+
+function (ls::HagerZhang)(ϕ, ϕdϕ,
                      x::AbstractArray{T},
                      s::AbstractArray{T},
                      x_new::AbstractArray{T},
-                     phi_0,
-                     dphi_0,
+                     phi_0::Real,
+                     dphi_0::Real,
                      c::Real) where T
 
     @unpack delta, sigma, alphamax, rho, epsilon, gamma,
             linesearchmax, psi3, display, mayterminate = ls
-
-    ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, s)
 
     # Prevent values of `x_new` that are likely to make
     # ϕ(x_new) infinite

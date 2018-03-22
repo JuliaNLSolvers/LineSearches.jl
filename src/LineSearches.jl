@@ -27,6 +27,19 @@ function make_ϕ(df, x_new, x, s)
     end
     ϕ
 end
+function make_ϕdϕ(df, x_new, x, s)
+    function ϕdϕ(α)
+        # Move a distance of alpha in the direction of s
+        x_new .= x .+ α.*s
+
+        # Evaluate ∇f(x+α*s)
+        NLSolversBase.value_gradient!(df, x_new)
+
+        # Calculate ϕ(a_i), ϕ'(a_i)
+        NLSolversBase.value(df), vecdot(NLSolversBase.gradient(df), s)
+    end
+    ϕdϕ
+end
 function make_ϕ_dϕ(df, x_new, x, s)
     function dϕ(α)
         # Move a distance of alpha in the direction of s
@@ -62,6 +75,19 @@ function make_ϕ_dϕ_ϕdϕ(df, x_new, x, s)
         NLSolversBase.value(df), vecdot(NLSolversBase.gradient(df), s)
     end
     make_ϕ(df, x_new, x, s), dϕ, ϕdϕ
+end
+function make_ϕ_ϕdϕ(df, x_new, x, s)
+    function ϕdϕ(α)
+        # Move a distance of alpha in the direction of s
+        x_new .= x .+ α.*s
+
+        # Evaluate ∇f(x+α*s)
+        NLSolversBase.value_gradient!(df, x_new)
+
+        # Calculate ϕ'(a_i)
+        NLSolversBase.value(df), vecdot(NLSolversBase.gradient(df), s)
+    end
+    make_ϕ(df, x_new, x, s), ϕdϕ
 end
 
 include("types.jl")

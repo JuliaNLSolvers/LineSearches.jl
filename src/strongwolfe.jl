@@ -21,14 +21,15 @@ use `MoreThuente`, `HagerZhang` or `BackTracking`.
 end
 
 function (ls::StrongWolfe)(df, x::AbstractArray{T},
-                  p::AbstractArray{T},
-                  x_new::AbstractArray{T},
-                  ϕ_0,
-                  dϕ_0,
-                  alpha0::Real) where T
-    @unpack c_1, c_2, ρ = ls
-
+                           p::AbstractArray{T}, x_new::AbstractArray{T},
+                           ϕ_0, dϕ_0, alpha0::Real) where T
     ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, p)
+    ls(ϕ, dϕ, ϕdϕ, x, p, x_new, ϕ_0, dϕ_0, alpha0)
+end
+function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ, x::AbstractArray{T},
+                           p::AbstractArray{T}, x_new::AbstractArray{T},
+                           ϕ_0, dϕ_0, alpha0::Real) where T
+    @unpack c_1, c_2, ρ = ls
 
     # Step-sizes
     a_0 = 0.0

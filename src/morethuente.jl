@@ -142,10 +142,13 @@
     maxfev::Int = 100
 end
 
-(ls::MoreThuente)(df::AbstractObjective, x, s, x_new, ϕ_0, dϕ_0, alpha) =
-    (ls::MoreThuente)(make_ϕ_dϕ_ϕdϕ(df, x_new, x, s)..., x, s, x_new, ϕ_0, dϕ_0, alpha)
-
-function (ls::MoreThuente)(ϕ, dϕ, ϕdϕ,
+function (ls::MoreThuente)(df::AbstractObjective, x::AbstractArray{T},
+                           s::AbstractArray{T}, x_new::AbstractArray{T},
+                           ϕ_0, dϕ_0, alpha::Real) where T
+    ϕdϕ = make_ϕdϕ(df, x_new, x, s)
+    ls(ϕdϕ, x, s, x_new, ϕ_0, dϕ_0, alpha)
+end
+function (ls::MoreThuente)(ϕdϕ,
                   x::AbstractArray{T},
                   s::AbstractArray{T},
                   x_new::AbstractArray{T},

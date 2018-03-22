@@ -17,13 +17,14 @@ This will then use a step-size alpha ← min(alpha,||s||_2) / ||s||_2
     scaled::Bool = false # Scales step. alpha ← min(alpha,||s||_2) / ||s||_2
 end
 
-(ls::Static)(df, x, s, x_new, phi0, dphi0, alpha) = (ls::Static)(df, x, s, x_new)
+function (ls::Static)(df::AbstractObjective, x, s, x_new, phi0=nothing, dphi0=nothing, alpha=nothing)
+    ϕ = make_ϕ(df, x_new, x, s)
+    ls(ϕ, x, s, x_new)
+end
 
-function (ls::Static)(df, x, s, x_new)
+function (ls::Static)(ϕ, x, s, x_new, phi0=nothing, dphi0=nothing, alpha=nothing)
     @unpack alpha, scaled = ls
     @assert alpha > 0 # This should really be done at the constructor level
-
-    ϕ = make_ϕ(df, x_new, x, s)
 
     if scaled == true && (ns = vecnorm(s)) > zero(typeof(alpha))
         alpha = min(alpha, ns) / ns
