@@ -12,7 +12,7 @@ is scaled with the `l_2` norm of the step direction.
     scaled::Bool = false # Scales step. alpha ← min(alpha,||s||_2) / ||s||_2
 end
 
-function (is::InitialStatic{T})(state, phi_0, dphi_0, df) where T
+function (is::InitialStatic{T})(ls, state, phi_0, dphi_0, df) where T
     state.alpha = is.alpha
     if is.scaled == true && (ns = vecnorm(state.s)) > zero(T)
         # TODO: Type instability if there's a type mismatch between is.alpha and ns
@@ -33,7 +33,7 @@ If state.alpha is NaN, then return fallback value is.alpha
     alphamax::T = Inf
 end
 
-function (is::InitialPrevious)(state, phi_0, dphi_0, df)
+function (is::InitialPrevious)(ls, state, phi_0, dphi_0, df)
     if isnan(state.alpha)
         state.alpha = is.alpha
     end
@@ -67,7 +67,7 @@ If αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.
     snap2one::Tuple{T,T} = (0.75, Inf) # Set everything in this (closed) interval to 1.0
 end
 
-function (is::InitialQuadratic{T})(state, phi_0, dphi_0, df) where T
+function (is::InitialQuadratic{T})(ls, state, phi_0, dphi_0, df) where T
     if !isfinite(state.f_x_previous) || dphi_0 ≈ zero(T)
         # If we're at the first iteration
         αguess = is.α0
@@ -110,7 +110,7 @@ If αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.
     snap2one::Tuple{T,T} = (0.75, Inf) # Set everything in this (closed) interval to 1.0
 end
 
-function (is::InitialConstantChange{T})(state, phi_0, dphi_0, df) where T
+function (is::InitialConstantChange{T})(ls, state, phi_0, dphi_0, df) where T
     if !isfinite(state.dphi_0_previous) || !isfinite(state.alpha) || dphi_0 ≈ zero(T)
         # If we're at the first iteration
         αguess = is.α0
@@ -147,7 +147,7 @@ otherwise, we select according to procedure I1-2, with starting value α0.
     verbose::Bool = false
 end
 
-function (is::InitialHagerZhang)(state, phi_0, dphi_0, df)
+function (is::InitialHagerZhang)(ls, state, phi_0, dphi_0, df)
     if isnan(state.f_x_previous) && isnan(is.α0)
         # If we're at the first iteration (f_x_previous is NaN)
         # and the user has not provided an initial step size (is.α0 is NaN),
@@ -156,11 +156,11 @@ function (is::InitialHagerZhang)(state, phi_0, dphi_0, df)
         state.alpha = _hzI0(state.x, NLSolversBase.gradient(df),
                             NLSolversBase.value(df),
                             convert(eltype(state.x), is.ψ0)) # Hack to deal with type instability between is{T} and state.x
-        state.mayterminate[] = false
+        ls.mayterminate[] = false
     else
         # Pick the initial step size according to HZ #I1-2
         state.alpha = _hzI12(state.alpha, df, state.x, state.s, state.x_ls, phi_0, dphi_0,
-                   is.ψ1, is.ψ2, is.ψ3, is.αmax, is.verbose, state.mayterminate)
+                   is.ψ1, is.ψ2, is.ψ3, is.αmax, is.verbose, ls.mayterminate)
     end
     return state.alpha
 end

@@ -13,98 +13,109 @@
     dphi_0 = dot(p, grtmp)
 
     function getstate()
-        state = StateDummy(1.0,  x, similar(x), NaN, p, Ref{Bool}(false), NaN)
+        state = StateDummy(1.0,  x, similar(x), NaN, p, NaN)
     end
-
     # Test HagerZhang I0
+    ls = HagerZhang()
     state = getstate()
     is = InitialHagerZhang(α0 = NaN)
-    is(state, phi_0, dphi_0, df)
+    is(ls, state, phi_0, dphi_0, df)
     @test state.alpha == 0.005
-    @test state.mayterminate[] == false
+    @test ls.mayterminate[] == false
 
     # Test HagerZhang I12
+    ls = HagerZhang()
     state = getstate()
     is = InitialHagerZhang(α0 = 1.0)
-    is(state, phi_0, dphi_0, df)
+    is(ls, state, phi_0, dphi_0, df)
     @test state.alpha == 0.4999999999999999
-    @test state.mayterminate[] == true
+    @test ls.mayterminate[] == true
 
     # Test Static unscaled
+    ls = HagerZhang()
     state = getstate()
     is = InitialStatic()
-    is(state, phi_0, dphi_0, df)
+    is(ls, state, phi_0, dphi_0, df)
     @test state.alpha == is.alpha
-    @test state.mayterminate[] == false
+    @test ls.mayterminate[] == false
 
     # Test Static scaled
+    ls = HagerZhang()
     state = getstate()
     is = InitialStatic(alpha = 0.5, scaled = true)
-    is(state, phi_0, dphi_0, df)
+    is(ls, state, phi_0, dphi_0, df)
     @test state.alpha == 0.08838834764831843
-    @test state.mayterminate[] == false
+    @test ls.mayterminate[] == false
 
     # Test Previous
+    ls = HagerZhang()
     state = getstate()
     alpha = state.alpha
-    state.mayterminate[] = true
+    ls.mayterminate[] = true
     is = InitialPrevious()
-    is(state, phi_0, dphi_0, df)
+    is(ls, state, phi_0, dphi_0, df)
     @test state.alpha == alpha
-    @test state.mayterminate[] == true
+    @test ls.mayterminate[] == true
 
     # Test Previous NaN
+    ls = HagerZhang()
     state = getstate()
     state.alpha = NaN
-    state.mayterminate[] = true
+    ls.mayterminate[] = true
     is = InitialPrevious()
-    is(state, phi_0, dphi_0, df)
+    is(ls, state, phi_0, dphi_0, df)
     @test state.alpha == is.alpha
-    @test state.mayterminate[] == true # InitialPrevious should not touch this!
+    @test ls.mayterminate[] == true # InitialPrevious should not touch this!
 
     # Test Quadratic NaN
+    ls = HagerZhang()
     state = getstate()
     is = InitialQuadratic()
-    is(state, phi_0, dphi_0, df)
+    is(ls, state, phi_0, dphi_0, df)
     @test state.alpha == is.α0
-    @test state.mayterminate[] == false
+    @test ls.mayterminate[] == false
 
     # Test Quadratic
+    ls = HagerZhang()
     state = getstate()
     state.f_x_previous = 2*phi_0
     is = InitialQuadratic(snap2one=(0.9,Inf))
-    is(state, phi_0, dphi_0, df)
+    is(ls, state, phi_0, dphi_0, df)
     @test state.alpha == 0.8200000000000001
-    @test state.mayterminate[] == false
+    @test ls.mayterminate[] == false
 
     # Test Quadratic snap2one
+    ls = HagerZhang()
     state = getstate()
     state.f_x_previous = 2*phi_0
     is = InitialQuadratic(snap2one=(0.75,Inf))
-    is(state, phi_0, dphi_0, df)
+    is(ls, state, phi_0, dphi_0, df)
     @test state.alpha == 1.0
-    @test state.mayterminate[] == false
+    @test ls.mayterminate[] == false
 
     # Test ConstantChange NaN
+    ls = HagerZhang()
     state = getstate()
     is = InitialConstantChange()
-    is(state, phi_0, dphi_0, df)
+    is(ls, state, phi_0, dphi_0, df)
     @test state.alpha == is.α0
-    @test state.mayterminate[] == false
+    @test ls.mayterminate[] == false
 
     # Test ConstantChange
+    ls = HagerZhang()
     state = getstate()
     state.dphi_0_previous = 0.1*dphi_0
     is = InitialConstantChange()
-    is(state, phi_0, dphi_0, df)
+    is(ls, state, phi_0, dphi_0, df)
     @test state.alpha == 0.25
-    @test state.mayterminate[] == false
+    @test ls.mayterminate[] == false
 
     # Test ConstantChange snap2one
+    ls = HagerZhang()
     state = getstate()
     state.dphi_0_previous = 0.1*dphi_0
     is = InitialConstantChange(snap2one=(0.25,1.0))
-    is(state, phi_0, dphi_0, df)
+    is(ls, state, phi_0, dphi_0, df)
     @test state.alpha == 1.0
-    @test state.mayterminate[] == false
+    @test ls.mayterminate[] == false
 end
