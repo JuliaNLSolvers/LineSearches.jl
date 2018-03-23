@@ -147,7 +147,7 @@ otherwise, we select according to procedure I1-2, with starting value α0.
     verbose::Bool = false
 end
 
-function (is::InitialHagerZhang)(ls, state, phi_0, dphi_0, df)
+function (is::InitialHagerZhang)(ls::T, state, phi_0, dphi_0, df) where T
     if isnan(state.f_x_previous) && isnan(is.α0)
         # If we're at the first iteration (f_x_previous is NaN)
         # and the user has not provided an initial step size (is.α0 is NaN),
@@ -156,11 +156,18 @@ function (is::InitialHagerZhang)(ls, state, phi_0, dphi_0, df)
         state.alpha = _hzI0(state.x, NLSolversBase.gradient(df),
                             NLSolversBase.value(df),
                             convert(eltype(state.x), is.ψ0)) # Hack to deal with type instability between is{T} and state.x
-        ls.mayterminate[] = false
+        if T <: HagerZhang
+            ls.mayterminate[] = false
+        end
     else
         # Pick the initial step size according to HZ #I1-2
+        if T <: HagerZhang
+            mayterminate = ls.mayterminate
+        else
+            mayterminate = Ref{Bool}(false)
+        end
         state.alpha = _hzI12(state.alpha, df, state.x, state.s, state.x_ls, phi_0, dphi_0,
-                   is.ψ1, is.ψ2, is.ψ3, is.αmax, is.verbose, ls.mayterminate)
+                   is.ψ1, is.ψ2, is.ψ3, is.αmax, is.verbose, mayterminate)
     end
     return state.alpha
 end

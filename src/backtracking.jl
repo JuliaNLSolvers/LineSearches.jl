@@ -18,14 +18,20 @@ This is a modification of the algorithm described in Nocedal Wright (2nd ed), Se
 end
 
 function (ls::BackTracking)(df::AbstractObjective, x::AbstractArray{T}, s::AbstractArray{T},
-                            x_new::AbstractArray{T}, ϕ_0, dϕ_0, α_0::Tα = 1.0, alphamax = convert(T, Inf)) where {T, Tα}
-    ϕ = make_ϕ(df, x_new, x, s)
+                            α_0::Tα = 1.0, x_new::AbstractArray{T} = similar(x), ϕ_0 = nothing, dϕ_0 = nothing, alphamax = convert(T, Inf)) where {T, Tα}
+    ϕ, dϕ = make_ϕ_dϕ(df, x_new, x, s)
 
-    ls(ϕ, x, s, x_new, ϕ_0, dϕ_0, α_0, alphamax)
+    if ϕ_0 == nothing
+        ϕ_0 = ϕ(α_0)
+    end
+    if dϕ_0 == nothing
+        dϕ_0 = ϕ(α_0)
+    end
+
+    ls(ϕ, x, s, α_0, ϕ_0, dϕ_0, alphamax)
 end
-function (ls::BackTracking)(ϕ, x::AbstractArray{T}, s::AbstractArray{T},
-                            x_new::AbstractArray{T},
-                            ϕ_0, dϕ_0, α_0::Tα = 1.0, alphamax = convert(T, Inf)) where {T, Tα}
+function (ls::BackTracking)(ϕ, x::AbstractArray{T}, s::AbstractArray{T}, α_0::Tα,
+                            ϕ_0, dϕ_0, alphamax = convert(T, Inf)) where {T, Tα}
 
     @unpack c_1, ρ_hi, ρ_lo, iterations, order, maxstep = ls
 
