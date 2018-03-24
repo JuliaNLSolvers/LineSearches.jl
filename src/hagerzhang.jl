@@ -202,7 +202,7 @@ function _hagerzhang!(df,
                 if display & BRACKET > 0
                     println("bracket: exceeding alphamax, bisecting: alphamax = ", alphamax, ", cold = ", cold, ", new c = ", c)
                 end
-                if c == cold || nextfloat(T) >= alphamax
+                if c == cold || nextfloat(c) >= alphamax
                     return cold
                 end
             end
