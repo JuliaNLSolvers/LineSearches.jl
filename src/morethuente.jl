@@ -278,7 +278,7 @@ function (ls::MoreThuente)(df,
         f, dg = ϕdϕ(alpha)
         nfev += 1 # This includes calls to f() and g!()
 
-        if isapprox(dg, 0.0)
+        if isapprox(dg, 0, atol=eps(T))
             return alpha
         end
 
