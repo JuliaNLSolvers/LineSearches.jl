@@ -103,10 +103,10 @@ function _hagerzhang!(df,
                      x_new::AbstractArray{T},
                      phi_0,
                      dphi_0,
-                     c::Real,
+                     c::T,
                      mayterminate::Bool,
-                     delta::Real = DEFAULTDELTA,
-                     sigma::Real = DEFAULTSIGMA,
+                     delta::Real = T(DEFAULTDELTA),
+                     sigma::Real = T(DEFAULTSIGMA),
                      alphamax::Real = convert(T,Inf),
                      rho::Real = convert(T,5),
                      epsilon::Real = convert(T,1e-6),
@@ -120,7 +120,7 @@ function _hagerzhang!(df,
     # Prevent values of `x_new` that are likely to make
     # ϕ(x_new) infinite
     iterfinitemax::Int = ceil(Int, -log2(eps(T)))
-    alphas = [T(0.0)] # for bisection
+    alphas = [T(0)] # for bisection
     values = [phi_0]
     slopes = [dphi_0]
     if display & LINESEARCH > 0
@@ -187,7 +187,7 @@ function _hagerzhang!(df,
             # have crested over the peak. Use bisection.
             ib = length(alphas)
             ia = ib - 1
-            if c != alphas[ib] || slopes[ib] >= 0
+            if c ≉  alphas[ib] || slopes[ib] >= 0
                 error("c = ", c)
             end
             # ia, ib = bisect(phi, lsr, ia, ib, phi_lim) # TODO: Pass options
@@ -200,10 +200,9 @@ function _hagerzhang!(df,
             if c > alphamax
                 c = (alphamax + cold)/2
                 if display & BRACKET > 0
-                    println("bracket: exceeding alphamax, bisecting: alphamax = ", alphamax,
-                            ", cold = ", cold, ", new c = ", c)
+                    println("bracket: exceeding alphamax, bisecting: alphamax = ", alphamax, ", cold = ", cold, ", new c = ", c)
                 end
-                if c == cold || nextfloat(c) >= alphamax
+                if c == cold || c + eps(T) >= alphamax
                     return cold
                 end
             end
@@ -312,7 +311,7 @@ function satisfies_wolfe(c::T,
                          sigma::Real) where T<:Number
     wolfe1 = delta * dphi_0 >= (phi_c - phi_0) / c &&
                dphi_c >= sigma * dphi_0
-    wolfe2 = (2.0 * delta - 1.0) * dphi_0 >= dphi_c >= sigma * dphi_0 &&
+    wolfe2 = (2 * delta - 1) * dphi_0 >= dphi_c >= sigma * dphi_0 &&
                phi_c <= phi_lim
     return wolfe1 || wolfe2
 end
@@ -627,11 +626,11 @@ function _hzI0(x::AbstractArray{T},
                psi0::T = convert(T,0.01)) where T
     alpha = one(T)
     gr_max = maximum(abs, gr)
-    if gr_max != 0.0
+    if gr_max != zero(T)
         x_max = maximum(abs, x)
-        if x_max != 0.0
+        if x_max != zero(T)
             alpha = psi0 * x_max / gr_max
-        elseif f_x != 0.0
+        elseif f_x != zero(T)
             alpha = psi0 * abs(f_x) / vecnorm(gr)
         end
     end

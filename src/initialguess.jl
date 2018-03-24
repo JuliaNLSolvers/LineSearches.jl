@@ -76,7 +76,7 @@ function (is::InitialQuadratic{T})(state, phi_0, dphi_0, df) where T
         # If we're at the first iteration
         αguess = is.α0
     else
-        αguess = 2.0 * (NLSolversBase.value(df) - state.f_x_previous) / dphi_0
+        αguess = T(2) * (NLSolversBase.value(df) - state.f_x_previous) / dphi_0
         αguess = NaNMath.max(is.αmin, state.alpha*is.ρ, αguess)
         αguess = NaNMath.min(is.αmax, αguess)
         # if αguess ≈ 1, then make it 1 (Newton-type behaviour)

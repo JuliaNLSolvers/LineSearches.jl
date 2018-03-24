@@ -167,12 +167,12 @@ function (ls::MoreThuente)(df,
     # Check the input parameters for errors.
     #
 
-    if  alpha <= 0.0 || f_tol < 0.0 || gtol < 0.0 ||
-        x_tol < 0.0 || alphamin < 0.0 || alphamax < alphamin || maxfev <= 0
+    if  alpha <= 0 || f_tol < 0 || gtol < 0 ||
+        x_tol < 0 || alphamin < 0 || alphamax < alphamin || maxfev <= 0
         throw(ArgumentError("Invalid parameters to morethuente"))
     end
 
-    if dphi_0 >= 0.0
+    if dphi_0 >= 0
         throw(ArgumentError("Search direction is not a direction of descent"))
     end
 
@@ -200,10 +200,10 @@ function (ls::MoreThuente)(df,
     # function, and derivative at the current step.
     #
 
-    stx = 0.0
+    stx = zero(T)
     fx = finit
     dgx = dphi_0
-    sty = 0.0
+    sty = zero(T)
     fy = finit
     dgy = dphi_0
 
@@ -222,13 +222,13 @@ function (ls::MoreThuente)(df,
     iterfinite = 0
     while (!isfinite(f) || !isfinite(dg)) && iterfinite < iterfinitemax
         iterfinite += 1
-        alpha = 0.5*alpha
+        alpha = (T(1)/2)*alpha
 
         f, dg = ϕdϕ(alpha)
         nfev += 1 # This includes calls to f() and g!()
 
         # Make stmax = (3/2)*alpha < 2alpha in the first iteration below
-        stx = (7/8)*alpha
+        stx = (T(7)/8)*alpha
     end
     # END: Ensure that the initial step provides finite function values
 
@@ -380,8 +380,8 @@ function (ls::MoreThuente)(df,
         #
 
         if bracketed
-            if abs(sty - stx) >= 0.66 * width1
-                alpha = stx + 0.5 * (sty - stx)
+            if abs(sty - stx) >= T(33)/50 * width1
+                alpha = stx + T(1)/2 * (sty - stx)
             end
             width1 = width
             width = abs(sty - stx)
@@ -452,6 +452,8 @@ function cstep(stx::Real, fx::Real, dgx::Real,
                alpha::Real, f::Real, dg::Real,
                bracketed::Bool, alphamin::Real, alphamax::Real)
 
+    T = promote_type(typeof(stx), typeof(fx), typeof(dgx), typeof(sty), typeof(fy), typeof(dgy), typeof(alpha), typeof(f), typeof(dg), typeof(alphamin), typeof(alphamax))
+
    info = 0
 
    #
@@ -459,8 +461,8 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    #
 
    if (bracketed && (alpha <= min(stx, sty) || alpha >= max(stx, sty))) ||
-        dgx * (alpha - stx) >= 0.0 || alphamax < alphamin
-      throw(ArgumentError("Minimizer not bracketed"))
+        dgx * (alpha - stx) >= 0 || alphamax < alphamin
+        throw(ArgumentError("Minimizer not bracketed"))
    end
 
    #
@@ -490,11 +492,11 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       q = gamma - dgx + gamma + dg
       r = p / q
       alphac = stx + r * (alpha - stx)
-      alphaq = stx + 0.5 * (dgx / ((fx - f) / (alpha - stx) + dgx)) * (alpha - stx)
+      alphaq = stx + T(1)/2 * (dgx / ((fx - f) / (alpha - stx) + dgx)) * (alpha - stx)
       if abs(alphac - stx) < abs(alphaq - stx)
          alphaf = alphac
       else
-         alphaf = 0.5*(alphac + alphaq)
+         alphaf = T(1)/2*(alphac + alphaq)
       end
       bracketed = true
 
@@ -505,7 +507,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    # the cubic step is taken, else the quadratic step is taken
    #
 
-   elseif sgnd < 0.0
+   elseif sgnd < zero(T)
       info = 2
       bound = false
       theta = 3 * (fx - f) / (alpha - stx) + dgx + dg
@@ -558,7 +560,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       p = gamma - dg + theta
       q = gamma + dgx - dg + gamma
       r = p / q
-      if r < 0.0 && gamma != 0.0
+      if r < 0 && gamma != 0
          alphac = alpha + r * (stx - alpha)
      elseif alpha > stx
          alphac = alphamax
@@ -621,7 +623,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       fy = f
       dgy = dg
    else
-      if sgnd < 0.0
+      if sgnd < zero(T)
          sty = stx
          fy = fx
          dgy = dgx
@@ -640,9 +642,9 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    alpha = alphaf
    if bracketed && bound
       if sty > stx
-         alpha = min(stx + 0.66 * (sty - stx), alpha)
+         alpha = min(stx + T(33)/50 * (sty - stx), alpha)
       else
-         alpha = max(stx + 0.66 * (sty - stx), alpha)
+         alpha = max(stx + T(33)/50 * (sty - stx), alpha)
       end
    end
 
