@@ -14,7 +14,7 @@ end
 
 function (is::InitialStatic{T})(state, phi_0, dphi_0, df) where T
     state.alpha = is.alpha
-    if is.scaled == true && (ns = vecnorm(state.s)) > zero(T)
+    if is.scaled == true && (ns = vecnorm(state.s)) > 0
         # TODO: Type instability if there's a type mismatch between is.alpha and ns
         state.alpha *= min(is.alpha, ns) / ns
     end

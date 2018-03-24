@@ -507,7 +507,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    # the cubic step is taken, else the quadratic step is taken
    #
 
-   elseif sgnd < zero(T)
+   elseif sgnd < 0
       info = 2
       bound = false
       theta = 3 * (fx - f) / (alpha - stx) + dgx + dg
@@ -623,7 +623,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       fy = f
       dgy = dg
    else
-      if sgnd < zero(T)
+      if sgnd < 0
          sty = stx
          fy = fx
          dgy = dgx
