@@ -278,7 +278,7 @@ function (ls::MoreThuente)(df,
         f, dg = ϕdϕ(alpha)
         nfev += 1 # This includes calls to f() and g!()
 
-        if isapprox(dg, 0, atol=eps(T))
+        if isapprox(dg, 0, atol=eps(T)) # Should add atol value to MoreThuente
             return alpha
         end
 
@@ -452,7 +452,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
                alpha::Real, f::Real, dg::Real,
                bracketed::Bool, alphamin::Real, alphamax::Real)
 
-    T = promote_type(typeof(stx), typeof(fx), typeof(dgx), typeof(sty), typeof(fy), typeof(dgy), typeof(alpha), typeof(f), typeof(dg), typeof(alphamin), typeof(alphamax))
+   T = promote_type(typeof(stx), typeof(fx), typeof(dgx), typeof(sty), typeof(fy), typeof(dgy), typeof(alpha), typeof(f), typeof(dg), typeof(alphamin), typeof(alphamax))
 
    info = 0
 
@@ -462,7 +462,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
 
    if (bracketed && (alpha <= min(stx, sty) || alpha >= max(stx, sty))) ||
      dgx * (alpha - stx) >= zero(T) || alphamax < alphamin
-        throw(ArgumentError("Minimizer not bracketed"))
+       throw(ArgumentError("Minimizer not bracketed"))
    end
 
    #
