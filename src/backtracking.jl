@@ -51,7 +51,7 @@ function (ls::BackTracking)(df, x::AbstractArray{T}, s::AbstractArray{T},
     while !isfinite(ϕx_1) && iterfinite < iterfinitemax
         iterfinite += 1
         α_1 = α_2
-        α_2 = T(1)/2*α_1
+        α_2 = (T(1)/2)*α_1
 
         # Backtrack until we satisfy sufficient decrease condition
         ϕx_1 = ϕ(α_2)
@@ -76,14 +76,14 @@ function (ls::BackTracking)(df, x::AbstractArray{T}, s::AbstractArray{T},
             # guaranteed backtracking factor 0.5 * (1-c_1)^{-1} which is < 1
             # provided that c_1 < 1/2; the backtrack_condition at the beginning
             # of the function guarantees at least a backtracking factor ρ.
-            α_tmp = - (dϕ_0 * α_2^2) / ( T(2) * (ϕx_1 - ϕ_0 - dϕ_0*α_2) )
+            α_tmp = - (dϕ_0 * α_2^2) / ( 2 * (ϕx_1 - ϕ_0 - dϕ_0*α_2) )
         else
             div = one(Tα) / (α_1^2 * α_2^2 * (α_2 - α_1))
             a = (α_1^2*(ϕx_1 - ϕ_0 - dϕ_0*α_2) - α_2^2*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
             b = (-α_1^3*(ϕx_1 - ϕ_0 - dϕ_0*α_2) + α_2^3*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
 
             if isapprox(a, zero(a))
-                α_tmp = dϕ_0 / (T(2)*b)
+                α_tmp = dϕ_0 / (2*b)
             else
                 # discriminant
                 d = max(b^2 - 3*a*dϕ_0, zero(Tα))

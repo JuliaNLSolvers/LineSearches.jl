@@ -21,7 +21,7 @@ end
 
 function (ls::Static)(df, x, s, x_new)
     @unpack alpha, scaled = ls
-    @assert alpha > 0 # This should really be done at the constructor level
+    @assert alpha > zero(typeof(alpha)) # This should really be done at the constructor level
 
     ϕ = make_ϕ(df, x_new, x, s)
 

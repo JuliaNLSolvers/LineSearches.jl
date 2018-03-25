@@ -66,7 +66,7 @@ function (ls::StrongWolfe)(df, x::AbstractArray{T},
         end
 
         # Check condition 3
-        if dϕ_a_i >= 0 # FIXME untested!
+        if dϕ_a_i >= zero(T) # FIXME untested!
             a_star = zoom(a_i, a_iminus1,
                           dϕ_0, ϕ_0, ϕ, dϕ, ϕdϕ,
                           x, p, x_new)
@@ -143,7 +143,7 @@ function zoom(a_lo::T,
                 return a_j
             end
 
-            if ϕprime_a_j * (a_hi - a_lo) >= 0
+            if ϕprime_a_j * (a_hi - a_lo) >= zero(T)
                 a_hi = a_lo
             end
 
