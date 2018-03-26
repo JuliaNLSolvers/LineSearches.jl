@@ -21,14 +21,14 @@ use `MoreThuente`, `HagerZhang` or `BackTracking`.
 end
 
 function (ls::StrongWolfe)(df, x::AbstractArray{T},
-                  p::AbstractArray{T},
-                  x_new::AbstractArray{T},
-                  ϕ_0,
-                  dϕ_0,
-                  alpha0::Real, mayterminate) where T
-    @unpack c_1, c_2, ρ = ls
-
+                           p::AbstractArray{T}, α::Real, x_new::AbstractArray{T},
+                           ϕ_0, dϕ_0) where T
     ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, p)
+    ls(ϕ, dϕ, ϕdϕ, x, p, α, ϕ_0, dϕ_0)
+end
+function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ, x::AbstractArray{T},
+                           p::AbstractArray{T}, alpha0::Real, ϕ_0, dϕ_0) where T
+    @unpack c_1, c_2, ρ = ls
 
     # Step-sizes
     a_0 = 0.0
@@ -54,23 +54,23 @@ function (ls::StrongWolfe)(df, x::AbstractArray{T},
             (ϕ_a_i >= ϕ_a_iminus1 && i > 1)
             a_star = zoom(a_iminus1, a_i,
                           dϕ_0, ϕ_0,
-                          ϕ, dϕ, ϕdϕ, x, p, x_new)
-            return a_star
+                          ϕ, dϕ, ϕdϕ, x, p)
+            return a_star, ϕ(a_star)
         end
 
         dϕ_a_i = dϕ(a_i)
 
         # Check condition 2
         if abs(dϕ_a_i) <= -c_2 * dϕ_0
-            return a_i
+            return a_i, dϕ_a_i
         end
 
         # Check condition 3
         if dϕ_a_i >= 0.0 # FIXME untested!
             a_star = zoom(a_i, a_iminus1,
                           dϕ_0, ϕ_0, ϕ, dϕ, ϕdϕ,
-                          x, p, x_new)
-            return a_star
+                          x, p)
+            return a_star, ϕ(a_star)
         end
 
         # Choose a_iplus1 from the interval (a_i, a_max)
@@ -84,8 +84,8 @@ function (ls::StrongWolfe)(df, x::AbstractArray{T},
         i += 1
     end
 
-    # Quasi-error response
-    return a_max
+    # Quasi-error response TODO make this error instead
+    return a_max, ϕ(a_max)
 end
 
 function zoom(a_lo::T,
@@ -97,7 +97,6 @@ function zoom(a_lo::T,
               ϕdϕ,
               x::AbstractArray,
               p::AbstractArray,
-              x_new::AbstractArray,
               c_1::Real = 1e-4,
               c_2::Real = 0.9) where T
 

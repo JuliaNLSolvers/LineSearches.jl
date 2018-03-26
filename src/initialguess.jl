@@ -12,14 +12,12 @@ is scaled with the `l_2` norm of the step direction.
     scaled::Bool = false # Scales step. alpha ← min(alpha,||s||_2) / ||s||_2
 end
 
-function (is::InitialStatic{T})(state, phi_0, dphi_0, df) where T
+function (is::InitialStatic{T})(ls, state, phi_0, dphi_0, df) where T
     state.alpha = is.alpha
     if is.scaled == true && (ns = vecnorm(state.s)) > zero(T)
         # TODO: Type instability if there's a type mismatch between is.alpha and ns
         state.alpha *= min(is.alpha, ns) / ns
     end
-    # TODO: Should `mayterminate` be true or false? Does it depend on which line search we use?
-    state.mayterminate = false
 end
 
 """
@@ -35,11 +33,9 @@ If state.alpha is NaN, then return fallback value is.alpha
     alphamax::T = Inf
 end
 
-function (is::InitialPrevious)(state, phi_0, dphi_0, df)
+function (is::InitialPrevious)(ls, state, phi_0, dphi_0, df)
     if isnan(state.alpha)
         state.alpha = is.alpha
-        # TODO: Should `mayterminate` be true or false? Does it depend on which line search we use?
-        state.mayterminate = false
     end
     state.alpha = min(is.alphamax, state.alpha)
     state.alpha = max(is.alphamin, state.alpha)
@@ -71,7 +67,7 @@ If αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.
     snap2one::Tuple{T,T} = (0.75, Inf) # Set everything in this (closed) interval to 1.0
 end
 
-function (is::InitialQuadratic{T})(state, phi_0, dphi_0, df) where T
+function (is::InitialQuadratic{T})(ls, state, phi_0, dphi_0, df) where T
     if !isfinite(state.f_x_previous) || dphi_0 ≈ zero(T)
         # If we're at the first iteration
         αguess = is.α0
@@ -85,8 +81,6 @@ function (is::InitialQuadratic{T})(state, phi_0, dphi_0, df) where T
         end
     end
     state.alpha = αguess
-    # TODO: Should `mayterminate` be true or false? Does it depend on which line search we use?
-    state.mayterminate = false
 end
 
 """
@@ -116,7 +110,7 @@ If αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.
     snap2one::Tuple{T,T} = (0.75, Inf) # Set everything in this (closed) interval to 1.0
 end
 
-function (is::InitialConstantChange{T})(state, phi_0, dphi_0, df) where T
+function (is::InitialConstantChange{T})(ls, state, phi_0, dphi_0, df) where T
     if !isfinite(state.dphi_0_previous) || !isfinite(state.alpha) || dphi_0 ≈ zero(T)
         # If we're at the first iteration
         αguess = is.α0
@@ -131,6 +125,143 @@ function (is::InitialConstantChange{T})(state, phi_0, dphi_0, df) where T
         end
     end
     state.alpha = αguess
-    # TODO: Should `mayterminate` be true or false? Does it depend on which line search we use?
-    state.mayterminate = false
+end
+
+
+"""
+Initial step size algorithm from
+  W. W. Hager and H. Zhang (2006) Algorithm 851: CG_DESCENT, a
+    conjugate gradient method with guaranteed descent. ACM
+    Transactions on Mathematical Software 32: 113–137.
+
+If α0 is NaN, then procedure I0 is called at the first iteration,
+otherwise, we select according to procedure I1-2, with starting value α0.
+"""
+@with_kw struct InitialHagerZhang{T}
+    ψ0::T         = 0.01
+    ψ1::T         = 0.2
+    ψ2::T         = 2.0
+    ψ3::T         = 0.1
+    αmax::T       = Inf
+    α0::T         = 1.0 # Initial alpha guess. NaN => algorithm calculates
+    verbose::Bool = false
+end
+
+function (is::InitialHagerZhang)(ls::T, state, phi_0, dphi_0, df) where T
+    if isnan(state.f_x_previous) && isnan(is.α0)
+        # If we're at the first iteration (f_x_previous is NaN)
+        # and the user has not provided an initial step size (is.α0 is NaN),
+        # then we
+        # pick the initial step size according to HZ #I0
+        state.alpha = _hzI0(state.x, NLSolversBase.gradient(df),
+                            NLSolversBase.value(df),
+                            convert(eltype(state.x), is.ψ0)) # Hack to deal with type instability between is{T} and state.x
+        if T <: HagerZhang
+            ls.mayterminate[] = false
+        end
+    else
+        # Pick the initial step size according to HZ #I1-2
+        if T <: HagerZhang
+            mayterminate = ls.mayterminate
+        else
+            mayterminate = Ref{Bool}(false)
+        end
+        state.alpha = _hzI12(state.alpha, df, state.x, state.s, state.x_ls, phi_0, dphi_0,
+                   is.ψ1, is.ψ2, is.ψ3, is.αmax, is.verbose, mayterminate)
+    end
+    return state.alpha
+end
+
+# Pick the initial step size (HZ #I1-I2)
+function _hzI12(alpha::T,
+                df,
+                x::AbstractArray{T},
+                s::AbstractArray{T},
+                x_new::AbstractArray{T},
+                phi_0::T,
+                dphi_0::T,
+                psi1::Real,
+                psi2::Real,
+                psi3::Real,
+                alphamax::Real,
+                verbose::Bool,
+                mayterminate) where T
+
+
+     ϕ = make_ϕ(df, x_new, x, s)
+
+    # Prevent values of `x_new` that are likely to make
+    # ϕ(x_new) infinite
+    iterfinitemax::Int = ceil(Int, -log2(eps(T)))
+
+    alphatest = psi1 * alpha
+    alphatest = min(alphatest, alphamax)
+
+    phitest = ϕ(alphatest)
+
+    iterfinite = 1
+    while !isfinite(phitest)
+        alphatest = psi3 * alphatest
+
+        phitest = ϕ(alphatest)
+
+        iterfinite += 1
+        if iterfinite >= iterfinitemax
+            return zero(T), true
+            #             error("Failed to achieve finite test value; alphatest = ", alphatest)
+        end
+    end
+    a = ((phitest-phi_0)/alphatest - dphi_0)/alphatest  # quadratic fit
+    if verbose == true
+        println("quadfit: alphatest = ", alphatest,
+                ", phi_0 = ", phi_0,
+                ", phitest = ", phitest,
+                ", quadcoef = ", a)
+    end
+    mayterminate[] = false
+    if isfinite(a) && a > 0 && phitest <= phi_0
+        alpha = -dphi_0 / 2 / a # if convex, choose minimum of quadratic
+        if alpha == 0
+            error("alpha is zero. dphi_0 = ", dphi_0, ", phi_0 = ", phi_0, ", phitest = ", phitest, ", alphatest = ", alphatest, ", a = ", a)
+        end
+        if alpha <= alphamax
+            mayterminate[] = true
+        else
+            alpha = alphamax
+            mayterminate[] = false
+        end
+        if verbose == true
+            println("alpha guess (quadratic): ", alpha,
+                    ",(mayterminate = ", mayterminate, ")")
+        end
+    else
+        if phitest > phi_0
+            alpha = alphatest
+        else
+            alpha *= psi2 # if not convex, expand the interval
+        end
+    end
+    alpha = min(alphamax, alpha)
+    if verbose == true
+        println("alpha guess (expand): ", alpha)
+    end
+    return alpha
+end
+
+# Generate initial guess for step size (HZ, stage I0)
+function _hzI0(x::AbstractArray{T},
+               gr::AbstractArray{T},
+               f_x::T,
+               psi0::T = convert(T,0.01)) where T
+    alpha = one(T)
+    gr_max = maximum(abs, gr)
+    if gr_max != 0.0
+        x_max = maximum(abs, x)
+        if x_max != 0.0
+            alpha = psi0 * x_max / gr_max
+        elseif f_x != 0.0
+            alpha = psi0 * abs(f_x) / vecnorm(gr)
+        end
+    end
+    return alpha
 end
