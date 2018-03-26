@@ -443,10 +443,10 @@ function update!(ϕdϕ,
                 ", dphi_c = ", dphi_c)
     end
     if c < a || c > b
-        return ia, ib, 0, 0  # it's out of the bracketing interval
+        return ia, ib#, 0, 0  # it's out of the bracketing interval
     end
     if dphi_c >= 0
-        return ia, ic, 0, 0  # replace b with a closer point
+        return ia, ic#, 0, 0  # replace b with a closer point
     end
     # We know dphi_c < 0. However, phi may not be monotonic between a
     # and c, so check that the value is also smaller than phi_0.  (It's
@@ -454,7 +454,7 @@ function update!(ϕdϕ,
     # secure environment of alpha=0; that's why we didn't check this
     # above.)
     if phi_c <= phi_lim
-        return ic, ib, 0, 0  # replace a
+        return ic, ib#, 0, 0  # replace a
     end
     # phi_c is bigger than phi_0, which implies that the minimum
     # lies between a and c. Find it via bisection.
