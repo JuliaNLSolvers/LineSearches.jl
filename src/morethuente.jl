@@ -224,7 +224,7 @@ function (ls::MoreThuente)(ϕdϕ,
     iterfinite = 0
     while (!isfinite(f) || !isfinite(dg)) && iterfinite < iterfinitemax
         iterfinite += 1
-        alpha = (T(1)/2)*alpha
+        alpha = alpha/2
 
         f, dg = ϕdϕ(alpha)
         nfev += 1 # This includes calls to f() and g!()
@@ -383,7 +383,7 @@ function (ls::MoreThuente)(ϕdϕ,
 
         if bracketed
             if abs(sty - stx) >= (T(2)/3) * width1
-                alpha = stx + (T(1)/2) * (sty - stx)
+                alpha = stx + (sty - stx)/2
             end
             width1 = width
             width = abs(sty - stx)
@@ -494,11 +494,11 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       q = gamma - dgx + gamma + dg
       r = p / q
       alphac = stx + r * (alpha - stx)
-      alphaq = stx + (T(1)/2) * (dgx / ((fx - f) / (alpha - stx) + dgx)) * (alpha - stx)
+      alphaq = stx + (dgx / ((fx - f) / (alpha - stx) + dgx)) / 2 * (alpha - stx)
       if abs(alphac - stx) < abs(alphaq - stx)
          alphaf = alphac
       else
-         alphaf = (T(1)/2)*(alphac + alphaq)
+         alphaf = (alphac + alphaq) / 2
       end
       bracketed = true
 

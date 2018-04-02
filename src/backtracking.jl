@@ -61,7 +61,7 @@ function (ls::BackTracking)(ϕ, x::AbstractArray{T}, s::AbstractArray{T}, α_0::
     while !isfinite(ϕx_1) && iterfinite < iterfinitemax
         iterfinite += 1
         α_1 = α_2
-        α_2 = (T(1)/2)*α_1
+        α_2 = α_1/2
 
         # Backtrack until we satisfy sufficient decrease condition
         ϕx_1 = ϕ(α_2)
