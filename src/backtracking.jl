@@ -17,13 +17,23 @@ This is a modification of the algorithm described in Nocedal Wright (2nd ed), Se
     maxstep::TF = Inf
 end
 
-function (ls::BackTracking)(df, x::AbstractArray{T}, s::AbstractArray{T},
-                            x_new::AbstractArray{T},
-                            ϕ_0, dϕ_0, α_0::Tα = 1.0, alphamax = convert(T, Inf)) where {T, Tα}
+function (ls::BackTracking)(df::AbstractObjective, x::AbstractArray{T}, s::AbstractArray{T},
+                            α_0::Tα = T(1), x_new::AbstractArray{T} = similar(x), ϕ_0 = nothing, dϕ_0 = nothing, alphamax = convert(T, Inf)) where {T, Tα}
+    ϕ, dϕ = make_ϕ_dϕ(df, x_new, x, s)
+
+    if ϕ_0 == nothing
+        ϕ_0 = ϕ(α_0)
+    end
+    if dϕ_0 == nothing
+        dϕ_0 = ϕ(α_0)
+    end
+
+    ls(ϕ, x, s, α_0, ϕ_0, dϕ_0, alphamax)
+end
+function (ls::BackTracking)(ϕ, x::AbstractArray{T}, s::AbstractArray{T}, α_0::Tα,
+                            ϕ_0, dϕ_0, alphamax = convert(T, Inf)) where {T, Tα}
 
     @unpack c_1, ρ_hi, ρ_lo, iterations, order, maxstep = ls
-
-    ϕ = make_ϕ(df, x_new, x, s)
 
     iterfinitemax = -log2(eps(T))
 
@@ -82,7 +92,7 @@ function (ls::BackTracking)(df, x::AbstractArray{T}, s::AbstractArray{T},
             a = (α_1^2*(ϕx_1 - ϕ_0 - dϕ_0*α_2) - α_2^2*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
             b = (-α_1^3*(ϕx_1 - ϕ_0 - dϕ_0*α_2) + α_2^3*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
 
-            if isapprox(a, zero(a))
+            if isapprox(a, zero(a), atol=eps(T))
                 α_tmp = dϕ_0 / (2*b)
             else
                 # discriminant
@@ -102,5 +112,5 @@ function (ls::BackTracking)(df, x::AbstractArray{T}, s::AbstractArray{T},
         ϕx_0, ϕx_1 = ϕx_1, ϕ(α_2)
     end
 
-    return α_2
+    return α_2, ϕx_1
 end

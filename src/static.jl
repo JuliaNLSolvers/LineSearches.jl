@@ -17,21 +17,20 @@ This will then use a step-size alpha ← min(alpha,||s||_2) / ||s||_2
     scaled::Bool = false # Scales step. alpha ← min(alpha,||s||_2) / ||s||_2
 end
 
-(ls::Static)(df, x, s, x_new, phi0, dphi0, alpha, mayterminate) = (ls::Static)(df, x, s, x_new)
+function (ls::Static)(df::AbstractObjective, x, s, α, x_new = similar(x), phi0 = nothing, dphi0 = nothing)
+    ϕ = make_ϕ(df, x_new, x, s)
+    ls(ϕ, x, s, α)
+end
 
-function (ls::Static)(df, x, s, x_new)
+function (ls::Static)(ϕ, x, s, alpha)
     @unpack alpha, scaled = ls
     @assert alpha > zero(typeof(alpha)) # This should really be done at the constructor level
-
-    ϕ = make_ϕ(df, x_new, x, s)
 
     if scaled == true && (ns = vecnorm(s)) > zero(typeof(alpha))
         alpha = min(alpha, ns) / ns
     end
 
-    # All line searches are assume to have evaluated the function at
-    # the last value. We will change this to actually be returned instead
-    ϕx = ϕ(alpha)
+    ϕα = ϕ(alpha)
 
-    return alpha
+    return alpha, ϕα
 end

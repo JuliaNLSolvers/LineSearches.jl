@@ -142,18 +142,20 @@
     maxfev::Int = 100
 end
 
-function (ls::MoreThuente)(df,
+function (ls::MoreThuente)(df::AbstractObjective, x::AbstractArray{T},
+                           s::AbstractArray{T}, alpha::Real, x_new::AbstractArray{T},
+                           ϕ_0, dϕ_0) where T
+    ϕdϕ = make_ϕdϕ(df, x_new, x, s)
+    ls(ϕdϕ, x, s, alpha, ϕ_0, dϕ_0)
+end
+function (ls::MoreThuente)(ϕdϕ,
                   x::AbstractArray{T},
                   s::AbstractArray{T},
-                  x_new::AbstractArray{T},
-                  phi_0,
-                  dphi_0,
                   alpha::Real,
-                  mayterminate::Bool) where T
+                  ϕ_0,
+                  dϕ_0) where T
 
     @unpack f_tol, gtol, x_tol, alphamin, alphamax, maxfev = ls
-
-    ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, s)
 
     if vecnorm(s) == 0
         Base.error("Step direction is zero.")
@@ -172,7 +174,7 @@ function (ls::MoreThuente)(df,
         throw(ArgumentError("Invalid parameters to morethuente"))
     end
 
-    if dphi_0 >= zero(T)
+    if dϕ_0 >= zero(T)
         throw(ArgumentError("Search direction is not a direction of descent"))
     end
 
@@ -183,8 +185,8 @@ function (ls::MoreThuente)(df,
     bracketed = false
     stage1 = true
     nfev = 0
-    finit = phi_0
-    dgtest = f_tol * dphi_0
+    finit = ϕ_0
+    dgtest = f_tol * dϕ_0
     width = alphamax - alphamin
     width1 = 2 * width
 
@@ -202,10 +204,10 @@ function (ls::MoreThuente)(df,
 
     stx = zero(T)
     fx = finit
-    dgx = dphi_0
+    dgx = dϕ_0
     sty = zero(T)
     fy = finit
-    dgy = dphi_0
+    dgy = dϕ_0
 
     # START: Ensure that the initial step provides finite function values
     # This is not part of the original FORTRAN code
@@ -279,7 +281,7 @@ function (ls::MoreThuente)(df,
         nfev += 1 # This includes calls to f() and g!()
 
         if isapprox(dg, 0, atol=eps(T)) # Should add atol value to MoreThuente
-            return alpha
+            return alpha, f
         end
 
         ftest1 = finit + alpha * dgtest
@@ -305,7 +307,7 @@ function (ls::MoreThuente)(df,
         if bracketed && stmax - stmin <= x_tol * stmax
             info = 2
         end
-        if f <= ftest1 && abs(dg) <= -gtol * dphi_0
+        if f <= ftest1 && abs(dg) <= -gtol * dϕ_0
             info = 1
         end
 
@@ -314,7 +316,7 @@ function (ls::MoreThuente)(df,
         #
 
         if info != 0
-            return alpha
+            return alpha, f
         end
 
         #
@@ -322,7 +324,7 @@ function (ls::MoreThuente)(df,
         # function has a nonpositive value and nonnegative derivative.
         #
 
-        if stage1 && f <= ftest1 && dg >= min(f_tol, gtol) * dphi_0
+        if stage1 && f <= ftest1 && dg >= min(f_tol, gtol) * dϕ_0
             stage1 = false
         end
 
