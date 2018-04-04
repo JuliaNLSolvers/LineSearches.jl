@@ -28,10 +28,9 @@ function (ls::BackTracking)(df::AbstractObjective, x::AbstractArray{T}, s::Abstr
         dϕ_0 = ϕ(α_0)
     end
 
-    ls(ϕ, x, s, α_0, ϕ_0, dϕ_0, alphamax)
+    ls(ϕ, α_0, ϕ_0, dϕ_0, alphamax)
 end
-function (ls::BackTracking)(ϕ, x::AbstractArray{T}, s::AbstractArray{T}, α_0::Tα,
-                            ϕ_0, dϕ_0, alphamax = convert(T, Inf)) where {T, Tα}
+function (ls::BackTracking)(ϕ, α_0::T, ϕ_0, dϕ_0, alphamax = convert(T, Inf)) where T
 
     @unpack c_1, ρ_hi, ρ_lo, iterations, order, maxstep = ls
 
@@ -88,7 +87,7 @@ function (ls::BackTracking)(ϕ, x::AbstractArray{T}, s::AbstractArray{T}, α_0::
             # of the function guarantees at least a backtracking factor ρ.
             α_tmp = - (dϕ_0 * α_2^2) / ( 2.0 * (ϕx_1 - ϕ_0 - dϕ_0*α_2) )
         else
-            div = one(Tα) / (α_1^2 * α_2^2 * (α_2 - α_1))
+            div = one(T) / (α_1^2 * α_2^2 * (α_2 - α_1))
             a = (α_1^2*(ϕx_1 - ϕ_0 - dϕ_0*α_2) - α_2^2*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
             b = (-α_1^3*(ϕx_1 - ϕ_0 - dϕ_0*α_2) + α_2^3*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
 
