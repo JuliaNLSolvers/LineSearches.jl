@@ -17,7 +17,7 @@ This will then use a step-size alpha ← min(alpha,||s||_2) / ||s||_2
     scaled::Bool = false # Scales step. alpha ← min(alpha,||s||_2) / ||s||_2
 end
 
-function (ls::Static)(df::AbstractObjective, x, s, α, x_new = similar(x), phi0 = nothing, dphi0 = nothing)
+function (ls::Static)(df::AbstractObjective, x, s, α, x_new = similar(x), ϕ_0 = nothing, dϕ_0 = nothing)
     ϕ = make_ϕ(df, x_new, x, s)
     ls(ϕ, α)
 end
@@ -26,7 +26,8 @@ function (ls::Static)(ϕ, alpha)
     @unpack alpha, scaled = ls
     @assert alpha > 0 # This should really be done at the constructor level
 
-    if scaled == true && (ns = vecnorm(s)) > zero(typeof(alpha))
+    if scaled == true
+        ns = vecnorm(s)
         alpha = min(alpha, ns) / ns
     end
 

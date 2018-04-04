@@ -381,7 +381,6 @@ function secant2!(ϕdϕ,
         if display & SECANT2 > 0
             println("secant2: second c = ", c)
         end
-        # phi_c = phi(tmpc, c) # TODO: Replace
         phi_c, dphi_c = ϕdϕ(c)
         @assert isfinite(phi_c) && isfinite(dphi_c)
 
