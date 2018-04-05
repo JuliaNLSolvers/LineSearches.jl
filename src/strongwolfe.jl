@@ -30,7 +30,7 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ, alpha0::T, ϕ_0::T, dϕ_0::T) where T
     @unpack c_1, c_2, ρ = ls
 
     # Step-sizes
-    a_0 = zero(T)
+    a_0 = T(0)
     a_iminus1 = a_0
     a_i = alpha0
     a_max = T(65536)
@@ -65,7 +65,7 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ, alpha0::T, ϕ_0::T, dϕ_0::T) where T
         end
 
         # Check condition 3
-        if dϕ_a_i >= zero(T) # FIXME untested!
+        if dϕ_a_i >= T(0) # FIXME untested!
             a_star = zoom(a_i, a_iminus1,
                           dϕ_0, ϕ_0, ϕ, dϕ, ϕdϕ)
             return a_star, ϕ(a_star)
@@ -138,7 +138,7 @@ function zoom(a_lo::T,
                 return a_j
             end
 
-            if ϕprime_a_j * (a_hi - a_lo) >= zero(T)
+            if ϕprime_a_j * (a_hi - a_lo) >= T(0)
                 a_hi = a_lo
             end
 

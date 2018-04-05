@@ -91,11 +91,11 @@ function (ls::BackTracking)(ϕ, α_0::T, ϕ_0, dϕ_0, alphamax = convert(T, Inf)
             a = (α_1^2*(ϕx_1 - ϕ_0 - dϕ_0*α_2) - α_2^2*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
             b = (-α_1^3*(ϕx_1 - ϕ_0 - dϕ_0*α_2) + α_2^3*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
 
-            if isapprox(a, zero(a), atol=eps(T))
+            if isapprox(a, T(0), atol=eps(T))
                 α_tmp = dϕ_0 / (2*b)
             else
                 # discriminant
-                d = max(b^2 - 3*a*dϕ_0, zero(T))
+                d = max(b^2 - 3*a*dϕ_0, T(0))
                 # quadratic equation root
                 α_tmp = (-b + sqrt(d)) / (3*a)
             end

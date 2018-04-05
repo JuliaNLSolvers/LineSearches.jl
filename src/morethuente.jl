@@ -545,7 +545,7 @@ elseif sgnd < T(0)
       # to infinity in the direction of the step
       #
       # # Use NaNMath in case s == zero(s)
-      gamma = s * sqrt(NaNMath.max(zero(s), (theta / s)^2 - (dgx / s) * (dg / s)))
+      gamma = s * sqrt(NaNMath.max(T(0), (theta / s)^2 - (dgx / s) * (dg / s)))
 
       if alpha > stx
           gamma = -gamma

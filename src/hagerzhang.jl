@@ -117,7 +117,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ, c::T, phi_0::Real, dphi_0::Real) where T
 
     (isfinite(phi_0) && isfinite(dphi_0)) || error("Initial value and slope must be finite")
     phi_lim = phi_0 + epsilon * abs(phi_0)
-    @assert c > zero(T)
+    @assert c > T(0)
     @assert isfinite(c) && c <= alphamax
     phi_c, dphi_c = ϕdϕ(c)
     iterfinite = 1
@@ -161,7 +161,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ, c::T, phi_0::Real, dphi_0::Real) where T
                     ", phi_c = ", phi_c,
                     ", dphi_c = ", dphi_c)
         end
-        if dphi_c >= zero(T)
+        if dphi_c >= T(0)
             # We've reached the upward slope, so we have b; examine
             # previous values to find a
             ib = length(alphas)
@@ -177,7 +177,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ, c::T, phi_0::Real, dphi_0::Real) where T
             # have crested over the peak. Use bisection.
             ib = length(alphas)
             ia = ib - 1
-            if c ≉  alphas[ib] || slopes[ib] >= zero(T)
+            if c ≉  alphas[ib] || slopes[ib] >= T(0)
                 error("c = ", c)
             end
             # ia, ib = bisect(phi, lsr, ia, ib, phi_lim) # TODO: Pass options
@@ -190,7 +190,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ, c::T, phi_0::Real, dphi_0::Real) where T
             if c > alphamax
                 c = (alphamax + cold)/2
                 if display & BRACKET > 0
-                    println("bracket: exceeding alphamax, bisecting: alphamax = ", alphamax, 
+                    println("bracket: exceeding alphamax, bisecting: alphamax = ", alphamax,
                     ", cold = ", cold, ", new c = ", c)
                 end
                 if c == cold || nextfloat(c) >= alphamax
@@ -212,7 +212,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ, c::T, phi_0::Real, dphi_0::Real) where T
             if !(isfinite(phi_c) && isfinite(dphi_c))
                 mayterminate[] = false # reset in case another initial guess is used next
                 return cold, ϕ(cold)
-            elseif dphi_c < zero(T) 0 && c == alphamax
+            elseif dphi_c < T(0) 0 && c == alphamax
                 # We're on the edge of the allowed region, and the
                 # value is still decreasing. This can be due to
                 # roundoff error in barrier penalties, a barrier
@@ -331,13 +331,14 @@ function secant2!(ϕdϕ,
                   delta::Real = DEFAULTDELTA,
                   sigma::Real = DEFAULTSIGMA,
                   display::Integer = 0)
+    Ts = eltype(slopes)
     phi_0 = values[1]
     dphi_0 = slopes[1]
     a = alphas[ia]
     b = alphas[ib]
     dphi_a = slopes[ia]
     dphi_b = slopes[ib]
-    if !(dphi_a < zero(eltype(slopes)) && dphi_b >= zero(eltype(slopes)))
+    if !(dphi_a < Ts(0.0) && dphi_b >= Ts(0.0))
         error(string("Search direction is not a direction of descent; ",
                      "this error may indicate that user-provided derivatives are inaccurate. ",
                       @sprintf "(dphi_a = %f; dphi_b = %f)" dphi_a dphi_b))
@@ -417,12 +418,13 @@ function update!(ϕdϕ,
                  ic::Integer,
                  phi_lim::Real,
                  display::Integer = 0)
+    Ts = eltype(slopes)
     a = alphas[ia]
     b = alphas[ib]
     # Debugging (HZ, eq. 4.4):
-    @assert slopes[ia] < zero(eltype(slopes))
+    @assert slopes[ia] < Ts(0)
     @assert values[ia] <= phi_lim
-    @assert slopes[ib] >= zero(eltype(slopes))
+    @assert slopes[ib] >= Ts(0)
     @assert b > a
     c = alphas[ic]
     phi_c = values[ic]
@@ -439,7 +441,7 @@ function update!(ϕdϕ,
     if c < a || c > b
         return ia, ib #, 0, 0  # it's out of the bracketing interval
     end
-    if dphi_c >= zero(eltype(slopes))
+    if dphi_c >= Ts(0)
         return ia, ic #, 0, 0  # replace b with a closer point
     end
     # We know dphi_c < 0. However, phi may not be monotonic between a
@@ -468,9 +470,9 @@ function bisect!(ϕdϕ,
     a = alphas[ia]
     b = alphas[ib]
     # Debugging (HZ, conditions shown following U3)
-    @assert slopes[ia] < zero(T)
+    @assert slopes[ia] < T(0)
     @assert values[ia] <= phi_lim
-    @assert slopes[ib] < zero(T)       # otherwise we wouldn't be here
+    @assert slopes[ib] < T(0)       # otherwise we wouldn't be here
     @assert values[ib] > phi_lim
     @assert b > a
     while b - a > eps(b)
@@ -486,7 +488,7 @@ function bisect!(ϕdϕ,
         push!(slopes, gphi)
 
         id = length(alphas)
-        if gphi >= zero(T)
+        if gphi >= T(0)
             return ia, id # replace b, return
         end
         if phi_d <= phi_lim
