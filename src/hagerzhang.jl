@@ -97,15 +97,10 @@ function (ls::HagerZhang)(df::AbstractObjective, x::AbstractArray{T},
                             s::AbstractArray{T}, α::Real,
                             x_new::AbstractArray{T}, phi_0::Real, dphi_0::Real) where T
     ϕ, ϕdϕ = make_ϕ_ϕdϕ(df, x_new, x, s)
-    ls(ϕ, ϕdϕ, x, s, α::Real, phi_0, dphi_0)
+    ls(ϕ, ϕdϕ, α, phi_0, dphi_0)
 end
 
-function (ls::HagerZhang)(ϕ, ϕdϕ,
-                     x::AbstractArray{T},
-                     s::AbstractArray{T},
-                     c::Real,
-                     phi_0::Real,
-                     dphi_0::Real) where T
+function (ls::HagerZhang)(ϕ, ϕdϕ, c::T, phi_0::Real, dphi_0::Real) where T
 
     @unpack delta, sigma, alphamax, rho, epsilon, gamma,
             linesearchmax, psi3, display, mayterminate = ls
@@ -386,7 +381,6 @@ function secant2!(ϕdϕ,
         if display & SECANT2 > 0
             println("secant2: second c = ", c)
         end
-        # phi_c = phi(tmpc, c) # TODO: Replace
         phi_c, dphi_c = ϕdϕ(c)
         @assert isfinite(phi_c) && isfinite(dphi_c)
 
