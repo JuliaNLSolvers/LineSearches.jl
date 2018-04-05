@@ -217,7 +217,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             if !(isfinite(phi_c) && isfinite(dphi_c))
                 mayterminate[] = false # reset in case another initial guess is used next
                 return cold, ϕ(cold)
-            elseif dphi_c < zero(T) 0 && c == alphamax
+            elseif dphi_c < zero(T) && c == alphamax
                 # We're on the edge of the allowed region, and the
                 # value is still decreasing. This can be due to
                 # roundoff error in barrier penalties, a barrier
