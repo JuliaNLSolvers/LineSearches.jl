@@ -1,6 +1,9 @@
 using LineSearches
-using Base.Test
+using   Compat,
+        Compat.Test,
+        Compat.LinearAlgebra
 using OptimTestProblems
+import NLSolversBase
 
 debug_printing = false
 

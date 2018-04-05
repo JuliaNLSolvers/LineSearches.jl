@@ -164,12 +164,12 @@ function (ls::MoreThuente)(ϕdϕ, alpha::T, ϕ_0, dϕ_0) where T
     # Check the input parameters for errors.
     #
 
-    if  alpha <= 0.0 || f_tol < 0.0 || gtol < 0.0 ||
-        x_tol < 0.0 || alphamin < 0.0 || alphamax < alphamin || maxfev <= 0
+    if  alpha <= zero(T) || f_tol < zero(T) || gtol < zero(T) ||
+        x_tol < zero(T) || alphamin < zero(T) || alphamax < alphamin || maxfev <= zero(T)
         throw(ArgumentError("Invalid parameters to morethuente"))
     end
 
-    if dϕ_0 >= 0.0
+    if dϕ_0 >= zero(T)
         throw(ArgumentError("Search direction is not a direction of descent"))
     end
 
@@ -197,10 +197,10 @@ function (ls::MoreThuente)(ϕdϕ, alpha::T, ϕ_0, dϕ_0) where T
     # function, and derivative at the current step.
     #
 
-    stx = 0.0
+    stx = zero(T)
     fx = finit
     dgx = dϕ_0
-    sty = 0.0
+    sty = zero(T)
     fy = finit
     dgy = dϕ_0
 
@@ -219,13 +219,13 @@ function (ls::MoreThuente)(ϕdϕ, alpha::T, ϕ_0, dϕ_0) where T
     iterfinite = 0
     while (!isfinite(f) || !isfinite(dg)) && iterfinite < iterfinitemax
         iterfinite += 1
-        alpha = 0.5*alpha
+        alpha = alpha/2
 
         f, dg = ϕdϕ(alpha)
         nfev += 1 # This includes calls to f() and g!()
 
         # Make stmax = (3/2)*alpha < 2alpha in the first iteration below
-        stx = (7/8)*alpha
+        stx = (T(7)/8)*alpha
     end
     # END: Ensure that the initial step provides finite function values
 
@@ -275,7 +275,7 @@ function (ls::MoreThuente)(ϕdϕ, alpha::T, ϕ_0, dϕ_0) where T
         f, dg = ϕdϕ(alpha)
         nfev += 1 # This includes calls to f() and g!()
 
-        if isapprox(dg, 0.0)
+        if isapprox(dg, 0, atol=eps(T)) # Should add atol value to MoreThuente
             return alpha, f
         end
 
@@ -377,8 +377,8 @@ function (ls::MoreThuente)(ϕdϕ, alpha::T, ϕ_0, dϕ_0) where T
         #
 
         if bracketed
-            if abs(sty - stx) >= 0.66 * width1
-                alpha = stx + 0.5 * (sty - stx)
+            if abs(sty - stx) >= (T(2)/3) * width1
+                alpha = stx + (sty - stx)/2
             end
             width1 = width
             width = abs(sty - stx)
@@ -449,6 +449,8 @@ function cstep(stx::Real, fx::Real, dgx::Real,
                alpha::Real, f::Real, dg::Real,
                bracketed::Bool, alphamin::Real, alphamax::Real)
 
+   T = promote_type(typeof(stx), typeof(fx), typeof(dgx), typeof(sty), typeof(fy), typeof(dgy), typeof(alpha), typeof(f), typeof(dg), typeof(alphamin), typeof(alphamax))
+
    info = 0
 
    #
@@ -456,8 +458,8 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    #
 
    if (bracketed && (alpha <= min(stx, sty) || alpha >= max(stx, sty))) ||
-        dgx * (alpha - stx) >= 0.0 || alphamax < alphamin
-      throw(ArgumentError("Minimizer not bracketed"))
+     dgx * (alpha - stx) >= zero(T) || alphamax < alphamin
+       throw(ArgumentError("Minimizer not bracketed"))
    end
 
    #
@@ -487,11 +489,11 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       q = gamma - dgx + gamma + dg
       r = p / q
       alphac = stx + r * (alpha - stx)
-      alphaq = stx + 0.5 * (dgx / ((fx - f) / (alpha - stx) + dgx)) * (alpha - stx)
+      alphaq = stx + (dgx / ((fx - f) / (alpha - stx) + dgx)) / 2 * (alpha - stx)
       if abs(alphac - stx) < abs(alphaq - stx)
          alphaf = alphac
       else
-         alphaf = 0.5*(alphac + alphaq)
+         alphaf = (alphac + alphaq) / 2
       end
       bracketed = true
 
@@ -502,7 +504,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    # the cubic step is taken, else the quadratic step is taken
    #
 
-   elseif sgnd < 0.0
+   elseif sgnd < zero(T)
       info = 2
       bound = false
       theta = 3 * (fx - f) / (alpha - stx) + dgx + dg
@@ -555,7 +557,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       p = gamma - dg + theta
       q = gamma + dgx - dg + gamma
       r = p / q
-      if r < 0.0 && gamma != 0.0
+      if r < zero(T) && gamma != zero(T)
          alphac = alpha + r * (stx - alpha)
      elseif alpha > stx
          alphac = alphamax
@@ -618,7 +620,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       fy = f
       dgy = dg
    else
-      if sgnd < 0.0
+      if sgnd < zero(T)
          sty = stx
          fy = fx
          dgy = dgx
@@ -637,9 +639,9 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    alpha = alphaf
    if bracketed && bound
       if sty > stx
-         alpha = min(stx + 0.66 * (sty - stx), alpha)
+         alpha = min(stx + (T(2)/3) * (sty - stx), alpha)
       else
-         alpha = max(stx + 0.66 * (sty - stx), alpha)
+         alpha = max(stx + (T(2)/3) * (sty - stx), alpha)
       end
    end
 

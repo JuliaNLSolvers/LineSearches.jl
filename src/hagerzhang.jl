@@ -108,7 +108,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ, c::T, phi_0::Real, dphi_0::Real) where T
     # Prevent values of x_new = x+αs that are likely to make
     # ϕ(x_new) infinite
     iterfinitemax::Int = ceil(Int, -log2(eps(T)))
-    alphas = [T(0.0)] # for bisection
+    alphas = [T(0)] # for bisection
     values = [phi_0]
     slopes = [dphi_0]
     if display & LINESEARCH > 0
@@ -117,7 +117,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ, c::T, phi_0::Real, dphi_0::Real) where T
 
     (isfinite(phi_0) && isfinite(dphi_0)) || error("Initial value and slope must be finite")
     phi_lim = phi_0 + epsilon * abs(phi_0)
-    @assert c > 0
+    @assert c > zero(T)
     @assert isfinite(c) && c <= alphamax
     phi_c, dphi_c = ϕdϕ(c)
     iterfinite = 1
@@ -161,7 +161,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ, c::T, phi_0::Real, dphi_0::Real) where T
                     ", phi_c = ", phi_c,
                     ", dphi_c = ", dphi_c)
         end
-        if dphi_c >= 0
+        if dphi_c >= zero(T)
             # We've reached the upward slope, so we have b; examine
             # previous values to find a
             ib = length(alphas)
@@ -177,7 +177,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ, c::T, phi_0::Real, dphi_0::Real) where T
             # have crested over the peak. Use bisection.
             ib = length(alphas)
             ia = ib - 1
-            if c != alphas[ib] || slopes[ib] >= 0
+            if c ≉  alphas[ib] || slopes[ib] >= zero(T)
                 error("c = ", c)
             end
             # ia, ib = bisect(phi, lsr, ia, ib, phi_lim) # TODO: Pass options
@@ -190,8 +190,8 @@ function (ls::HagerZhang)(ϕ, ϕdϕ, c::T, phi_0::Real, dphi_0::Real) where T
             if c > alphamax
                 c = (alphamax + cold)/2
                 if display & BRACKET > 0
-                    println("bracket: exceeding alphamax, bisecting: alphamax = ", alphamax,
-                            ", cold = ", cold, ", new c = ", c)
+                    println("bracket: exceeding alphamax, bisecting: alphamax = ", alphamax, 
+                    ", cold = ", cold, ", new c = ", c)
                 end
                 if c == cold || nextfloat(c) >= alphamax
                     mayterminate[] = false # reset in case another initial guess is used next
@@ -212,7 +212,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ, c::T, phi_0::Real, dphi_0::Real) where T
             if !(isfinite(phi_c) && isfinite(dphi_c))
                 mayterminate[] = false # reset in case another initial guess is used next
                 return cold, ϕ(cold)
-            elseif dphi_c < 0 && c == alphamax
+            elseif dphi_c < zero(T) 0 && c == alphamax
                 # We're on the edge of the allowed region, and the
                 # value is still decreasing. This can be due to
                 # roundoff error in barrier penalties, a barrier
@@ -308,7 +308,7 @@ function satisfies_wolfe(c::T,
                          sigma::Real) where T<:Number
     wolfe1 = delta * dphi_0 >= (phi_c - phi_0) / c &&
                dphi_c >= sigma * dphi_0
-    wolfe2 = (2.0 * delta - 1.0) * dphi_0 >= dphi_c >= sigma * dphi_0 &&
+    wolfe2 = (2 * delta - 1) * dphi_0 >= dphi_c >= sigma * dphi_0 &&
                phi_c <= phi_lim
     return wolfe1 || wolfe2
 end
@@ -337,7 +337,7 @@ function secant2!(ϕdϕ,
     b = alphas[ib]
     dphi_a = slopes[ia]
     dphi_b = slopes[ib]
-    if !(dphi_a < 0 && dphi_b >= 0)
+    if !(dphi_a < zero(eltype(slopes)) && dphi_b >= zero(eltype(slopes)))
         error(string("Search direction is not a direction of descent; ",
                      "this error may indicate that user-provided derivatives are inaccurate. ",
                       @sprintf "(dphi_a = %f; dphi_b = %f)" dphi_a dphi_b))
@@ -420,9 +420,9 @@ function update!(ϕdϕ,
     a = alphas[ia]
     b = alphas[ib]
     # Debugging (HZ, eq. 4.4):
-    @assert slopes[ia] < 0
+    @assert slopes[ia] < zero(eltype(slopes))
     @assert values[ia] <= phi_lim
-    @assert slopes[ib] >= 0
+    @assert slopes[ib] >= zero(eltype(slopes))
     @assert b > a
     c = alphas[ic]
     phi_c = values[ic]
@@ -437,10 +437,10 @@ function update!(ϕdϕ,
                 ", dphi_c = ", dphi_c)
     end
     if c < a || c > b
-        return ia, ib, 0, 0  # it's out of the bracketing interval
+        return ia, ib #, 0, 0  # it's out of the bracketing interval
     end
-    if dphi_c >= 0
-        return ia, ic, 0, 0  # replace b with a closer point
+    if dphi_c >= zero(eltype(slopes))
+        return ia, ic #, 0, 0  # replace b with a closer point
     end
     # We know dphi_c < 0. However, phi may not be monotonic between a
     # and c, so check that the value is also smaller than phi_0.  (It's
@@ -448,7 +448,7 @@ function update!(ϕdϕ,
     # secure environment of alpha=0; that's why we didn't check this
     # above.)
     if phi_c <= phi_lim
-        return ic, ib, 0, 0  # replace a
+        return ic, ib#, 0, 0  # replace a
     end
     # phi_c is bigger than phi_0, which implies that the minimum
     # lies between a and c. Find it via bisection.
@@ -468,9 +468,9 @@ function bisect!(ϕdϕ,
     a = alphas[ia]
     b = alphas[ib]
     # Debugging (HZ, conditions shown following U3)
-    @assert slopes[ia] < 0
+    @assert slopes[ia] < zero(T)
     @assert values[ia] <= phi_lim
-    @assert slopes[ib] < 0       # otherwise we wouldn't be here
+    @assert slopes[ib] < zero(T)       # otherwise we wouldn't be here
     @assert values[ib] > phi_lim
     @assert b > a
     while b - a > eps(b)
@@ -486,7 +486,7 @@ function bisect!(ϕdϕ,
         push!(slopes, gphi)
 
         id = length(alphas)
-        if gphi >= 0
+        if gphi >= zero(T)
             return ia, id # replace b, return
         end
         if phi_d <= phi_lim

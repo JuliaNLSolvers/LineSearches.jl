@@ -30,17 +30,17 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ, alpha0::T, ϕ_0::T, dϕ_0::T) where T
     @unpack c_1, c_2, ρ = ls
 
     # Step-sizes
-    a_0 = 0.0
+    a_0 = zero(T)
     a_iminus1 = a_0
     a_i = alpha0
-    a_max = 65536.0
+    a_max = T(65536)
 
     # ϕ(alpha) = df.f(x + alpha * p)
     ϕ_a_iminus1 = ϕ_0
-    ϕ_a_i = NaN
+    ϕ_a_i = T(NaN)
 
     # ϕ'(alpha) = vecdot(g(x + alpha * p), p)
-    dϕ_a_i = NaN
+    dϕ_a_i = T(NaN)
 
     # Iteration counter
     i = 1
@@ -65,7 +65,7 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ, alpha0::T, ϕ_0::T, dϕ_0::T) where T
         end
 
         # Check condition 3
-        if dϕ_a_i >= 0.0 # FIXME untested!
+        if dϕ_a_i >= zero(T) # FIXME untested!
             a_star = zoom(a_i, a_iminus1,
                           dϕ_0, ϕ_0, ϕ, dϕ, ϕdϕ)
             return a_star, ϕ(a_star)
@@ -93,8 +93,8 @@ function zoom(a_lo::T,
               ϕ,
               dϕ,
               ϕdϕ,
-              c_1::Real = 1e-4,
-              c_2::Real = 0.9) where T
+              c_1::Real = T(1)/10^4,
+              c_2::Real = T(9)/10) where T
 
     # Step-size
     a_j = T(NaN)
@@ -138,7 +138,7 @@ function zoom(a_lo::T,
                 return a_j
             end
 
-            if ϕprime_a_j * (a_hi - a_lo) >= 0.0
+            if ϕprime_a_j * (a_hi - a_lo) >= zero(T)
                 a_hi = a_lo
             end
 
@@ -156,9 +156,9 @@ function interpolate(a_i1::Real, a_i::Real,
                      ϕ_a_i1::Real, ϕ_a_i::Real,
                      dϕ_a_i1::Real, dϕ_a_i::Real)
     d1 = dϕ_a_i1 + dϕ_a_i -
-        3.0 * (ϕ_a_i1 - ϕ_a_i) / (a_i1 - a_i)
+        3 * (ϕ_a_i1 - ϕ_a_i) / (a_i1 - a_i)
     d2 = sqrt(d1 * d1 - dϕ_a_i1 * dϕ_a_i)
     return a_i - (a_i - a_i1) *
         ((dϕ_a_i + d2 - d1) /
-         (dϕ_a_i - dϕ_a_i1 + 2.0 * d2))
+         (dϕ_a_i - dϕ_a_i1 + 2 * d2))
 end

@@ -20,7 +20,7 @@ end
 
 function (ls::Static)(ϕ, alpha = 1.0)
     @unpack alpha, scaled = ls
-    @assert alpha > 0 # This should really be done at the constructor level
+    @assert alpha > zero(typeof(alpha)) # This should really be done at the constructor level
 
     ϕα = ϕ(alpha)
 
