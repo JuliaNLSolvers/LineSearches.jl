@@ -151,10 +151,6 @@ end
 function (ls::MoreThuente)(ϕdϕ, alpha::T, ϕ_0, dϕ_0) where T
 
     @unpack f_tol, gtol, x_tol, alphamin, alphamax, maxfev = ls
-    
-    # if vecnorm(s) == 0
-    #     Base.error("Step direction is zero.")
-    # end
 
     iterfinitemax = -log2(eps(T))
     info = 0
@@ -164,12 +160,12 @@ function (ls::MoreThuente)(ϕdϕ, alpha::T, ϕ_0, dϕ_0) where T
     # Check the input parameters for errors.
     #
 
-    if  alpha <= zero(T) || f_tol < zero(T) || gtol < zero(T) ||
-        x_tol < zero(T) || alphamin < zero(T) || alphamax < alphamin || maxfev <= zero(T)
+    if  alpha <= T(0) || f_tol < T(0) || gtol < T(0) ||
+        x_tol < T(0) || alphamin < T(0) || alphamax < alphamin || maxfev <= T(0)
         throw(ArgumentError("Invalid parameters to morethuente"))
     end
 
-    if dϕ_0 >= zero(T)
+    if dϕ_0 >= T(0)
         throw(ArgumentError("Search direction is not a direction of descent"))
     end
 
@@ -197,10 +193,10 @@ function (ls::MoreThuente)(ϕdϕ, alpha::T, ϕ_0, dϕ_0) where T
     # function, and derivative at the current step.
     #
 
-    stx = zero(T)
+    stx = T(0)
     fx = finit
     dgx = dϕ_0
-    sty = zero(T)
+    sty = T(0)
     fy = finit
     dgy = dϕ_0
 
@@ -458,7 +454,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    #
 
    if (bracketed && (alpha <= min(stx, sty) || alpha >= max(stx, sty))) ||
-     dgx * (alpha - stx) >= zero(T) || alphamax < alphamin
+     dgx * (alpha - stx) >= T(0) || alphamax < alphamin
        throw(ArgumentError("Minimizer not bracketed"))
    end
 
@@ -504,7 +500,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    # the cubic step is taken, else the quadratic step is taken
    #
 
-   elseif sgnd < zero(T)
+elseif sgnd < T(0)
       info = 2
       bound = false
       theta = 3 * (fx - f) / (alpha - stx) + dgx + dg
@@ -557,7 +553,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       p = gamma - dg + theta
       q = gamma + dgx - dg + gamma
       r = p / q
-      if r < zero(T) && gamma != zero(T)
+      if r < T(0) && gamma != T(0)
          alphac = alpha + r * (stx - alpha)
      elseif alpha > stx
          alphac = alphamax
@@ -620,7 +616,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       fy = f
       dgy = dg
    else
-      if sgnd < zero(T)
+      if sgnd < T(0)
          sty = stx
          fy = fx
          dgy = dgx
