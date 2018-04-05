@@ -7,8 +7,8 @@
     end
 
     @testset "Quadratic function" begin
-        lsalphas =     [1.0,   0.35355339059327373, 0.5, 0.5, 0.49995, 0.5,  0.5]  # types
-                        # Stat # Stat(scaled)       #HZ  wolfe   mt    bt2   bt3
+        lsalphas =     [1.0,  0.5, 0.5, 0.49995, 0.5,  0.5]  # types
+                        # Stat       #HZ  wolfe   mt    bt2   bt3
         x = [-1., -1.]
 
         for (i, linesearch!) in enumerate(lstypes)
@@ -51,9 +51,10 @@
             if linesearch! == HagerZhang()
                 linesearch!.mayterminate[] = false
             end
-
-            if typeof(linesearch!) <: HagerZhang || typeof(linesearch!) <: MoreThuente
+            if typeof(linesearch!) <: HagerZhang
                 @test_throws ErrorException alpha, ϕalpha = linesearch!(df, x, p, alpha, xtmp, phi_0, dphi_0)
+            elseif typeof(linesearch!) <: MoreThuente
+                @test_throws ArgumentError alpha, ϕalpha = linesearch!(df, x, p, alpha, xtmp, phi_0, dphi_0)
             else
                 alpha, ϕalpha = linesearch!(df, x, p, alpha, xtmp, phi_0, dphi_0)
                 @test alpha == 1.0 # Is this what we want for non-descent directions?
@@ -72,8 +73,7 @@
         mayterminate = Ref{Bool}(false)
         alpha = 1.0; xtmp = zeros(x0)
 
-        lsalphas =  [1.0,                  # Static(scaled)
-                     0.021884405476620426, # Static(scaled)
+        lsalphas =  [1.0,                  # Static()
                      0.01375274240750926,  # HZ
                      0.020646100006834013, # Wolfe
                      0.0175892025844326,   # MT

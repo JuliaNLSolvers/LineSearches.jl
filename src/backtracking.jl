@@ -95,7 +95,7 @@ function (ls::BackTracking)(ϕ, α_0::T, ϕ_0, dϕ_0, alphamax = convert(T, Inf)
                 α_tmp = dϕ_0 / (2.0*b)
             else
                 # discriminant
-                d = max(b^2 - 3*a*dϕ_0, zero(Tα))
+                d = max(b^2 - 3*a*dϕ_0, zero(T))
                 # quadratic equation root
                 α_tmp = (-b + sqrt(d)) / (3.0*a)
             end
@@ -105,7 +105,8 @@ function (ls::BackTracking)(ϕ, α_0::T, ϕ_0, dϕ_0, alphamax = convert(T, Inf)
 
         # enforce a maximum step alpha * s (application specific, default is Inf)
         α_1 = α_2
-        α_2 = min(α_tmp, maxstep / vecnorm(s, Inf))
+        α_2 = α_tmp
+        # α_2 = min(α_tmp, maxstep / vecnorm(s, Inf))
 
         # Evaluate f(x) at proposed position
         ϕx_0, ϕx_1 = ϕx_1, ϕ(α_2)

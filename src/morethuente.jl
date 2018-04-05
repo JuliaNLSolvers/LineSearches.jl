@@ -151,10 +151,10 @@ end
 function (ls::MoreThuente)(ϕdϕ, alpha::T, ϕ_0, dϕ_0) where T
 
     @unpack f_tol, gtol, x_tol, alphamin, alphamax, maxfev = ls
-
-    if vecnorm(s) == 0
-        Base.error("Step direction is zero.")
-    end
+    
+    # if vecnorm(s) == 0
+    #     Base.error("Step direction is zero.")
+    # end
 
     iterfinitemax = -log2(eps(T))
     info = 0

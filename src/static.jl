@@ -7,10 +7,6 @@
 """
 `Static`: defines a static linesearch, i.e. with fixed step-size. E.g., initialise
 with `Static(alpha = 0.3141)` for fixed step-size 0.3141. Default is 1.0.
-
-You can also make this independent of the size of the step `s`, by using
-`Static(scaled = true)`.
-This will then use a step-size alpha ← min(alpha,||s||_2) / ||s||_2
 """
 @with_kw struct Static{T}
     alpha::T = 1.0
@@ -22,14 +18,9 @@ function (ls::Static)(df::AbstractObjective, x, s, α, x_new = similar(x), ϕ_0 
     ls(ϕ, α)
 end
 
-function (ls::Static)(ϕ, alpha)
+function (ls::Static)(ϕ, alpha = 1.0)
     @unpack alpha, scaled = ls
     @assert alpha > 0 # This should really be done at the constructor level
-
-    if scaled == true
-        ns = vecnorm(s)
-        alpha = min(alpha, ns) / ns
-    end
 
     ϕα = ϕ(alpha)
 

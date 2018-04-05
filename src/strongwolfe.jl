@@ -53,7 +53,7 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ, alpha0::T, ϕ_0::T, dϕ_0::T) where T
             (ϕ_a_i >= ϕ_a_iminus1 && i > 1)
             a_star = zoom(a_iminus1, a_i,
                           dϕ_0, ϕ_0,
-                          ϕ, dϕ, ϕdϕ, x, p)
+                          ϕ, dϕ, ϕdϕ)
             return a_star, ϕ(a_star)
         end
 
@@ -67,8 +67,7 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ, alpha0::T, ϕ_0::T, dϕ_0::T) where T
         # Check condition 3
         if dϕ_a_i >= 0.0 # FIXME untested!
             a_star = zoom(a_i, a_iminus1,
-                          dϕ_0, ϕ_0, ϕ, dϕ, ϕdϕ,
-                          x, p)
+                          dϕ_0, ϕ_0, ϕ, dϕ, ϕdϕ)
             return a_star, ϕ(a_star)
         end
 
@@ -94,8 +93,6 @@ function zoom(a_lo::T,
               ϕ,
               dϕ,
               ϕdϕ,
-              x::AbstractArray,
-              p::AbstractArray,
               c_1::Real = 1e-4,
               c_2::Real = 0.9) where T
 
