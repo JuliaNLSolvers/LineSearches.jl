@@ -24,7 +24,7 @@ end
 
 function (ls::Static)(ϕ, x, s, alpha)
     @unpack alpha, scaled = ls
-    @assert alpha > 0 # This should really be done at the constructor level
+    @assert alpha > zero(typeof(alpha)) # This should really be done at the constructor level
 
     if scaled == true && (ns = vecnorm(s)) > zero(typeof(alpha))
         alpha = min(alpha, ns) / ns

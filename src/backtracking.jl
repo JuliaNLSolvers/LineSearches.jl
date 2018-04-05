@@ -18,7 +18,7 @@ This is a modification of the algorithm described in Nocedal Wright (2nd ed), Se
 end
 
 function (ls::BackTracking)(df::AbstractObjective, x::AbstractArray{T}, s::AbstractArray{T},
-                            α_0::Tα = 1.0, x_new::AbstractArray{T} = similar(x), ϕ_0 = nothing, dϕ_0 = nothing, alphamax = convert(T, Inf)) where {T, Tα}
+                            α_0::Tα = T(1), x_new::AbstractArray{T} = similar(x), ϕ_0 = nothing, dϕ_0 = nothing, alphamax = convert(T, Inf)) where {T, Tα}
     ϕ, dϕ = make_ϕ_dϕ(df, x_new, x, s)
 
     if ϕ_0 == nothing
@@ -61,7 +61,7 @@ function (ls::BackTracking)(ϕ, x::AbstractArray{T}, s::AbstractArray{T}, α_0::
     while !isfinite(ϕx_1) && iterfinite < iterfinitemax
         iterfinite += 1
         α_1 = α_2
-        α_2 = 0.5*α_1
+        α_2 = α_1/2
 
         # Backtrack until we satisfy sufficient decrease condition
         ϕx_1 = ϕ(α_2)
@@ -86,19 +86,19 @@ function (ls::BackTracking)(ϕ, x::AbstractArray{T}, s::AbstractArray{T}, α_0::
             # guaranteed backtracking factor 0.5 * (1-c_1)^{-1} which is < 1
             # provided that c_1 < 1/2; the backtrack_condition at the beginning
             # of the function guarantees at least a backtracking factor ρ.
-            α_tmp = - (dϕ_0 * α_2^2) / ( 2.0 * (ϕx_1 - ϕ_0 - dϕ_0*α_2) )
+            α_tmp = - (dϕ_0 * α_2^2) / ( 2 * (ϕx_1 - ϕ_0 - dϕ_0*α_2) )
         else
             div = one(Tα) / (α_1^2 * α_2^2 * (α_2 - α_1))
             a = (α_1^2*(ϕx_1 - ϕ_0 - dϕ_0*α_2) - α_2^2*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
             b = (-α_1^3*(ϕx_1 - ϕ_0 - dϕ_0*α_2) + α_2^3*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
 
-            if isapprox(a, zero(a))
-                α_tmp = dϕ_0 / (2.0*b)
+            if isapprox(a, zero(a), atol=eps(T))
+                α_tmp = dϕ_0 / (2*b)
             else
                 # discriminant
                 d = max(b^2 - 3*a*dϕ_0, zero(Tα))
                 # quadratic equation root
-                α_tmp = (-b + sqrt(d)) / (3.0*a)
+                α_tmp = (-b + sqrt(d)) / (3*a)
             end
         end
         α_tmp = NaNMath.min(α_tmp, α_2*ρ_hi) # avoid too small reductions
