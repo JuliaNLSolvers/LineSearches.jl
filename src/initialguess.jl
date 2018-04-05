@@ -68,11 +68,11 @@ If αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.
 end
 
 function (is::InitialQuadratic{T})(ls, state, phi_0, dphi_0, df) where T
-    if !isfinite(state.f_x_previous) || dphi_0 ≈ zero(T)
+    if !isfinite(state.f_x_previous) || isapprox(dphi_0, zero(T), atol=eps(T)) # Need to add a tolerance
         # If we're at the first iteration
         αguess = is.α0
     else
-        αguess = 2.0 * (NLSolversBase.value(df) - state.f_x_previous) / dphi_0
+        αguess = 2 * (NLSolversBase.value(df) - state.f_x_previous) / dphi_0
         αguess = NaNMath.max(is.αmin, state.alpha*is.ρ, αguess)
         αguess = NaNMath.min(is.αmax, αguess)
         # if αguess ≈ 1, then make it 1 (Newton-type behaviour)
@@ -111,7 +111,7 @@ If αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.
 end
 
 function (is::InitialConstantChange{T})(ls, state, phi_0, dphi_0, df) where T
-    if !isfinite(state.dphi_0_previous) || !isfinite(state.alpha) || dphi_0 ≈ zero(T)
+    if !isfinite(state.dphi_0_previous) || !isfinite(state.alpha) || isapprox(dphi_0, zero(T), atol=eps(T))
         # If we're at the first iteration
         αguess = is.α0
     else
@@ -252,14 +252,14 @@ end
 function _hzI0(x::AbstractArray{T},
                gr::AbstractArray{T},
                f_x::T,
-               psi0::T = convert(T,0.01)) where T
+               psi0::T = T(1)/100) where T
     alpha = one(T)
     gr_max = maximum(abs, gr)
-    if gr_max != 0.0
+    if gr_max != zero(T)
         x_max = maximum(abs, x)
-        if x_max != 0.0
+        if x_max != zero(T)
             alpha = psi0 * x_max / gr_max
-        elseif f_x != 0.0
+        elseif f_x != zero(T)
             alpha = psi0 * abs(f_x) / vecnorm(gr)
         end
     end
