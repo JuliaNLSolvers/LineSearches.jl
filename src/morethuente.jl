@@ -149,12 +149,12 @@ function (ls::MoreThuente)(df::AbstractObjective, x::AbstractArray{T},
     ls(ϕdϕ, x, s, alpha, ϕ_0, dϕ_0)
 end
 function (ls::MoreThuente)(ϕdϕ,
-                  x::AbstractArray{T},
-                  s::AbstractArray{T},
+                  x::AbstractArray{Tx},
+                  s::AbstractArray{Tx},
                   alpha::Real,
                   ϕ_0,
-                  dϕ_0) where T
-
+                  dϕ_0) where Tx
+    T = real(Tx)
     @unpack f_tol, gtol, x_tol, alphamin, alphamax, maxfev = ls
 
     if vecnorm(s) == 0

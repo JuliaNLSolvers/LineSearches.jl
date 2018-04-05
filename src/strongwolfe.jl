@@ -26,8 +26,9 @@ function (ls::StrongWolfe)(df, x::AbstractArray{T},
     ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, p)
     ls(ϕ, dϕ, ϕdϕ, x, p, α, ϕ_0, dϕ_0)
 end
-function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ, x::AbstractArray{T},
-                           p::AbstractArray{T}, alpha0::Real, ϕ_0, dϕ_0) where T
+function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ, x::AbstractArray{Tx},
+                           p::AbstractArray{Tx}, alpha0::Real, ϕ_0, dϕ_0) where Tx
+    T = real(Tx)
     @unpack c_1, c_2, ρ = ls
 
     # Step-sizes

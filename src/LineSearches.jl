@@ -41,7 +41,7 @@ function make_ϕdϕ(df, x_new, x, s)
         NLSolversBase.value_gradient!(df, x_new)
 
         # Calculate ϕ(a_i), ϕ'(a_i)
-        NLSolversBase.value(df), vecdot(NLSolversBase.gradient(df), s)
+        NLSolversBase.value(df), real(vecdot(NLSolversBase.gradient(df), s))
     end
     ϕdϕ
 end
@@ -54,7 +54,7 @@ function make_ϕ_dϕ(df, x_new, x, s)
         NLSolversBase.gradient!(df, x_new)
 
         # Calculate ϕ'(a_i)
-        vecdot(NLSolversBase.gradient(df), s)
+        real(vecdot(NLSolversBase.gradient(df), s))
     end
     make_ϕ(df, x_new, x, s), dϕ
 end
@@ -67,7 +67,7 @@ function make_ϕ_dϕ_ϕdϕ(df, x_new, x, s)
         NLSolversBase.gradient!(df, x_new)
 
         # Calculate ϕ'(a_i)
-        vecdot(NLSolversBase.gradient(df), s)
+        real(vecdot(NLSolversBase.gradient(df), s))
     end
     function ϕdϕ(α)
         # Move a distance of alpha in the direction of s
@@ -77,7 +77,7 @@ function make_ϕ_dϕ_ϕdϕ(df, x_new, x, s)
         NLSolversBase.value_gradient!(df, x_new)
 
         # Calculate ϕ'(a_i)
-        NLSolversBase.value(df), vecdot(NLSolversBase.gradient(df), s)
+        NLSolversBase.value(df), real(vecdot(NLSolversBase.gradient(df), s))
     end
     make_ϕ(df, x_new, x, s), dϕ, ϕdϕ
 end
@@ -90,7 +90,7 @@ function make_ϕ_ϕdϕ(df, x_new, x, s)
         NLSolversBase.value_gradient!(df, x_new)
 
         # Calculate ϕ'(a_i)
-        NLSolversBase.value(df), vecdot(NLSolversBase.gradient(df), s)
+        NLSolversBase.value(df), real(vecdot(NLSolversBase.gradient(df), s))
     end
     make_ϕ(df, x_new, x, s), ϕdϕ
 end
