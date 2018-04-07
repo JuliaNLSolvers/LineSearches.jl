@@ -111,11 +111,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ, c::T, phi_0::Real, dphi_0::Real) where T
     alphas = [T(0)] # for bisection
     values = [phi_0]
     slopes = [dphi_0]
-    if display & LINESEARCH > 0
-        println("New linesearch")
-    end
 
-    (isfinite(phi_0) && isfinite(dphi_0)) || error("Initial value and slope must be finite")
     phi_lim = phi_0 + epsilon * abs(phi_0)
     @assert c > T(0)
     @assert isfinite(c) && c <= alphamax

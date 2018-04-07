@@ -10,7 +10,6 @@ with `Static(alpha = 0.3141)` for fixed step-size 0.3141. Default is 1.0.
 """
 @with_kw struct Static{T}
     alpha::T = 1.0
-    scaled::Bool = false # Scales step. alpha ← min(alpha,||s||_2) / ||s||_2
 end
 
 function (ls::Static)(df::AbstractObjective, x, s, α, x_new = similar(x), ϕ_0 = nothing, dϕ_0 = nothing)
@@ -18,9 +17,8 @@ function (ls::Static)(df::AbstractObjective, x, s, α, x_new = similar(x), ϕ_0 
     ls(ϕ, α)
 end
 
-function (ls::Static)(ϕ, alpha = 1.0)
-    @unpack alpha, scaled = ls
-    @assert alpha > zero(typeof(alpha)) # This should really be done at the constructor level
+function (ls::Static)(ϕ, alpha::T = 1.0) where T
+    @unpack alpha = ls
 
     ϕα = ϕ(alpha)
 

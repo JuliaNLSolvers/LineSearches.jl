@@ -25,12 +25,12 @@ function (ls::BackTracking)(df::AbstractObjective, x::AbstractArray{T}, s::Abstr
         ϕ_0 = ϕ(α_0)
     end
     if dϕ_0 == nothing
-        dϕ_0 = ϕ(α_0)
+        dϕ_0 = dϕ(α_0)
     end
 
-    ls(ϕ, α_0, ϕ_0, dϕ_0, alphamax)
+    ls(ϕ, α_0, ϕ_0, dϕ_0)
 end
-function (ls::BackTracking)(ϕ, α_0::T, ϕ_0, dϕ_0, alphamax = convert(T, Inf)) where T
+function (ls::BackTracking)(ϕ, α_0::T, ϕ_0, dϕ_0) where T
 
     @unpack c_1, ρ_hi, ρ_lo, iterations, order, maxstep = ls
 

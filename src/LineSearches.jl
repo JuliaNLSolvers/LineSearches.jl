@@ -20,12 +20,12 @@ export BackTracking, HagerZhang, Static, MoreThuente, StrongWolfe
 export InitialHagerZhang, InitialStatic, InitialPrevious,
     InitialQuadratic, InitialConstantChange
 
+abstract type AbstractLineSearch end
 
 struct LineSearchException{T<:Real} <: Exception
     message::AbstractString
     alpha::T
 end
-
 
 function make_ϕ(df, x_new, x, s)
     function ϕ(α)
