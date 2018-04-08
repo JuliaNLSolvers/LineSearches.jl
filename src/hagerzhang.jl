@@ -446,11 +446,7 @@ function update!(ϕdϕ,
         return ia, ib #, 0, 0  # it's out of the bracketing interval
     end
     if dphi_c >= zero(eltype(slopes))
-<<<<<<< HEAD
-        return ia, ic, 0, 0  # replace b with a closer point
-=======
         return ia, ic #, 0, 0  # replace b with a closer point
->>>>>>> db6136c545f78f7e87cba3d5fe427feb5066008e
     end
     # We know dphi_c < 0. However, phi may not be monotonic between a
     # and c, so check that the value is also smaller than phi_0.  (It's
