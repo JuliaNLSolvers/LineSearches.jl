@@ -3,6 +3,7 @@ using   Compat,
         Compat.Test,
         Compat.LinearAlgebra
 using OptimTestProblems
+using HigherPrecision
 import NLSolversBase
 
 debug_printing = false
@@ -12,7 +13,8 @@ lstypes =  (Static(), Static(scaled=true), HagerZhang(), StrongWolfe(), MoreThue
 
 my_tests = [
     "initial.jl",
-    "alphacalc.jl"
+    "alphacalc.jl",
+    "arbitrary_precision.jl"
 ]
 
 mutable struct StateDummy
