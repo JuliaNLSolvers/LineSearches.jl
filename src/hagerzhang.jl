@@ -217,7 +217,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             if !(isfinite(phi_c) && isfinite(dphi_c))
                 mayterminate[] = false # reset in case another initial guess is used next
                 return cold, ϕ(cold)
-            elseif dphi_c < zero(T) 0 && c == alphamax
+            elseif dphi_c < zero(T) && c == alphamax
                 # We're on the edge of the allowed region, and the
                 # value is still decreasing. This can be due to
                 # roundoff error in barrier penalties, a barrier
@@ -443,10 +443,14 @@ function update!(ϕdϕ,
                 ", dphi_c = ", dphi_c)
     end
     if c < a || c > b
-        return ia, ib, 0, 0  # it's out of the bracketing interval
+        return ia, ib #, 0, 0  # it's out of the bracketing interval
     end
     if dphi_c >= zero(eltype(slopes))
+<<<<<<< HEAD
         return ia, ic, 0, 0  # replace b with a closer point
+=======
+        return ia, ic #, 0, 0  # replace b with a closer point
+>>>>>>> db6136c545f78f7e87cba3d5fe427feb5066008e
     end
     # We know dphi_c < 0. However, phi may not be monotonic between a
     # and c, so check that the value is also smaller than phi_0.  (It's
@@ -454,7 +458,7 @@ function update!(ϕdϕ,
     # secure environment of alpha=0; that's why we didn't check this
     # above.)
     if phi_c <= phi_lim
-        return ic, ib, 0, 0  # replace a
+        return ic, ib#, 0, 0  # replace a
     end
     # phi_c is bigger than phi_0, which implies that the minimum
     # lies between a and c. Find it via bisection.

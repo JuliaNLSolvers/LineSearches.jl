@@ -2,11 +2,16 @@ isdefined(Base, :__precompile__) && __precompile__()
 
 module LineSearches
 
+using   Compat,
+        Compat.LinearAlgebra,
+        Compat.Distributed,
+        Compat.Printf
+
 using Parameters, NaNMath
 
 import NLSolversBase
 import NLSolversBase: AbstractObjective
-import Base.clear!
+import Compat.Distributed.clear!
 
 export LineSearchResults, LineSearchException
 
