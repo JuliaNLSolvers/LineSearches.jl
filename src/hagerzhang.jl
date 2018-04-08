@@ -92,6 +92,7 @@ Conjugate gradient line search implementation from:
    display::Int = 0
    mayterminate::Tm = Ref{Bool}(false)
 end
+HagerZhang{T}(args...; kwargs...) where T = HagerZhang{T, Base.RefValue{Bool}}(args...; kwargs...)
 
 function (ls::HagerZhang)(df::AbstractObjective, x::AbstractArray{T},
                             s::AbstractArray{T}, α::Real,

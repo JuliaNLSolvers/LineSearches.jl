@@ -16,6 +16,7 @@ This is a modification of the algorithm described in Nocedal Wright (2nd ed), Se
     order::TI = 3
     maxstep::TF = Inf
 end
+BackTracking{TF}(args...; kwargs...) where TF = Backtracking{TF,Int}(args...; kwargs...)
 
 function (ls::BackTracking)(df::AbstractObjective, x::AbstractArray{T}, s::AbstractArray{T},
                             α_0::Tα = T(1), x_new::AbstractArray{T} = similar(x), ϕ_0 = nothing, dϕ_0 = nothing, alphamax = convert(T, Inf)) where {T, Tα}
