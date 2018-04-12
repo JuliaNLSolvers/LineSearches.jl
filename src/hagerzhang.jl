@@ -101,11 +101,12 @@ function (ls::HagerZhang)(df::AbstractObjective, x::AbstractArray{T},
 end
 
 function (ls::HagerZhang)(ϕ, ϕdϕ,
-                     x::AbstractArray{T},
-                     s::AbstractArray{T},
+                     x::AbstractArray{Tx},
+                     s::AbstractArray{Tx},
                      c::Real,
                      phi_0::Real,
-                     dphi_0::Real) where T
+                     dphi_0::Real) where Tx
+    T = real(Tx)
 
     @unpack delta, sigma, alphamax, rho, epsilon, gamma,
             linesearchmax, psi3, display, mayterminate = ls

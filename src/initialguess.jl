@@ -87,7 +87,7 @@ end
 Constant first-order change approximation to determine initial step length.
 
 ** This requires that the optimization algorithm stores dphi0 from the previous iteration **
-(dphi0_previous = vecdot(∇f_{k-1}, s_{k-1}), where s is the step direction.
+(dphi0_previous = real(vecdot(∇f_{k-1}, s_{k-1})), where s is the step direction.
 
 This is meant for methods that do not produce well-scaled search directions,
 such as Gradient Descent and (variations of) Conjugate Gradient methods.
@@ -175,9 +175,9 @@ end
 # Pick the initial step size (HZ #I1-I2)
 function _hzI12(alpha::T,
                 df,
-                x::AbstractArray{T},
-                s::AbstractArray{T},
-                x_new::AbstractArray{T},
+                x::AbstractArray{Tx},
+                s::AbstractArray{Tx},
+                x_new::AbstractArray{Tx},
                 phi_0::T,
                 dphi_0::T,
                 psi1::Real,
@@ -185,7 +185,7 @@ function _hzI12(alpha::T,
                 psi3::Real,
                 alphamax::Real,
                 verbose::Bool,
-                mayterminate) where T
+                mayterminate) where {Tx,T}
 
 
      ϕ = make_ϕ(df, x_new, x, s)
@@ -249,10 +249,10 @@ function _hzI12(alpha::T,
 end
 
 # Generate initial guess for step size (HZ, stage I0)
-function _hzI0(x::AbstractArray{T},
-               gr::AbstractArray{T},
+function _hzI0(x::AbstractArray{Tx},
+               gr::AbstractArray{Tx},
                f_x::T,
-               psi0::T = T(1)/100) where T
+               psi0::T = T(1)/100) where {Tx,T}
     alpha = one(T)
     gr_max = maximum(abs, gr)
     if gr_max != zero(T)
