@@ -7,7 +7,7 @@ import NLSolversBase
 
 debug_printing = false
 
-lstypes =  (Static(), Static(scaled=true), HagerZhang(), StrongWolfe(), MoreThuente(),
+lstypes =  (Static(), HagerZhang(), StrongWolfe(), MoreThuente(),
             BackTracking(), BackTracking(order=2) )
 
 my_tests = [
