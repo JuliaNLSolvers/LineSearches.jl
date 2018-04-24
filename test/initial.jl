@@ -43,7 +43,12 @@
     state = getstate()
     is = InitialStatic(alpha = 0.5, scaled = true)
     is(ls, state, phi_0, dphi_0, df)
-    @test state.alpha == 0.08838834764831843
+    @test state.alpha == 0.5 / vecnorm(state.s)
+    @test ls.mayterminate[] == false
+    is = InitialStatic(alpha = 0.5, scaled = true)
+    state.s .= (is.alpha / 100)
+    is(ls, state, phi_0, dphi_0, df)
+    @test state.alpha ==  1.0
     @test ls.mayterminate[] == false
 
     # Test Previous

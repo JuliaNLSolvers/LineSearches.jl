@@ -13,10 +13,11 @@ is scaled with the `l_2` norm of the step direction.
 end
 
 function (is::InitialStatic{T})(ls, state, phi_0, dphi_0, df) where T
-    state.alpha = is.alpha
     if is.scaled == true && (ns = vecnorm(state.s)) > zero(T)
-        # TODO: Type instability if there's a type mismatch between is.alpha and ns
-        state.alpha *= min(is.alpha, ns) / ns
+        # TODO: Type instability if there's a type mismatch between is.alpha and ns?
+        state.alpha = min(is.alpha, ns) / ns
+    else
+        state.alpha = is.alpha
     end
 end
 
