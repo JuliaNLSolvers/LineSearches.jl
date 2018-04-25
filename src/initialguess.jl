@@ -13,8 +13,8 @@ is scaled with the `l_2` norm of the step direction.
 end
 
 function (is::InitialStatic{T})(ls, state, phi_0, dphi_0, df) where T
-    PT = promote_type(T, eltype(state.s))
-    if is.scaled == true && (ns = vecnorm(state.s)) > zero(PT)
+    PT = promote_type(T, real(eltype(state.s)))
+    if is.scaled == true && (ns = real(vecnorm(state.s))) > zero(PT)
         # TODO: Type instability if there's a type mismatch between is.alpha and ns?
         state.alpha = PT(min(is.alpha, ns)) / ns
     else
@@ -149,7 +149,7 @@ otherwise, we select according to procedure I1-2, with starting value α0.
     verbose::Bool = false
 end
 
-function (is::InitialHagerZhang)(ls::T, state, phi_0, dphi_0, df) where T
+function (is::InitialHagerZhang)(ls::Tls, state, phi_0, dphi_0, df) where Tls
     if isnan(state.f_x_previous) && isnan(is.α0)
         # If we're at the first iteration (f_x_previous is NaN)
         # and the user has not provided an initial step size (is.α0 is NaN),
@@ -158,12 +158,12 @@ function (is::InitialHagerZhang)(ls::T, state, phi_0, dphi_0, df) where T
         state.alpha = _hzI0(state.x, NLSolversBase.gradient(df),
                             NLSolversBase.value(df),
                             convert(eltype(state.x), is.ψ0)) # Hack to deal with type instability between is{T} and state.x
-        if T <: HagerZhang
+        if Tls <: HagerZhang
             ls.mayterminate[] = false
         end
     else
         # Pick the initial step size according to HZ #I1-2
-        if T <: HagerZhang
+        if Tls <: HagerZhang
             mayterminate = ls.mayterminate
         else
             mayterminate = Ref{Bool}(false)
@@ -188,9 +188,7 @@ function _hzI12(alpha::T,
                 alphamax::Real,
                 verbose::Bool,
                 mayterminate) where {Tx,T}
-
-
-     ϕ = make_ϕ(df, x_new, x, s)
+    ϕ = make_ϕ(df, x_new, x, s)
 
     # Prevent values of `x_new` that are likely to make
     # ϕ(x_new) infinite
