@@ -16,7 +16,7 @@ in `Optim`.
 * `MoreThuente` (From the algorithm in More and Thuente, 1994)
 * `BackTracking` (Described in Nocedal and Wright, 2006)
 * `StrongWolfe` (Nocedal and Wright)
-* `Static` (Simply takes a given step length, default 1.0)
+* `Static` (Takes the proposed initial step length.)
 
 ### Available initial step length procedures
 The package provides some procedures to calculate the initial step
@@ -54,12 +54,12 @@ Results of Optimization Algorithm
  * Minimum: 3.081488e-31
  * Iterations: 14
  * Convergence: true
-   * |x - x'| ≤ 1.0e-32: false 
-     |x - x'| = 3.06e-09 
+   * |x - x'| ≤ 1.0e-32: false
+     |x - x'| = 3.06e-09
    * |f(x) - f(x')| ≤ 1.0e-32 |f(x)|: false
      |f(x) - f(x')| = 3.03e+13 |f(x)|
-   * |g(x)| ≤ 1.0e-08: true 
-     |g(x)| = 1.11e-15 
+   * |g(x)| ≤ 1.0e-08: true
+     |g(x)| = 1.11e-15
    * Stopped by an increasing objective: false
    * Reached Maximum Number of Iterations: false
  * Objective Calls: 44
@@ -82,12 +82,12 @@ Results of Optimization Algorithm
  * Minimum: 1.667699e-17
  * Iterations: 14
  * Convergence: true
-   * |x - x'| ≤ 1.0e-32: false 
-     |x - x'| = 1.36e-05 
+   * |x - x'| ≤ 1.0e-32: false
+     |x - x'| = 1.36e-05
    * |f(x) - f(x')| ≤ 1.0e-32 |f(x)|: false
      |f(x) - f(x')| = 1.21e+08 |f(x)|
-   * |g(x)| ≤ 1.0e-08: true 
-     |g(x)| = 4.16e-09 
+   * |g(x)| ≤ 1.0e-08: true
+     |g(x)| = 4.16e-09
    * Stopped by an increasing objective: false
    * Reached Maximum Number of Iterations: false
  * Objective Calls: 19
@@ -117,12 +117,12 @@ Results of Optimization Algorithm
  * Minimum: 3.081488e-31
  * Iterations: 14
  * Convergence: true
-   * |x - x'| ≤ 1.0e-32: false 
-     |x - x'| = 3.06e-09 
+   * |x - x'| ≤ 1.0e-32: false
+     |x - x'| = 3.06e-09
    * |f(x) - f(x')| ≤ 1.0e-32 |f(x)|: false
      |f(x) - f(x')| = 3.03e+13 |f(x)|
-   * |g(x)| ≤ 1.0e-08: true 
-     |g(x)| = 1.11e-15 
+   * |g(x)| ≤ 1.0e-08: true
+     |g(x)| = 1.11e-15
    * Stopped by an increasing objective: false
    * Reached Maximum Number of Iterations: false
  * Objective Calls: 44
@@ -145,12 +145,12 @@ Results of Optimization Algorithm
  * Minimum: 6.535152e-18
  * Iterations: 15
  * Convergence: true
-   * |x - x'| ≤ 1.0e-32: false 
-     |x - x'| = 1.09e-05 
+   * |x - x'| ≤ 1.0e-32: false
+     |x - x'| = 1.09e-05
    * |f(x) - f(x')| ≤ 1.0e-32 |f(x)|: false
      |f(x) - f(x')| = 8.61e+08 |f(x)|
-   * |g(x)| ≤ 1.0e-08: true 
-     |g(x)| = 4.41e-09 
+   * |g(x)| ≤ 1.0e-08: true
+     |g(x)| = 4.41e-09
    * Stopped by an increasing objective: false
    * Reached Maximum Number of Iterations: false
  * Objective Calls: 36
