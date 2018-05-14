@@ -55,18 +55,17 @@ function (ls::BackTracking)(ϕ, x::AbstractArray{T}, s::AbstractArray{T}, α_0::
 
     ϕx_1 = ϕ(α_1)
 
+    # Hard-coded backtrack until we find a finite function value
     iterfinite = 0
-
-    # Backtrack until we satisfy sufficient decrease condition
     while !isfinite(ϕx_1) && iterfinite < iterfinitemax
         iterfinite += 1
         α_1 = α_2
         α_2 = α_1/2
 
-        # Backtrack until we satisfy sufficient decrease condition
         ϕx_1 = ϕ(α_2)
     end
 
+    # Backtrack until we satisfy sufficient decrease condition
     while ϕx_1 > ϕ_0 + c_1 * α_2 * dϕ_0
         # Increment the number of steps we've had to perform
         iteration += 1
