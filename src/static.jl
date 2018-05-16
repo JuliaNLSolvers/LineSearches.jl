@@ -32,17 +32,28 @@ function (ls::DeprecatedStatic)(df::AbstractObjective, x, s, α, x_new = similar
     ls(ϕ, x, s, α)
 end
 
-function (ls::DeprecatedStatic)(ϕ, x, s, alpha)
-    @unpack alpha, scaled = ls
-    @assert alpha > zero(typeof(alpha)) # This should really be done at the constructor level
+function (ls::DeprecatedStatic)(ϕ, x, s, α::Tα) where Tα
+    @unpack α, scaled = ls
+    @assert α > Tα(0) # This should really be done at the constructor level
 
-    if scaled == true && (ns = vecnorm(s)) > zero(typeof(alpha))
-        alpha = min(alpha, ns) / ns
+    if scaled == true && (ns = vecnorm(s)) > Tα(0)
+        α = min(α, ns) / ns
     end
 
-    ϕα = ϕ(alpha)
+    ϕα = ϕ(α)
 
-    return alpha, ϕα
+    # Hard-coded backtrack until we find a finite function value
+    iterfinite = 0
+    iterfinitemax = -log2(eps(real(Tα)))
+    while !isfinite(ϕα) && iterfinite < iterfinitemax
+        iterfinite += 1
+        αold = α
+        α    = αold/2
+
+        ϕα = ϕ(α)
+    end
+
+    return α, ϕα
 end
 ##########################
 ## DELETE UNTIL THIS LINE
@@ -55,13 +66,25 @@ end
 """
 immutable NewStatic end
 
-function (ls::NewStatic)(df::AbstractObjective, x, s, α, x_new = similar(x), phi0 = nothing, dphi0 = nothing)
+function (ls::NewStatic)(df::AbstractObjective, x, s, α, x_new = similar(x), ϕ_0 = nothing, dϕ_0 = nothing)
     ϕ = make_ϕ(df, x_new, x, s)
     ls(ϕ, x, s, α)
 end
 
-function (ls::NewStatic)(ϕ, x, s, alpha)
-    ϕα = ϕ(alpha)
+function (ls::NewStatic)(ϕ, x, s, α::Tα) where Tα
+    @assert α > real(Tα(0))
+    ϕα = ϕ(α)
 
-    return alpha, ϕα
+    # Hard-coded backtrack until we find a finite function value
+    iterfinite = 0
+    iterfinitemax = -log2(eps(real(Tα)))
+    while !isfinite(ϕα) && iterfinite < iterfinitemax
+        iterfinite += 1
+        αold = α
+        α    = αold/2
+
+        ϕα = ϕ(α)
+    end
+
+    return α, ϕα
 end
