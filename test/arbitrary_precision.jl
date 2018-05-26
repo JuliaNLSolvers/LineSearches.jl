@@ -1,4 +1,9 @@
-for T in [Float32, Float64, typeof(DoubleFloat64(1)), BigFloat]
+if Sys.WORD_SIZE == 32
+    test_types = [Float32, Float64, BigFloat]
+else
+    test_types = [Float32, Float64, typeof(DoubleFloat64(1)), BigFloat]
+end
+for T in test_types
     @eval begin
         @testset "Arbitrary precision - initial step guess: $($T)" begin
             f(x) = vecdot(x, x)

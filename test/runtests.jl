@@ -3,7 +3,11 @@ using   Compat,
         Compat.Test,
         Compat.LinearAlgebra
 using OptimTestProblems
-using HigherPrecision
+if Sys.WORD_SIZE != 32
+    # Bug in HigherPrecision, waiting for
+    # https://github.com/saschatimme/HigherPrecision.jl/pull/21
+    using HigherPrecision
+end
 import NLSolversBase
 
 debug_printing = false
