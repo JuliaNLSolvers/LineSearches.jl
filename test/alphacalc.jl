@@ -16,8 +16,7 @@
             df = NLSolversBase.OnceDifferentiable(f,g!,x)
 
             xtmp = copy(x)
-            phi_0 = NLSolversBase.value_gradient!(df, x)
-            grtmp = NLSolversBase.gradient(df)
+            phi_0, grtmp = NLSolversBase.value_gradient!(df, x)
             p = -grtmp
             dphi_0 = dot(p, grtmp)
 
@@ -42,8 +41,7 @@
             df = NLSolversBase.OnceDifferentiable(f,g!,x)
 
             xtmp = copy(x)
-            phi_0 = NLSolversBase.value_gradient!(df, x)
-            grtmp = NLSolversBase.gradient(df)
+            phi_0, grtmp = NLSolversBase.value_gradient!(df, x)
             p = -grtmp
             dphi_0 = dot(p, grtmp)
 

@@ -9,10 +9,9 @@ for T in [Float32, Float64, typeof(DoubleFloat64(1)), BigFloat]
             x = $T[-1, -1]
             df = NLSolversBase.OnceDifferentiable(f,g!,x)
 
-            phi_0 = NLSolversBase.value_gradient!(df, x)
+            phi_0, grtmp = NLSolversBase.value_gradient!(df, x)
             @test !isnan(phi_0)
             @test phi_0 isa $T
-            grtmp = NLSolversBase.gradient(df)
             @test !any(isnan, grtmp)
             @test grtmp isa Vector{$T}
             p = -grtmp
