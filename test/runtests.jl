@@ -3,6 +3,11 @@ using   Compat,
         Compat.Test,
         Compat.LinearAlgebra
 using OptimTestProblems
+if Sys.WORD_SIZE != 32
+    # Bug in HigherPrecision, waiting for
+    # https://github.com/saschatimme/HigherPrecision.jl/pull/21
+    using HigherPrecision
+end
 import NLSolversBase
 
 debug_printing = false
@@ -12,7 +17,8 @@ lstypes =  (Static(), HagerZhang(), StrongWolfe(), MoreThuente(),
 
 my_tests = [
     "initial.jl",
-    "alphacalc.jl"
+    "alphacalc.jl",
+    "arbitrary_precision.jl"
 ]
 
 mutable struct StateDummy
