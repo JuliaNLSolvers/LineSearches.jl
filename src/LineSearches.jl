@@ -13,9 +13,7 @@ import NLSolversBase
 import NLSolversBase: AbstractObjective
 import Compat.Distributed.clear!
 
-export LineSearchResults, LineSearchException
-
-export clear!, alphatry, alphainit
+export LineSearchResults, clear!
 
 export BackTracking, HagerZhang, Static, MoreThuente, StrongWolfe
 
