@@ -50,12 +50,8 @@
                 linesearch!.mayterminate[] = false
             end
 
-            if typeof(linesearch!) <: HagerZhang || typeof(linesearch!) <: MoreThuente
-                @test_throws ErrorException alpha, ϕalpha = linesearch!(df, x, p, alpha, xtmp, phi_0, dphi_0)
-            else
-                alpha, ϕalpha = linesearch!(df, x, p, alpha, xtmp, phi_0, dphi_0)
-                @test alpha == 1.0 # Is this what we want for non-descent directions?
-            end
+            alpha, ϕalpha = linesearch!(df, x, p, alpha, xtmp, phi_0, dphi_0)
+            @test alpha == 1.0 # Is this what we want for non-descent directions?
         end
     end
 

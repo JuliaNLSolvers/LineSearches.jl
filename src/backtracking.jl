@@ -29,9 +29,9 @@ function (ls::BackTracking)(df::AbstractObjective, x::AbstractArray{T}, s::Abstr
         dϕ_0 = dϕ(α_0)
     end
 
-    ls(ϕ, s, α_0, ϕ_0, dϕ_0, alphamax)
+    ls(ϕ, x, s, α_0, ϕ_0, dϕ_0, alphamax)
 end
-function (ls::BackTracking)(ϕ, s::AbstractArray{T}, α_0::Tα,
+function (ls::BackTracking)(ϕ, x::AbstractArray{T}, s::AbstractArray{T}, α_0::Tα,
                             ϕ_0, dϕ_0, alphamax = convert(real(T), Inf)) where {T, Tα}
 
     @unpack c_1, ρ_hi, ρ_lo, iterations, order, maxstep = ls

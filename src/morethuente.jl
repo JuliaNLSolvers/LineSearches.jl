@@ -145,19 +145,19 @@ end
 function (ls::MoreThuente)(df::AbstractObjective, x::AbstractArray{T},
                            s::AbstractArray{T}, alpha::Real, x_new::AbstractArray{T},
                            ϕ_0, dϕ_0) where T
+
+
     ϕdϕ = make_ϕdϕ(df, x_new, x, s)
-    ls(ϕdϕ, s, alpha, ϕ_0, dϕ_0)
+    ls(ϕdϕ, alpha, ϕ_0, dϕ_0)
 end
 function (ls::MoreThuente)(ϕdϕ,
-                  s::AbstractArray{Tx},
-                  alpha::Real,
+                  alpha::T,
                   ϕ_0,
-                  dϕ_0) where Tx
-    T = real(Tx)
+                  dϕ_0) where T
     @unpack f_tol, gtol, x_tol, alphamin, alphamax, maxfev = ls
 
-    if vecnorm(s) == 0
-        Base.error("Step direction is zero.")
+    if dϕ_0 == T(0)
+        return alpha, ϕ_0
     end
 
     iterfinitemax = -log2(eps(T))

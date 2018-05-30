@@ -24,12 +24,10 @@ function (ls::StrongWolfe)(df, x::AbstractArray{T},
                            p::AbstractArray{T}, α::Real, x_new::AbstractArray{T},
                            ϕ_0, dϕ_0) where T
     ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, p)
-    ls(ϕ, dϕ, ϕdϕ, p, α, ϕ_0, dϕ_0)
+    ls(ϕ, dϕ, ϕdϕ, α, ϕ_0, dϕ_0)
 end
 function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
-                           p::AbstractArray{Tx},
-                           alpha0::Real, ϕ_0, dϕ_0) where Tx
-    T = real(Tx)
+                           alpha0::T, ϕ_0, dϕ_0) where T
     @unpack c_1, c_2, ρ = ls
 
     # Step-sizes
@@ -56,7 +54,7 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
             (ϕ_a_i >= ϕ_a_iminus1 && i > 1)
             a_star = zoom(a_iminus1, a_i,
                           dϕ_0, ϕ_0,
-                          ϕ, dϕ, ϕdϕ, p)
+                          ϕ, dϕ, ϕdϕ)
             return a_star, ϕ(a_star)
         end
 
@@ -70,7 +68,7 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
         # Check condition 3
         if dϕ_a_i >= zero(T) # FIXME untested!
             a_star = zoom(a_i, a_iminus1,
-                          dϕ_0, ϕ_0, ϕ, dϕ, ϕdϕ, p)
+                          dϕ_0, ϕ_0, ϕ, dϕ, ϕdϕ)
             return a_star, ϕ(a_star)
         end
 
@@ -96,7 +94,6 @@ function zoom(a_lo::T,
               ϕ,
               dϕ,
               ϕdϕ,
-              p::AbstractArray,
               c_1::Real = T(1)/10^4,
               c_2::Real = T(9)/10) where T
 
