@@ -24,10 +24,11 @@ function (ls::StrongWolfe)(df, x::AbstractArray{T},
                            p::AbstractArray{T}, α::Real, x_new::AbstractArray{T},
                            ϕ_0, dϕ_0) where T
     ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, p)
-    ls(ϕ, dϕ, ϕdϕ, x, p, α, ϕ_0, dϕ_0)
+    ls(ϕ, dϕ, ϕdϕ, p, α, ϕ_0, dϕ_0)
 end
-function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ, x::AbstractArray{Tx},
-                           p::AbstractArray{Tx}, alpha0::Real, ϕ_0, dϕ_0) where Tx
+function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
+                           p::AbstractArray{Tx},
+                           alpha0::Real, ϕ_0, dϕ_0) where Tx
     T = real(Tx)
     @unpack c_1, c_2, ρ = ls
 
@@ -55,7 +56,7 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ, x::AbstractArray{Tx},
             (ϕ_a_i >= ϕ_a_iminus1 && i > 1)
             a_star = zoom(a_iminus1, a_i,
                           dϕ_0, ϕ_0,
-                          ϕ, dϕ, ϕdϕ, x, p)
+                          ϕ, dϕ, ϕdϕ, p)
             return a_star, ϕ(a_star)
         end
 
@@ -69,8 +70,7 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ, x::AbstractArray{Tx},
         # Check condition 3
         if dϕ_a_i >= zero(T) # FIXME untested!
             a_star = zoom(a_i, a_iminus1,
-                          dϕ_0, ϕ_0, ϕ, dϕ, ϕdϕ,
-                          x, p)
+                          dϕ_0, ϕ_0, ϕ, dϕ, ϕdϕ, p)
             return a_star, ϕ(a_star)
         end
 
@@ -96,7 +96,6 @@ function zoom(a_lo::T,
               ϕ,
               dϕ,
               ϕdϕ,
-              x::AbstractArray,
               p::AbstractArray,
               c_1::Real = T(1)/10^4,
               c_2::Real = T(9)/10) where T

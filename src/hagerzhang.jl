@@ -98,11 +98,10 @@ function (ls::HagerZhang)(df::AbstractObjective, x::AbstractArray{T},
                             s::AbstractArray{T}, α::Real,
                             x_new::AbstractArray{T}, phi_0::Real, dphi_0::Real) where T
     ϕ, ϕdϕ = make_ϕ_ϕdϕ(df, x_new, x, s)
-    ls(ϕ, ϕdϕ, x, s, α::Real, phi_0, dphi_0)
+    ls(ϕ, ϕdϕ, s, α::Real, phi_0, dphi_0)
 end
 
 function (ls::HagerZhang)(ϕ, ϕdϕ,
-                     x::AbstractArray{Tx},
                      s::AbstractArray{Tx},
                      c::Real,
                      phi_0::Real,
@@ -197,7 +196,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             if c > alphamax
                 c = (alphamax + cold)/2
                 if display & BRACKET > 0
-                    println("bracket: exceeding alphamax, bisecting: alphamax = ", alphamax, 
+                    println("bracket: exceeding alphamax, bisecting: alphamax = ", alphamax,
                     ", cold = ", cold, ", new c = ", c)
                 end
                 if c == cold || nextfloat(c) >= alphamax
