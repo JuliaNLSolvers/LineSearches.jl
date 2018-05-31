@@ -25,7 +25,7 @@
     # Test HagerZhang I12
     ls = HagerZhang()
     state = getstate()
-    is = InitialHagerZhang(α0 = 1.0, verbose = true)
+    is = InitialHagerZhang(α0 = 1.0)
     is(ls, state, phi_0, dphi_0, df)
     @test state.alpha == 0.4999999999999999
     @test ls.mayterminate[] == true
