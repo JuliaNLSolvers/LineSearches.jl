@@ -103,8 +103,8 @@ function (ls::BackTracking)(ϕ, α_0::Tα, ϕ_0, dϕ_0) where Tα
 
         α_1 = α_2
 
-        α_2 = NaNMath.min(α_tmp, α_2*ρ_hi) # avoid too small reductions
-        α_2 = NaNMath.max(α_2, α_2*ρ_lo) # avoid too big reductions
+        α_tmp = NaNMath.min(α_tmp, α_2*ρ_hi) # avoid too small reductions
+        α_2 = NaNMath.max(α_tmp, α_2*ρ_lo) # avoid too big reductions
 
         # enforce a maximum step alpha * s (application specific, default is Inf)
 
