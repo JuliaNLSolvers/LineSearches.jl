@@ -215,6 +215,7 @@ function _hzI12(alpha::T,
     if verbose == true
         println("quadfit: alphatest = ", alphatest,
                 ", phi_0 = ", phi_0,
+                ", dphi_0 = ", dphi_0,
                 ", phitest = ", phitest,
                 ", quadcoef = ", a)
     end
