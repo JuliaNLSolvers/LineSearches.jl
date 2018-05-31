@@ -222,7 +222,12 @@ function _hzI12(alpha::T,
     @show _c === alphatest
     @show _d === dphi_0
     @show ((_a-_b)/_c-_d)/_c
-    @show ((phitest-phi_0)/alphatest - dphi_0)/alphatest 
+    @show ((phitest-phi_0)/alphatest - dphi_0)/alphatest
+    _a = phitest
+    _b = phi_0
+    _c = alphatest
+    _d = dphi_0
+    @show ((_a-_b)/_c-_d)/_c
     @show ((0.72-(2.0))/0.2-(-8.0))/0.2
 
     if verbose == true
