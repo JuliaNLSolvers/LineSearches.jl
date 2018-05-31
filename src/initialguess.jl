@@ -217,6 +217,11 @@ function _hzI12(alpha::T,
     @show 2.0 === phi_0
     @show 0.2 === alphatest
     @show -8.0 === dphi_0
+    _a = 0.72
+    _b = 2.0
+    _c = 0.2
+    _d = -8.0
+    @show ((_a-_b)/_c-_d)/_c
     @show ((0.72-(2.0))/0.2-(-8.0))/0.2
 
     if verbose == true
