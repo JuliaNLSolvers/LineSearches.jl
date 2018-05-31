@@ -28,15 +28,15 @@ function (ls::BackTracking)(df::AbstractObjective, x::AbstractArray{T}, s::Abstr
     if dϕ_0 == nothing
         dϕ_0 = dϕ(α_0)
     end
-
-    ls(ϕ, x, s, α_0, ϕ_0, dϕ_0, alphamax)
+    alphamax = min(alphamax, ls.maxstep / vecnorm(s, Inf))
+    ls(ϕ, α_0, ϕ_0, dϕ_0, alphamax)
 end
-function (ls::BackTracking)(ϕ, x::AbstractArray{T}, s::AbstractArray{T}, α_0::Tα,
-                            ϕ_0, dϕ_0, alphamax = convert(real(T), Inf)) where {T, Tα}
+function (ls::BackTracking)(ϕ, α_0::Tα,
+                            ϕ_0, dϕ_0, alphamax = convert(real(Tα), Inf)) where Tα
 
-    @unpack c_1, ρ_hi, ρ_lo, iterations, order, maxstep = ls
+    @unpack c_1, ρ_hi, ρ_lo, iterations, order = ls
 
-    iterfinitemax = -log2(eps(real(T)))
+    iterfinitemax = -log2(eps(real(Tα)))
 
     @assert order in (2,3)
     # Check the input is valid, and modify otherwise
@@ -92,7 +92,7 @@ function (ls::BackTracking)(ϕ, x::AbstractArray{T}, s::AbstractArray{T}, α_0::
             a = (α_1^2*(ϕx_1 - ϕ_0 - dϕ_0*α_2) - α_2^2*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
             b = (-α_1^3*(ϕx_1 - ϕ_0 - dϕ_0*α_2) + α_2^3*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
 
-            if isapprox(a, zero(a), atol=eps(real(T)))
+            if isapprox(a, zero(a), atol=eps(real(Tα)))
                 α_tmp = dϕ_0 / (2*b)
             else
                 # discriminant
@@ -106,7 +106,7 @@ function (ls::BackTracking)(ϕ, x::AbstractArray{T}, s::AbstractArray{T}, α_0::
 
         # enforce a maximum step alpha * s (application specific, default is Inf)
         α_1 = α_2
-        α_2 = min(α_tmp, maxstep / vecnorm(s, Inf))
+        α_2 = min(α_tmp, alphamax)
 
         # Evaluate f(x) at proposed position
         ϕx_0, ϕx_1 = ϕx_1, ϕ(α_2)
