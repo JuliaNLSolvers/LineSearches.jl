@@ -224,7 +224,7 @@ function _hzI12(alpha::T,
     @show ((_a - _b)/_c - _d)/_c
     @show ((phitest-phi_0)/alphatest - dphi_0)/alphatest
     @show weirdcalc(_a,_b,_c,_d)
-    @show weirdcalc(phitest,phi_0,alphatest_c,dphi_0)
+    @show weirdcalc(phitest,phi_0,alphatest,dphi_0)
 
 
     _a = phitest
