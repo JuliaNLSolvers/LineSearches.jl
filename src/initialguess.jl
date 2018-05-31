@@ -173,7 +173,7 @@ function (is::InitialHagerZhang)(ls::Tls, state, phi_0, dphi_0, df) where Tls
     end
     return state.alpha
 end
-@noinline weirdcalc(a,b,c,d) = ((a-b)/c-d)/c
+
 # Pick the initial step size (HZ #I1-I2)
 function _hzI12(alpha::T,
                 df,
@@ -212,33 +212,7 @@ function _hzI12(alpha::T,
         end
     end
     a = ((phitest-phi_0)/alphatest - dphi_0)/alphatest  # quadratic fit
-    @show a
-    _a = 0.72
-    _b = 2.0
-    _c = 0.2
-    _d = -8.0
-    @show _a === phitest
-    @show _b === phi_0
-    @show _c === alphatest
-    @show _d === dphi_0
-    @show ((_a - _b)/_c - _d)/_c
-    @show ((phitest-phi_0)/alphatest - dphi_0)/alphatest
-    @show weirdcalc(_a,_b,_c,_d)
-    @show weirdcalc(phitest,phi_0,alphatest,dphi_0)
-
-
-    _a = phitest
-    println(_a)
-    _b = phi_0
-    println(_b)
-    _c = alphatest
-    println(_c)
-    _d = dphi_0
-    println(_d)
-    @show __a = ((_a-_b)/_c-_d)/_c
-    @show ((_a-_b)/_c-_d)/_c
-    @show ((0.72-(2.0))/0.2-(-8.0))/0.2
-
+    
     if verbose == true
         println("quadfit: alphatest = ", alphatest,
                 ", phi_0 = ", phi_0,
