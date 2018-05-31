@@ -224,9 +224,13 @@ function _hzI12(alpha::T,
     @show ((_a-_b)/_c-_d)/_c
     @show ((phitest-phi_0)/alphatest - dphi_0)/alphatest
     _a = phitest
+    println(_a)
     _b = phi_0
+    println(_b)
     _c = alphatest
+    println(_c)
     _d = dphi_0
+    println(_d)
     @show ((_a-_b)/_c-_d)/_c
     @show ((0.72-(2.0))/0.2-(-8.0))/0.2
 
