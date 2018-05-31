@@ -182,10 +182,10 @@ function _hzI12(alpha::T,
                 x_new::AbstractArray{Tx},
                 phi_0::T,
                 dphi_0::T,
-                psi1::Real,
-                psi2::Real,
-                psi3::Real,
-                alphamax::Real,
+                psi1::T,
+                psi2::T,
+                psi3::T,
+                alphamax::Tx,
                 verbose::Bool,
                 mayterminate) where {Tx,T}
     ϕ = make_ϕ(df, x_new, x, s)
@@ -221,7 +221,7 @@ function _hzI12(alpha::T,
     @show _b === phi_0
     @show _c === alphatest
     @show _d === dphi_0
-    @show ((_a-_b)/_c-_d)/_c
+    @show ((_a - _b)/_c - _d)/_c
     @show ((phitest-phi_0)/alphatest - dphi_0)/alphatest
     _a = phitest
     println(_a)
