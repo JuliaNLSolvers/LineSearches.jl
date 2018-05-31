@@ -231,6 +231,7 @@ function _hzI12(alpha::T,
     println(_c)
     _d = dphi_0
     println(_d)
+    @show __a = ((_a-_b)/_c-_d)/_c
     @show ((_a-_b)/_c-_d)/_c
     @show ((0.72-(2.0))/0.2-(-8.0))/0.2
 
