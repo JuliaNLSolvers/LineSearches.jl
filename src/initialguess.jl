@@ -212,6 +212,10 @@ function _hzI12(alpha::T,
         end
     end
     a = ((phitest-phi_0)/alphatest - dphi_0)/alphatest  # quadratic fit
+    @show 0.72 === phitest
+    @show 2.0 === phi_0
+    @show 0.2 === alphatest
+    @show -8.0 === dphi_0
     @show ((0.72-(2.0))/0.2-(-8.0))/0.2
 
     if verbose == true
