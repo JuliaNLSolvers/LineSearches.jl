@@ -197,12 +197,12 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             if c > alphamax
                 c = (alphamax + cold)/2
                 if display & BRACKET > 0
-                    println("bracket: exceeding alphamax, bisecting: alphamax = ", alphamax, 
+                    println("bracket: exceeding alphamax, bisecting: alphamax = ", alphamax,
                     ", cold = ", cold, ", new c = ", c)
                 end
                 if c == cold || nextfloat(c) >= alphamax
                     mayterminate[] = false # reset in case another initial guess is used next
-                    return cold, dphi_c
+                    return cold, phi_c
                 end
             end
             phi_c, dphi_c = ϕdϕ(c)
