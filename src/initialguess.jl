@@ -173,7 +173,7 @@ function (is::InitialHagerZhang)(ls::Tls, state, phi_0, dphi_0, df) where Tls
     end
     return state.alpha
 end
-
+function weirdcalc(a,b,c,d) = ((a-b)/c-d)/c
 # Pick the initial step size (HZ #I1-I2)
 function _hzI12(alpha::T,
                 df,
@@ -223,6 +223,10 @@ function _hzI12(alpha::T,
     @show _d === dphi_0
     @show ((_a - _b)/_c - _d)/_c
     @show ((phitest-phi_0)/alphatest - dphi_0)/alphatest
+    @show weirdcalc(_a,_b,_c,_d)
+    @show weirdcalc(phitest,phi_0,alphatest_c,dphi_0)
+
+
     _a = phitest
     println(_a)
     _b = phi_0
