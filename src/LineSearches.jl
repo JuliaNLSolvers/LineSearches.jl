@@ -11,9 +11,8 @@ using Parameters, NaNMath
 
 import NLSolversBase
 import NLSolversBase: AbstractObjective
-import Compat.Distributed.clear!
 
-export LineSearchResults, clear!
+export LineSearchException
 
 export BackTracking, HagerZhang, Static, MoreThuente, StrongWolfe
 
