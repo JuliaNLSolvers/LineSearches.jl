@@ -98,19 +98,20 @@ function (ls::HagerZhang)(df::AbstractObjective, x::AbstractArray{T},
                             s::AbstractArray{T}, α::Real,
                             x_new::AbstractArray{T}, phi_0::Real, dphi_0::Real) where T
     ϕ, ϕdϕ = make_ϕ_ϕdϕ(df, x_new, x, s)
-    ls(ϕ, ϕdϕ, x, s, α::Real, phi_0, dphi_0)
+    ls(ϕ, ϕdϕ, α::Real, phi_0, dphi_0)
 end
 
 function (ls::HagerZhang)(ϕ, ϕdϕ,
-                     x::AbstractArray{Tx},
-                     s::AbstractArray{Tx},
-                     c::Real,
+                     c::T,
                      phi_0::Real,
-                     dphi_0::Real) where Tx
-    T = real(Tx)
+                     dphi_0::Real) where T
 
     @unpack delta, sigma, alphamax, rho, epsilon, gamma,
             linesearchmax, psi3, display, mayterminate = ls
+
+    if dphi_0 == T(0)
+        return c, phi_0
+    end
 
     # Prevent values of x_new = x+αs that are likely to make
     # ϕ(x_new) infinite
