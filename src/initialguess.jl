@@ -14,7 +14,7 @@ end
 
 function (is::InitialStatic{T})(ls, state, phi_0, dphi_0, df) where T
     PT = promote_type(T, real(eltype(state.s)))
-    if is.scaled == true && (ns = real(vecnorm(state.s))) > zero(PT)
+    if is.scaled == true && (ns = real(vecnorm(state.s))) > PT(0)
         # TODO: Type instability if there's a type mismatch between is.alpha and ns?
         state.alpha = PT(min(is.alpha, ns)) / ns
     else
@@ -70,7 +70,7 @@ If αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.
 end
 
 function (is::InitialQuadratic{T})(ls, state, phi_0, dphi_0, df) where T
-    if !isfinite(state.f_x_previous) || isapprox(dphi_0, zero(T), atol=eps(T)) # Need to add a tolerance
+    if !isfinite(state.f_x_previous) || isapprox(dphi_0, T(0), atol=eps(T)) # Need to add a tolerance
         # If we're at the first iteration
         αguess = is.α0
     else
@@ -113,7 +113,7 @@ If αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.
 end
 
 function (is::InitialConstantChange{T})(ls, state, phi_0, dphi_0, df) where T
-    if !isfinite(state.dphi_0_previous) || !isfinite(state.alpha) || isapprox(dphi_0, zero(T), atol=eps(T))
+    if !isfinite(state.dphi_0_previous) || !isfinite(state.alpha) || isapprox(dphi_0, T(0), atol=eps(T))
         # If we're at the first iteration
         αguess = is.α0
     else
@@ -207,12 +207,12 @@ function _hzI12(alpha::T,
 
         iterfinite += 1
         if iterfinite >= iterfinitemax
-            return zero(T), true
+            return T(0), true
             #             error("Failed to achieve finite test value; alphatest = ", alphatest)
         end
     end
     a = ((phitest-phi_0)/alphatest - dphi_0)/alphatest  # quadratic fit
-    
+
     if verbose == true
         println("quadfit: alphatest = ", alphatest,
                 ", phi_0 = ", phi_0,
@@ -257,11 +257,11 @@ function _hzI0(x::AbstractArray{Tx},
                psi0::T = T(1)/100) where {Tx,T}
     alpha = one(T)
     gr_max = maximum(abs, gr)
-    if gr_max != zero(T)
+    if gr_max != T(0)
         x_max = maximum(abs, x)
-        if x_max != zero(T)
+        if x_max != T(0)
             alpha = psi0 * x_max / gr_max
-        elseif f_x != zero(T)
+        elseif f_x != T(0)
             alpha = psi0 * abs(f_x) / vecnorm(gr)
         end
     end
