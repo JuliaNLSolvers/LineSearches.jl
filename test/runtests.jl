@@ -24,7 +24,6 @@ mutable struct StateDummy
     x_ls
     f_x_previous
     s
-    dphi_0_previous
 end
 
 for my_test in my_tests
