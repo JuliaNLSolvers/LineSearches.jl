@@ -7,7 +7,7 @@
 # experiment with different line search algorithms.
 # The algorithm is implemented as follows.
 
-function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, ls,
+function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, linesearch,
                     maxiter::Int = 10000,
                     g_rtol::T = sqrt(eps(T)), g_atol::T = eps(T)) where T <: Number
     x = copy(x0)
@@ -39,7 +39,7 @@ function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, ls,
 
         dϕ_0 = dot(s, gvec)
         α, fx = perform_linesearch(ϕ, dϕ, ϕdϕ, 1.0,
-                                   fx, dϕ_0, ls)
+                                   fx, dϕ_0, linesearch)
         @. x = x + α*s
         g!(gvec, x)
         gnorm = norm(gvec)
@@ -59,21 +59,21 @@ end
 # a method `perform_linesearch` that returns the step length `α` and the
 # objective value `fx = f(x + α*s)`.
 #
-# We use multiple dispatch on `ls` to call the different line search procedures:
+# We use multiple dispatch on `linesearch` to call the different line search procedures:
 
 using LineSearches
 perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   ls::BackTracking) =
-                       ls(ϕ, α0, ϕ_0, dϕ_0)
+                   linesearch::BackTracking) =
+                       linesearch(ϕ, α0, ϕ_0, dϕ_0)
 perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   ls::HagerZhang) =
-                       ls(ϕ, ϕdϕ, α0, ϕ_0, dϕ_0)
+                   linesearch::HagerZhang) =
+                       linesearch(ϕ, ϕdϕ, α0, ϕ_0, dϕ_0)
 perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   ls::MoreThuente) =
-                       ls(ϕdϕ, α0, ϕ_0, dϕ_0)
+                   linesearch::MoreThuente) =
+                       linesearch(ϕdϕ, α0, ϕ_0, dϕ_0)
 perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   ls::StrongWolfe) =
-                       ls(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0)
+                   linesearch::StrongWolfe) =
+                       linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0)
 
 # The functions ϕ and dϕ represent a univariate objective
 # and its derivative, which is used by the line search algorithms.
