@@ -7,7 +7,7 @@
 # experiment with different line search algorithms.
 # The algorithm is implemented as follows.
 
-function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, ls::AbstractLineSearch,
+function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, ls,
                     maxiter::Int = 10000,
                     g_rtol::T = sqrt(eps(T)), g_atol::T = eps(T)) where T <: Number
     x = copy(x0)
