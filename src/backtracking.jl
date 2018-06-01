@@ -28,11 +28,11 @@ function (ls::BackTracking)(df::AbstractObjective, x::AbstractArray{T}, s::Abstr
     if dϕ_0 == nothing
         dϕ_0 = dϕ(α_0)
     end
-    alphamax = min(alphamax, ls.maxstep / vecnorm(s, Inf))
-    ls(ϕ, α_0, ϕ_0, dϕ_0, alphamax)
+
+    α_0 = min(α_0, min(alphamax, ls.maxstep / vecnorm(s, Inf)))
+    ls(ϕ, α_0, ϕ_0, dϕ_0)
 end
-function (ls::BackTracking)(ϕ, α_0::Tα,
-                            ϕ_0, dϕ_0, alphamax = convert(real(Tα), Inf)) where Tα
+function (ls::BackTracking)(ϕ, α_0::Tα, ϕ_0, dϕ_0) where Tα
 
     @unpack c_1, ρ_hi, ρ_lo, iterations, order = ls
 
@@ -101,12 +101,11 @@ function (ls::BackTracking)(ϕ, α_0::Tα,
                 α_tmp = (-b + sqrt(d)) / (3*a)
             end
         end
-        α_tmp = NaNMath.min(α_tmp, α_2*ρ_hi) # avoid too small reductions
-        α_tmp = NaNMath.max(α_tmp, α_2*ρ_lo) # avoid too big reductions
 
-        # enforce a maximum step alpha * s (application specific, default is Inf)
         α_1 = α_2
-        α_2 = min(α_tmp, alphamax)
+
+        α_tmp = NaNMath.min(α_tmp, α_2*ρ_hi) # avoid too small reductions
+        α_2 = NaNMath.max(α_tmp, α_2*ρ_lo) # avoid too big reductions
 
         # Evaluate f(x) at proposed position
         ϕx_0, ϕx_1 = ϕx_1, ϕ(α_2)
