@@ -12,7 +12,7 @@
     dphi_0 = dot(p, grtmp)
 
     function getstate()
-        state = StateDummy(1.0,  x, similar(x), NaN, p, NaN)
+        state = StateDummy(1.0,  x, similar(x), NaN, p)
     end
     # Test HagerZhang I0
     ls = HagerZhang()
@@ -108,8 +108,8 @@
     # Test ConstantChange
     ls = HagerZhang()
     state = getstate()
-    state.dphi_0_previous = 0.1*dphi_0
     is = InitialConstantChange()
+    is.dϕ_0_previous[] = 0.1*dphi_0
     is(ls, state, phi_0, dphi_0, df)
     @test state.alpha == 0.25
     @test ls.mayterminate[] == false
@@ -117,8 +117,8 @@
     # Test ConstantChange snap2one
     ls = HagerZhang()
     state = getstate()
-    state.dphi_0_previous = 0.1*dphi_0
     is = InitialConstantChange(snap2one=(0.25,1.0))
+    is.dϕ_0_previous[] = 0.1*dphi_0
     is(ls, state, phi_0, dphi_0, df)
     @test state.alpha == 1.0
     @test ls.mayterminate[] == false

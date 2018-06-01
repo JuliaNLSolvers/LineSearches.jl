@@ -104,21 +104,43 @@ This procedure have several arguments, with the following defaults.
 
 If αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.
 """
-@with_kw struct InitialConstantChange{T}
-    αmin::T = 1e-12 # Minimum initial step size (value somewhat arbitrary)
-    αmax::T = 1.0   # Maximum initial step size
-    α0::T   = 1.0   # Fallback at first iteration
-    ρ::T    = 0.25  # maximum decrease from previous step
-    snap2one::Tuple{T,T} = (0.75, Inf) # Set everything in this (closed) interval to 1.0
+struct InitialConstantChange{T}
+    αmin::T # Minimum initial step size (value somewhat arbitrary)
+    αmax::T # Maximum initial step size
+    α0::T   # Fallback at first iteration
+    ρ::T    # maximum decrease from previous step
+    snap2one::Tuple{T,T} # Set everything in this (closed) interval to 1.0
+    dϕ_0_previous::Base.RefValue{T}
+end
+
+# Have to make this constructor without with_kw because Ref(NaN) has to adapt to T
+function InitialConstantChange{T}(; αmin = 1e-12,
+                        αmax = 1.0,
+                        α0   = 1.0,
+                        ρ    = 0.25,
+                        snap2one = (0.75, Inf)) where T
+    αmin, αmax, α0, ρ = convert.(T, (αmin, αmax, α0, ρ))
+    snap2one = convert.(T, snap2one)
+    InitialConstantChange(αmin, αmax, α0, ρ, snap2one, Ref{T}(T(NaN)))
+end
+
+# Have to make this constructor without with_kw because Ref(NaN) has to adapt to T
+function InitialConstantChange(; αmin = 1e-12,
+                        αmax = 1.0,
+                        α0   = 1.0,
+                        ρ    = 0.25,
+                        snap2one = (0.75, Inf))
+    T = promote_type(typeof.((αmin, αmax, α0, ρ))...)
+    InitialConstantChange(αmin, αmax, α0, ρ, snap2one, Ref{T}(T(NaN)))
 end
 
 function (is::InitialConstantChange{T})(ls, state, phi_0, dphi_0, df) where T
-    if !isfinite(state.dphi_0_previous) || !isfinite(state.alpha) || isapprox(dphi_0, T(0), atol=eps(T))
+    if !isfinite(is.dϕ_0_previous[]) || !isfinite(state.alpha) || isapprox(dphi_0, T(0), atol=eps(T))
         # If we're at the first iteration
         αguess = is.α0
     else
         # state.alpha is the previously used step length
-        αguess = state.alpha * state.dphi_0_previous / dphi_0
+        αguess = state.alpha * is.dϕ_0_previous[] / dphi_0
         αguess = NaNMath.max(is.αmin, state.alpha*is.ρ, αguess)
         αguess = NaNMath.min(is.αmax, αguess)
         # if αguess ≈ 1, then make it 1 (Newton-type behaviour)

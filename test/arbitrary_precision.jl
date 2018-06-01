@@ -20,7 +20,7 @@ for T in [Float32, Float64, typeof(DoubleFloat64(1)), BigFloat]
             @test dphi_0 isa $T
 
             function getstate()
-                state = StateDummy($T(1),  x, similar(x), $T(NaN), p, $T(NaN))
+                state = StateDummy($T(1),  x, similar(x), $T(NaN), p)
             end
             # Test HagerZhang I0
             ls = HagerZhang{$T}()
@@ -122,8 +122,8 @@ for T in [Float32, Float64, typeof(DoubleFloat64(1)), BigFloat]
             # Test ConstantChange
             ls = HagerZhang{$T}()
             state = getstate()
-            state.dphi_0_previous = $T(0.1)*dphi_0
             is = InitialConstantChange{$T}()
+            is.dϕ_0_previous[] = $T(0.1)*dphi_0
             is(ls, state, phi_0, dphi_0, df)
             @test !isnan(state.alpha)
             @test ls.mayterminate[] == false
@@ -131,8 +131,8 @@ for T in [Float32, Float64, typeof(DoubleFloat64(1)), BigFloat]
             # Test ConstantChange snap2one
             ls = HagerZhang{$T}()
             state = getstate()
-            state.dphi_0_previous = $T(0.1)*dphi_0
             is = InitialConstantChange{$T}(snap2one=($T(0.25),$T(1)))
+            is.dϕ_0_previous[] = $T(0.1)*dphi_0
             is(ls, state, phi_0, dphi_0, df)
             @test !isnan(state.alpha)
             @test ls.mayterminate[] == false
