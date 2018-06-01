@@ -1,8 +1,12 @@
 @testset "Literate examples" begin
-    EXAMPLEDIR = joinpath(@__DIR__, "..", "examples")
+    EXAMPLEDIR = joinpath(@__DIR__, "../docs/src/examples")
     for file in filter!(r"\.jl$", readdir(EXAMPLEDIR))
         @testset "$file" begin
-            include(joinpath(EXAMPLEDIR, file))
+            mktempdir() do dir
+                cd(dir) do
+                    include(joinpath(EXAMPLEDIR, file))
+                end
+            end
         end
     end
 end
