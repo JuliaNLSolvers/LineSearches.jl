@@ -96,7 +96,7 @@ function (ls::BackTracking)(ϕ, α_0::Tα, ϕ_0, dϕ_0) where Tα
                 α_tmp = dϕ_0 / (2*b)
             else
                 # discriminant
-                d = max(b^2 - 3*a*dϕ_0, zero(Tα))
+                d = max(b^2 - 3*a*dϕ_0, Tα(0))
                 # quadratic equation root
                 α_tmp = (-b + sqrt(d)) / (3*a)
             end
