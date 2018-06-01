@@ -14,7 +14,8 @@ lstypes =  (Static(), HagerZhang(), StrongWolfe(), MoreThuente(),
 my_tests = [
     "initial.jl",
     "alphacalc.jl",
-    "arbitrary_precision.jl"
+    "arbitrary_precision.jl",
+    "examples.jl"
 ]
 
 mutable struct StateDummy
