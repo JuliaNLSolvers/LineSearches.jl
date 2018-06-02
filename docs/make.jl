@@ -4,8 +4,7 @@ using Documenter, LineSearches
 include("generate.jl")
 
 GENERATEDEXAMPLES = [joinpath("examples", "generated", f) for f in (
-    "optim_linesearch.md", "optim_initialstep.md",
-    "customoptimizer.md")]
+    "customoptimizer.md", "optim_linesearch.md", "optim_initialstep.md")]
 
 # Build documentation.
 makedocs(
