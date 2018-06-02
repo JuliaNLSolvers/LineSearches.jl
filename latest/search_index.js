@@ -21,7 +21,23 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Introduction",
     "category": "section",
-    "text": "LineSearches provides a collection of line search routines for optimization and nonlinear solvers. The package can be used on its own, but it also provides extra supporting functionality for Optim.jl and NLsolve.jl."
+    "text": "LineSearches provides a collection of line search routines for optimization and nonlinear solvers.  The package can be used on its own, but it also provides extra supporting functionality for Optim.jl and NLsolve.jl."
+},
+
+{
+    "location": "index.html#Available-line-search-algorithms-1",
+    "page": "Home",
+    "title": "Available line search algorithms",
+    "category": "section",
+    "text": "HagerZhang (Taken from the Conjugate Gradient implementation by Hager and Zhang, 2006)\nMoreThuente (From the algorithm in More and Thuente, 1994)\nBackTracking (Described in Nocedal and Wright, 2006)\nStrongWolfe (Nocedal and Wright)\nStatic (Takes the proposed initial step length.)"
+},
+
+{
+    "location": "index.html#Available-initial-step-length-procedures-1",
+    "page": "Home",
+    "title": "Available initial step length procedures",
+    "category": "section",
+    "text": "The package provides some procedures to calculate the initial step length that is passed to the line search algorithm, currently specialized to be used with Optim and NLsolve.InitialPrevious (Use the step length from the previous optimization iteration)\nInitialStatic (Use the same initial step length each time)\nInitialHagerZhang (Taken from Hager and Zhang, 2006)\nInitialQuadratic (Propose initial step length based on a quadratic interpolation)\nInitialConstantChange (Propose initial step length assuming constant change in step length)"
 },
 
 {
@@ -30,6 +46,14 @@ var documenterSearchIndex = {"docs": [
     "title": "Installation",
     "category": "section",
     "text": "To install, simply run the following in the Julia REPL:Pkg.add(\"LineSearches\")and then runusing LineSearchesto load the package."
+},
+
+{
+    "location": "index.html#References-1",
+    "page": "Home",
+    "title": "References",
+    "category": "section",
+    "text": "W. W. Hager and H. Zhang (2006) \"Algorithm 851: CG_DESCENT, a conjugate gradient method with guaranteed descent.\" ACM Transactions on Mathematical Software 32: 113-137.\nMoré, Jorge J., and David J. Thuente. \"Line search algorithms with guaranteed sufficient decrease.\" ACM Transactions on Mathematical Software (TOMS) 20.3 (1994): 286-307.\nNocedal, Jorge, and Stephen Wright. \"Numerical optimization.\" Springer Science & Business Media, 2006."
 },
 
 {
@@ -53,7 +77,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Using LineSearches without Optim/NLsolve",
     "title": "Optimizing Rosenbrock",
     "category": "section",
-    "text": "Here is an example to show how we can combine gdoptimize and LineSearches to minimize the Rosenbrock function, which is defined byf(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2\n\nfunction g!(gvec, x)\n    gvec[1] = -2.0 * (1.0 - x[1]) - 400.0 * (x[2] - x[1]^2) * x[1]\n    gvec[2] = 200.0 * (x[2] - x[1]^2)\n    gvec\nend\n\nfunction fg!(gvec, x)\n    g!(gvec, x)\n    f(x)\nendWe can now use gdoptimize with BackTracking to optimize the Rosenbrock function from a given initial conditionx0`.x0 = [-1., 1.0]\nls = BackTracking(order=3)\nfx_bt3, x_bt3, iter_bt3 = gdoptimize(f, g!, fg!, x0, ls)Interestingly, the StrongWolfe line search converges in one iteration, whilst all the other algorithms take thousands of iterations. This is just luck due to the particular choice of initial conditionls = StrongWolfe()\nfx_sw, x_sw, iter_sw = gdoptimize(f, g!, fg!, x0, ls)"
+    "text": "Here is an example to show how we can combine gdoptimize and LineSearches to minimize the Rosenbrock function, which is defined byf(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2\n\nfunction g!(gvec, x)\n    gvec[1] = -2.0 * (1.0 - x[1]) - 400.0 * (x[2] - x[1]^2) * x[1]\n    gvec[2] = 200.0 * (x[2] - x[1]^2)\n    gvec\nend\n\nfunction fg!(gvec, x)\n    g!(gvec, x)\n    f(x)\nendWe can now use gdoptimize with BackTracking to optimize the Rosenbrock function from a given initial condition x0.x0 = [-1., 1.0]\nls = BackTracking(order=3)\nfx_bt3, x_bt3, iter_bt3 = gdoptimize(f, g!, fg!, x0, ls)Interestingly, the StrongWolfe line search converges in one iteration, whilst all the other algorithms take thousands of iterations. This is just luck due to the particular choice of initial conditionls = StrongWolfe()\nfx_sw, x_sw, iter_sw = gdoptimize(f, g!, fg!, x0, ls)"
 },
 
 {
@@ -62,6 +86,38 @@ var documenterSearchIndex = {"docs": [
     "title": "Plain Program",
     "category": "section",
     "text": "Below follows a version of the program without any comments. The file is also available here: customoptimizer.jlfunction gdoptimize(f, g!, fg!, x0::AbstractArray{T}, linesearch,\n                    maxiter::Int = 10000,\n                    g_rtol::T = sqrt(eps(T)), g_atol::T = eps(T)) where T <: Number\n    x = copy(x0)\n    gvec = similar(x)\n    g!(gvec, x)\n    fx = f(x)\n\n    gnorm = norm(gvec)\n    gtol = max(g_rtol*gnorm, g_atol)\n\n    # Univariate line search functions\n    ϕ(α) = f(x .+ α.*s)\n    function dϕ(α)\n        g!(gvec, x .+ α.*s)\n        return vecdot(gvec, s)\n    end\n    function ϕdϕ(α)\n        phi = fg!(gvec, x .+ α.*s)\n        dphi = vecdot(gvec, s)\n        return (phi, dphi)\n    end\n\n    s = similar(gvec) # Step direction\n\n    iter = 0\n    while iter < maxiter && gnorm > gtol\n        iter += 1\n        s .= -gvec\n\n        dϕ_0 = dot(s, gvec)\n        α, fx = perform_linesearch(ϕ, dϕ, ϕdϕ, 1.0,\n                                   fx, dϕ_0, linesearch)\n        @. x = x + α*s\n        g!(gvec, x)\n        gnorm = norm(gvec)\n    end\n\n    return (fx, x, iter)\nend\n\nusing LineSearches\nperform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,\n                   linesearch::BackTracking) =\n                       linesearch(ϕ, α0, ϕ_0, dϕ_0)\nperform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,\n                   linesearch::HagerZhang) =\n                       linesearch(ϕ, ϕdϕ, α0, ϕ_0, dϕ_0)\nperform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,\n                   linesearch::MoreThuente) =\n                       linesearch(ϕdϕ, α0, ϕ_0, dϕ_0)\nperform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,\n                   linesearch::StrongWolfe) =\n                       linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0)\n\nf(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2\n\nfunction g!(gvec, x)\n    gvec[1] = -2.0 * (1.0 - x[1]) - 400.0 * (x[2] - x[1]^2) * x[1]\n    gvec[2] = 200.0 * (x[2] - x[1]^2)\n    gvec\nend\n\nfunction fg!(gvec, x)\n    g!(gvec, x)\n    f(x)\nend\n\nx0 = [-1., 1.0]\nls = BackTracking(order=3)\nfx_bt3, x_bt3, iter_bt3 = gdoptimize(f, g!, fg!, x0, ls)\n\nls = StrongWolfe()\nfx_sw, x_sw, iter_sw = gdoptimize(f, g!, fg!, x0, ls)\n\n# This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jlThis page was generated using Literate.jl."
+},
+
+{
+    "location": "examples/generated/optim_linesearch.html#",
+    "page": "Optim line search",
+    "title": "Optim line search",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "examples/generated/optim_linesearch.html#Optim-line-search-1",
+    "page": "Optim line search",
+    "title": "Optim line search",
+    "category": "section",
+    "text": "tip: Tip\nThis example is also available as a Jupyter notebook: optim_linesearch.ipynbThis example shows how to use LineSearches with Optim.  We solve the Rosenbrock problem with two different line search algorithms.First, run Newton with the default line search algorithm:using Optim, LineSearches\nimport OptimTestProblems.MultivariateProblems\nUP = MultivariateProblems.UnconstrainedProblems\nprob = UP.examples[\"Rosenbrock\"]\n\nalgo_hz = Newton(linesearch = HagerZhang())\nres_hz = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_hz)Now we can try Newton with the cubic backtracking line search, which reduced the number of objective and gradient calls.algo_bt3 = Newton(linesearch = BackTracking(order=3))\nres_bt3 = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_bt3)This page was generated using Literate.jl."
+},
+
+{
+    "location": "examples/generated/optim_initialstep.html#",
+    "page": "Optim initial step length guess",
+    "title": "Optim initial step length guess",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "examples/generated/optim_initialstep.html#Optim-initial-step-length-guess-1",
+    "page": "Optim initial step length guess",
+    "title": "Optim initial step length guess",
+    "category": "section",
+    "text": "tip: Tip\nThis example is also available as a Jupyter notebook: optim_initialstep.ipynbThis example shows how to use the initial step length procedures with Optim.  We solve the Rosenbrock problem with two different procedures.First, run Newton with the (default) initial guess and line search procedures.using Optim, LineSearches\nimport OptimTestProblems.MultivariateProblems\nUP = MultivariateProblems.UnconstrainedProblems\nprob = UP.examples[\"Rosenbrock\"]\n\nalgo_st = Newton(alphaguess = InitialStatic(), linesearch = HagerZhang())\nres_st = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_st)We can now try with the initial step length guess from Hager and Zhang.algo_hz = Newton(alphaguess = InitialHagerZhang(α0=1.0), linesearch = HagerZhang())\nres_hz = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_hz)From the result we see that this has reduced the number of function and gradient calls, but increased the number of iterations.This page was generated using Literate.jl."
 },
 
 {
