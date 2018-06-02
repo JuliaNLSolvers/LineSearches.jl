@@ -132,7 +132,12 @@
 # TODO: Decide whether to update x, f, g and info
 #       or just return step and nfev and let existing code do its job
 
-
+"""
+The line search implementation from:
+  Moré, Jorge J., and David J. Thuente
+    Line search algorithms with guaranteed sufficient decrease.
+    ACM Transactions on Mathematical Software (TOMS) 20.3 (1994): 286-307.
+"""
 @with_kw struct MoreThuente{T}
     f_tol::T = 1e-4 # c_1 Wolfe sufficient decrease condition
     gtol::T = 0.9   # c_2 Wolfe curvature condition (Recommend 0.1 for GradientDescent)
