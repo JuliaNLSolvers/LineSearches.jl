@@ -107,7 +107,7 @@ function fg!(gvec, x)
 end
 
 
-# We can now use `gdoptimize` with `BackTracking to optimize the Rosenbrock function
+# We can now use `gdoptimize` with `BackTracking` to optimize the Rosenbrock function
 # from a given initial condition `x0`.
 
 x0 = [-1., 1.0]
