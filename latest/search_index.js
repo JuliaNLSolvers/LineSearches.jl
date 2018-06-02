@@ -29,7 +29,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Installation",
     "category": "section",
-    "text": "To install, simply run the following in the Julia REPL:Pkg.add(\"LineSearches\")and then runusing JuAFEMto load the package."
+    "text": "To install, simply run the following in the Julia REPL:Pkg.add(\"LineSearches\")and then runusing LineSearchesto load the package."
 },
 
 {
