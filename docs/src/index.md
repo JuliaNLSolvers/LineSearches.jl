@@ -20,6 +20,6 @@ Pkg.add("LineSearches")
 ```
 and then run
 ```julia
-using JuAFEM
+using LineSearches
 ```
 to load the package.
