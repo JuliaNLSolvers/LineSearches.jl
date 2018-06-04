@@ -190,8 +190,9 @@ function (is::InitialHagerZhang)(ls::Tls, state, phi_0, dphi_0, df) where Tls
         else
             mayterminate = Ref{Bool}(false)
         end
+        T = eltype(state.alpha)
         state.alpha = _hzI12(state.alpha, df, state.x, state.s, state.x_ls, phi_0, dphi_0,
-                   is.ψ1, is.ψ2, is.ψ3, is.αmax, is.verbose, mayterminate)
+                   is.ψ1, is.ψ2, is.ψ3, T(is.αmax), is.verbose, mayterminate)
     end
     return state.alpha
 end
@@ -204,10 +205,10 @@ function _hzI12(alpha::T,
                 x_new::AbstractArray{Tx},
                 phi_0::T,
                 dphi_0::T,
-                psi1::T,
-                psi2::T,
-                psi3::T,
-                alphamax::Tx,
+                psi1::Real,
+                psi2::Real,
+                psi3::Real,
+                alphamax::T,
                 verbose::Bool,
                 mayterminate) where {Tx,T}
     ϕ = make_ϕ(df, x_new, x, s)
