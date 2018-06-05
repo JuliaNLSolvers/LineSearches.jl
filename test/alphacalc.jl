@@ -61,8 +61,8 @@
                 end
             else
                 α, ϕα = linesearch!(df, x, p, alpha, xtmp, phi_0, dphi_0)
-                @test ϕα == phi_0
-                @test alpha == α # Is this what we want zero-slope directions?
+                @test ϕα == 0.0
+                @test alpha == α # Is this what we want for zero-slope directions?
             end
         end
     end
