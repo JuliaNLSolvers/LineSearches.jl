@@ -109,8 +109,12 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
     @unpack delta, sigma, alphamax, rho, epsilon, gamma,
             linesearchmax, psi3, display, mayterminate = ls
 
-    if dphi_0 == T(0)
-        return T(0), phi_0
+
+    if !(isfinite(phi_0) && isfinite(dphi_0))
+        throw(ArgumentError("Value and slope at step length = 0 must be finite."))
+    end
+    if dphi_0 >= T(0)
+        throw(ArgumentError("Search direction is not a direction of descent."))
     end
 
     # Prevent values of x_new = x+αs that are likely to make
@@ -123,7 +127,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
         println("New linesearch")
     end
 
-    (isfinite(phi_0) && isfinite(dphi_0)) || error("Initial value and slope must be finite")
+
     phi_lim = phi_0 + epsilon * abs(phi_0)
     @assert c > T(0)
     @assert isfinite(c) && c <= alphamax

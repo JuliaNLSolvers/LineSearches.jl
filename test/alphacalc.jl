@@ -50,8 +50,20 @@
                 linesearch!.mayterminate[] = false
             end
 
-            alpha, ϕalpha = linesearch!(df, x, p, alpha, xtmp, phi_0, dphi_0)
-            @test alpha == 1.0 # Is this what we want for non-descent directions?
+            if typeof(linesearch!) <: Union{HagerZhang, MoreThuente}
+                @test_throws ArgumentError linesearch!(df, x, p, alpha,
+                                                       xtmp, phi_0, dphi_0)
+                try
+                    linesearch!(df, x, p, alpha,
+                                xtmp, phi_0, dphi_0)
+                catch ex
+                    @test ex.msg == "Search direction is not a direction of descent."
+                end
+            else
+                α, ϕα = linesearch!(df, x, p, alpha, xtmp, phi_0, dphi_0)
+                @test ϕα == phi_0
+                @test alpha == α # Is this what we want zero-slope directions?
+            end
         end
     end
 
