@@ -1,14 +1,9 @@
 # generate examples
 import Literate
 
-# We shouldn't run the examples that require Optim in Travis/CI,
-# because an update in LineSearches may be breaking with the
-# most recently tagged Optim version.
-if get(ENV, "CI", "") == "true"
-    ONLYSTATIC = ["optim_linesearch.jl", "optim_initialstep.jl"]
-else
-    ONLYSTATIC = ["",]
-end
+# TODO: Remove items from `SKIPFILE` as soon as they run on the latest
+# stable `Optim` (or other dependency)
+ONLYSTATIC = ["optim_linesearch.jl", "optim_initialstep.jl"]
 
 EXAMPLEDIR = joinpath(@__DIR__, "src", "examples")
 GENERATEDDIR = joinpath(@__DIR__, "src", "examples", "generated")
