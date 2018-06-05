@@ -153,10 +153,14 @@ function (ls::MoreThuente)(df::AbstractObjective, x::AbstractArray{T},
     ϕdϕ = make_ϕdϕ(df, x_new, x, s)
     ls(ϕdϕ, alpha, ϕ_0, dϕ_0)
 end
+
+(ls::MoreThuente)(ϕ, dϕ, ϕdϕ, alpha, ϕ_0, dϕ_0) = ls(ϕdϕ, alpha, ϕ_0, dϕ_0)
+
+# TODO: Should we deprecate the interface that only uses the ϕdϕ argument?
 function (ls::MoreThuente)(ϕdϕ,
-                  alpha::T,
-                  ϕ_0,
-                  dϕ_0) where T
+                           alpha::T,
+                           ϕ_0,
+                           dϕ_0) where T
     @unpack f_tol, gtol, x_tol, alphamin, alphamax, maxfev = ls
 
     iterfinitemax = -log2(eps(T))

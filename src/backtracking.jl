@@ -32,8 +32,11 @@ function (ls::BackTracking)(df::AbstractObjective, x::AbstractArray{T}, s::Abstr
     α_0 = min(α_0, min(alphamax, ls.maxstep / vecnorm(s, Inf)))
     ls(ϕ, α_0, ϕ_0, dϕ_0)
 end
-function (ls::BackTracking)(ϕ, α_0::Tα, ϕ_0, dϕ_0) where Tα
 
+(ls::BackTracking)(ϕ, dϕ, ϕdϕ, αinitial, ϕ_0, dϕ_0) = ls(ϕ, αinitial, ϕ_0, dϕ_0)
+
+# TODO: Should we deprecate the interface that only uses the ϕ argument?
+function (ls::BackTracking)(ϕ, αinitial::Tα, ϕ_0, dϕ_0) where Tα
     @unpack c_1, ρ_hi, ρ_lo, iterations, order = ls
 
     iterfinitemax = -log2(eps(real(Tα)))
@@ -52,7 +55,7 @@ function (ls::BackTracking)(ϕ, α_0::Tα, ϕ_0, dϕ_0) where Tα
 
     ϕx_0, ϕx_1 = ϕ_0, ϕ_0
 
-    α_1, α_2 = α_0, α_0
+    α_1, α_2 = αinitial, αinitial
 
     ϕx_1 = ϕ(α_1)
 

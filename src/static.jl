@@ -37,6 +37,8 @@ function (ls::DeprecatedStatic)(df::AbstractObjective, x, s, α, x_new = similar
     ls(ϕ, α)
 end
 
+(ls::DeprecatedStatic)(ϕ, dϕ, ϕdϕ, α, ϕ_0, dϕ_0) = ls(ϕ, α)
+
 function (ls::DeprecatedStatic)(ϕ, α::Tα) where Tα
     @unpack α, scaled = ls
     @assert α > Tα(0) # This should really be done at the constructor level
@@ -73,10 +75,13 @@ immutable NewStatic end
 
 function (ls::NewStatic)(df::AbstractObjective, x, s, α, x_new = similar(x), ϕ_0 = nothing, dϕ_0 = nothing)
     ϕ = make_ϕ(df, x_new, x, s)
-    ls(ϕ, x, s, α)
+    ls(ϕ, α)
 end
 
-function (ls::NewStatic)(ϕ, x, s, α::Tα) where Tα
+(ls::NewStatic)(ϕ, dϕ, ϕdϕ, α, ϕ_0, dϕ_0) = ls(ϕ, α)
+
+# TODO: Should we deprecate the interface that only uses the ϕ argument?
+function (ls::NewStatic)(ϕ, α::Tα) where Tα
     @assert α > real(Tα(0))
     ϕα = ϕ(α)
 
