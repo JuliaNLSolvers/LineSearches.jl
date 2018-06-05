@@ -150,8 +150,6 @@ end
 function (ls::MoreThuente)(df::AbstractObjective, x::AbstractArray{T},
                            s::AbstractArray{T}, alpha::Real, x_new::AbstractArray{T},
                            ϕ_0, dϕ_0) where T
-
-
     ϕdϕ = make_ϕdϕ(df, x_new, x, s)
     ls(ϕdϕ, alpha, ϕ_0, dϕ_0)
 end
@@ -162,7 +160,7 @@ function (ls::MoreThuente)(ϕdϕ,
     @unpack f_tol, gtol, x_tol, alphamin, alphamax, maxfev = ls
 
     if dϕ_0 == T(0)
-        return alpha, ϕ_0
+        return T(0), ϕ_0
     end
 
     iterfinitemax = -log2(eps(T))

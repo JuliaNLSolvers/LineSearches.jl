@@ -95,8 +95,8 @@ end
 HagerZhang{T}(args...; kwargs...) where T = HagerZhang{T, Base.RefValue{Bool}}(args...; kwargs...)
 
 function (ls::HagerZhang)(df::AbstractObjective, x::AbstractArray{T},
-                            s::AbstractArray{T}, α::Real,
-                            x_new::AbstractArray{T}, phi_0::Real, dphi_0::Real) where T
+                          s::AbstractArray{T}, α::Real,
+                          x_new::AbstractArray{T}, phi_0::Real, dphi_0::Real) where T
     ϕ, ϕdϕ = make_ϕ_ϕdϕ(df, x_new, x, s)
     ls(ϕ, ϕdϕ, α::Real, phi_0, dphi_0)
 end
@@ -110,7 +110,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             linesearchmax, psi3, display, mayterminate = ls
 
     if dphi_0 == T(0)
-        return c, phi_0
+        return T(0), phi_0
     end
 
     # Prevent values of x_new = x+αs that are likely to make
