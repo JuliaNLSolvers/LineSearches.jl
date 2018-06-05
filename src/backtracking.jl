@@ -23,10 +23,10 @@ function (ls::BackTracking)(df::AbstractObjective, x::AbstractArray{T}, s::Abstr
     ϕ, dϕ = make_ϕ_dϕ(df, x_new, x, s)
 
     if ϕ_0 == nothing
-        ϕ_0 = ϕ(α_0)
+        ϕ_0 = ϕ(Tα(0))
     end
     if dϕ_0 == nothing
-        dϕ_0 = dϕ(α_0)
+        dϕ_0 = dϕ(Tα(0)))
     end
 
     α_0 = min(α_0, min(alphamax, ls.maxstep / vecnorm(s, Inf)))
