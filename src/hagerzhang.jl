@@ -95,8 +95,8 @@ end
 HagerZhang{T}(args...; kwargs...) where T = HagerZhang{T, Base.RefValue{Bool}}(args...; kwargs...)
 
 function (ls::HagerZhang)(df::AbstractObjective, x::AbstractArray{T},
-                            s::AbstractArray{T}, α::Real,
-                            x_new::AbstractArray{T}, phi_0::Real, dphi_0::Real) where T
+                          s::AbstractArray{T}, α::Real,
+                          x_new::AbstractArray{T}, phi_0::Real, dphi_0::Real) where T
     ϕ, ϕdϕ = make_ϕ_ϕdϕ(df, x_new, x, s)
     ls(ϕ, ϕdϕ, α::Real, phi_0, dphi_0)
 end
@@ -109,8 +109,12 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
     @unpack delta, sigma, alphamax, rho, epsilon, gamma,
             linesearchmax, psi3, display, mayterminate = ls
 
-    if dphi_0 == T(0)
-        return c, phi_0
+
+    if !(isfinite(phi_0) && isfinite(dphi_0))
+        throw(ArgumentError("Value and slope at step length = 0 must be finite."))
+    end
+    if dphi_0 >= T(0)
+        throw(ArgumentError("Search direction is not a direction of descent."))
     end
 
     # Prevent values of x_new = x+αs that are likely to make
@@ -123,7 +127,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
         println("New linesearch")
     end
 
-    (isfinite(phi_0) && isfinite(dphi_0)) || error("Initial value and slope must be finite")
+
     phi_lim = phi_0 + epsilon * abs(phi_0)
     @assert c > T(0)
     @assert isfinite(c) && c <= alphamax

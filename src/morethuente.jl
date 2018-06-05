@@ -150,8 +150,6 @@ end
 function (ls::MoreThuente)(df::AbstractObjective, x::AbstractArray{T},
                            s::AbstractArray{T}, alpha::Real, x_new::AbstractArray{T},
                            ϕ_0, dϕ_0) where T
-
-
     ϕdϕ = make_ϕdϕ(df, x_new, x, s)
     ls(ϕdϕ, alpha, ϕ_0, dϕ_0)
 end
@@ -160,10 +158,6 @@ function (ls::MoreThuente)(ϕdϕ,
                   ϕ_0,
                   dϕ_0) where T
     @unpack f_tol, gtol, x_tol, alphamin, alphamax, maxfev = ls
-
-    if dϕ_0 == T(0)
-        return alpha, ϕ_0
-    end
 
     iterfinitemax = -log2(eps(T))
     info = 0
@@ -175,11 +169,11 @@ function (ls::MoreThuente)(ϕdϕ,
 
     if  alpha <= T(0) || f_tol < T(0) || gtol < T(0) ||
         x_tol < T(0) || alphamin < T(0) || alphamax < alphamin || maxfev <= T(0)
-        throw(ArgumentError("Invalid parameters to morethuente"))
+        throw(ArgumentError("Invalid parameters to MoreThuente."))
     end
 
     if dϕ_0 >= T(0)
-        throw(ArgumentError("Search direction is not a direction of descent"))
+        throw(ArgumentError("Search direction is not a direction of descent."))
     end
 
     #
