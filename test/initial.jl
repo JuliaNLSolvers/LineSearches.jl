@@ -120,6 +120,10 @@
     is = InitialConstantChange(snap2one=(0.25,1.0))
     is.dϕ_0_previous[] = 0.1*dphi_0
     is(ls, state, phi_0, dphi_0, df)
+    @test is.dϕ_0_previous[] == dphi_0
     @test state.alpha == 1.0
     @test ls.mayterminate[] == false
+    dϕ_0_rand = rand()
+    is(ls, state, phi_0, dϕ_0_rand, df)
+    @test is.dϕ_0_previous[] == dϕ_0_rand
 end
