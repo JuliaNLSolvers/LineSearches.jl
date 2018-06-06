@@ -101,11 +101,13 @@ function (ls::HagerZhang)(df::AbstractObjective, x::AbstractArray{T},
     ls(ϕ, ϕdϕ, α::Real, phi_0, dphi_0)
 end
 
-function (ls::HagerZhang)(ϕ, ϕdϕ,
-                     c::T,
-                     phi_0::Real,
-                     dphi_0::Real) where T
+(ls::HagerZhang)(ϕ, dϕ, ϕdϕ, c, phi_0, dphi_0) = ls(ϕ, ϕdϕ, c, phi_0, dphi_0)
 
+# TODO: Should we deprecate the interface that only uses the ϕ and ϕd\phi arguments?
+function (ls::HagerZhang)(ϕ, ϕdϕ,
+                          c::T,
+                          phi_0::Real,
+                          dphi_0::Real) where T # Should c and phi_0 be same type?
     @unpack delta, sigma, alphamax, rho, epsilon, gamma,
             linesearchmax, psi3, display, mayterminate = ls
 
