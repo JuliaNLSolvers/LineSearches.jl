@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Using LineSearches without Optim/NLsolve · LineSearches.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link href="../../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>LineSearches.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../../search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../../index.html">Home</a></li><li><span class="toctext">Examples</span><ul><li class="current"><a class="toctext" href="customoptimizer.html">Using LineSearches without Optim/NLsolve</a><ul class="internal"><li><a class="toctext" href="#Optimizing-Rosenbrock-1">Optimizing Rosenbrock</a></li><li><a class="toctext" href="#customoptimizer-plain-program-1">Plain Program</a></li></ul></li><li><a class="toctext" href="optim_linesearch.html">Optim line search</a></li><li><a class="toctext" href="optim_initialstep.html">Optim initial step length guess</a></li></ul></li><li><span class="toctext">API Reference</span><ul><li><a class="toctext" href="../../reference/linesearch.html">Line search routines</a></li><li><a class="toctext" href="../../reference/initialstep.html">Initial step length guess</a></li></ul></li></ul></nav><article id="docs"><header><nav><ul><li>Examples</li><li><a href="customoptimizer.html">Using LineSearches without Optim/NLsolve</a></li></ul><a class="edit-page" href="https://github.com/JuliaNLSolvers/LineSearches.jl/blob/master/docs/src/examples/customoptimizer.jl"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Using LineSearches without Optim/NLsolve</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Using-LineSearches-without-Optim/NLsolve-1" href="#Using-LineSearches-without-Optim/NLsolve-1">Using LineSearches without Optim/NLsolve</a></h1><div class="admonition tip"><div class="admonition-title">Tip</div><div class="admonition-text"><p>This example is also available as a Jupyter notebook: <a href="https://nbviewer.jupyter.org/github/JuliaNLSolvers/LineSearches.jl/blob/gh-pages/v6.0.0/examples/generated/customoptimizer.ipynb"><code>customoptimizer.ipynb</code></a></p></div></div><p>This tutorial shows you how to use the line search algorithms in <code>LineSearches</code> for your own optimization algorithm that is not part of <code>Optim</code> or <code>NLsolve</code>.</p><p>Say we have written a gradient descent optimization algorithm but would like to experiment with different line search algorithms. The algorithm is implemented as follows.</p><div><pre><code class="language-julia">function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, linesearch,
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Using LineSearches without Optim/NLsolve · LineSearches.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link href="../../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>LineSearches.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../../search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../../index.html">Home</a></li><li><span class="toctext">Examples</span><ul><li class="current"><a class="toctext" href="customoptimizer.html">Using LineSearches without Optim/NLsolve</a><ul class="internal"><li><a class="toctext" href="#Optimizing-Rosenbrock-1">Optimizing Rosenbrock</a></li><li><a class="toctext" href="#customoptimizer-plain-program-1">Plain Program</a></li></ul></li><li><a class="toctext" href="optim_linesearch.html">Optim line search</a></li><li><a class="toctext" href="optim_initialstep.html">Optim initial step length guess</a></li></ul></li><li><span class="toctext">API Reference</span><ul><li><a class="toctext" href="../../reference/linesearch.html">Line search routines</a></li><li><a class="toctext" href="../../reference/initialstep.html">Initial step length guess</a></li></ul></li></ul></nav><article id="docs"><header><nav><ul><li>Examples</li><li><a href="customoptimizer.html">Using LineSearches without Optim/NLsolve</a></li></ul><a class="edit-page" href="https://github.com/JuliaNLSolvers/LineSearches.jl/blob/master/docs/src/examples/customoptimizer.jl"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Using LineSearches without Optim/NLsolve</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Using-LineSearches-without-Optim/NLsolve-1" href="#Using-LineSearches-without-Optim/NLsolve-1">Using LineSearches without Optim/NLsolve</a></h1><div class="admonition tip"><div class="admonition-title">Tip</div><div class="admonition-text"><p>This example is also available as a Jupyter notebook: <a href="https://nbviewer.jupyter.org/github/JuliaNLSolvers/LineSearches.jl/blob/gh-pages/v6.0.1/examples/generated/customoptimizer.ipynb"><code>customoptimizer.ipynb</code></a></p></div></div><p>This tutorial shows you how to use the line search algorithms in <code>LineSearches</code> for your own optimization algorithm that is not part of <code>Optim</code> or <code>NLsolve</code>.</p><p>Say we have written a gradient descent optimization algorithm but would like to experiment with different line search algorithms. The algorithm is implemented as follows.</p><div><pre><code class="language-julia">function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, linesearch,
                     maxiter::Int = 10000,
                     g_rtol::T = sqrt(eps(T)), g_atol::T = eps(T)) where T &lt;: Number
     x = copy(x0)
@@ -30,27 +30,15 @@
         s .= -gvec
 
         dϕ_0 = dot(s, gvec)
-        α, fx = perform_linesearch(ϕ, dϕ, ϕdϕ, 1.0,
-                                   fx, dϕ_0, linesearch)
+        α, fx = linesearch(ϕ, dϕ, ϕdϕ, 1.0, fx, dϕ_0)
+
         @. x = x + α*s
         g!(gvec, x)
         gnorm = norm(gvec)
     end
 
     return (fx, x, iter)
-end</code></pre><pre><code class="language-none">gdoptimize (generic function with 4 methods)</code></pre></div><p>Note that there are many optimization and line search algorithms that allow the user to evaluate both the objective and the gradient at the same time, for computational efficiency reasons. We have included this functionality in the algorithm as the input function <code>fg!</code>, and even if the Gradient Descent algorithm does not use it explicitly, many of the LineSearches algorithms do.</p><p>The Gradient Descent <code>gdoptimize</code> method selects a descent direction and calls a method <code>perform_linesearch</code> that returns the step length <code>α</code> and the objective value <code>fx = f(x + α*s)</code>.</p><p>We use multiple dispatch on <code>linesearch</code> to call the different line search procedures:</p><div><pre><code class="language-julia">using LineSearches
-perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   linesearch::BackTracking) =
-                       linesearch(ϕ, α0, ϕ_0, dϕ_0)
-perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   linesearch::HagerZhang) =
-                       linesearch(ϕ, ϕdϕ, α0, ϕ_0, dϕ_0)
-perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   linesearch::MoreThuente) =
-                       linesearch(ϕdϕ, α0, ϕ_0, dϕ_0)
-perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   linesearch::StrongWolfe) =
-                       linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0)</code></pre></div><p>The functions ϕ and dϕ represent a univariate objective and its derivative, which is used by the line search algorithms. To utilize the <code>fg!</code> function call in the optimizer, <code>HagerZhang</code>, <code>MoreThuente</code>, and <code>StrongWolfe</code> also require a function ϕdϕ which returns the univariate objective and the derivative at the same time.</p><h2><a class="nav-anchor" id="Optimizing-Rosenbrock-1" href="#Optimizing-Rosenbrock-1">Optimizing Rosenbrock</a></h2><p>Here is an example to show how we can combine <code>gdoptimize</code> and <code>LineSearches</code> to minimize the Rosenbrock function, which is defined by</p><div><pre><code class="language-julia">f(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
+end</code></pre><pre><code class="language-none">gdoptimize (generic function with 4 methods)</code></pre></div><p>Note that there are many optimization and line search algorithms that allow the user to evaluate both the objective and the gradient at the same time, for computational efficiency reasons. We have included this functionality in the algorithm as the input function <code>fg!</code>, and even if the Gradient Descent algorithm does not use it explicitly, many of the LineSearches algorithms do.</p><p>The Gradient Descent <code>gdoptimize</code> method selects a descent direction and calls the line search algorithm  <code>linesearch</code> which returns the step length <code>α</code> and the objective value <code>fx = f(x + α*s)</code>.</p><p>The functions ϕ and dϕ represent a univariate objective and its derivative, which is used by the line search algorithms. To utilize the <code>fg!</code> function call in the optimizer, some of the line searches require a function ϕdϕ which returns the univariate objective and the derivative at the same time.</p><h2><a class="nav-anchor" id="Optimizing-Rosenbrock-1" href="#Optimizing-Rosenbrock-1">Optimizing Rosenbrock</a></h2><p>Here is an example to show how we can combine <code>gdoptimize</code> and <code>LineSearches</code> to minimize the Rosenbrock function, which is defined by</p><div><pre><code class="language-julia">f(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
 
 function g!(gvec, x)
     gvec[1] = -2.0 * (1.0 - x[1]) - 400.0 * (x[2] - x[1]^2) * x[1]
@@ -62,6 +50,8 @@ function fg!(gvec, x)
     g!(gvec, x)
     f(x)
 end</code></pre><pre><code class="language-none">fg! (generic function with 1 method)</code></pre></div><p>We can now use <code>gdoptimize</code> with <code>BackTracking</code> to optimize the Rosenbrock function from a given initial condition <code>x0</code>.</p><div><pre><code class="language-julia">x0 = [-1., 1.0]
+
+using LineSearches
 ls = BackTracking(order=3)
 fx_bt3, x_bt3, iter_bt3 = gdoptimize(f, g!, fg!, x0, ls)</code></pre><pre><code class="language-none">(2.0620997768295942e-15, [1.0, 1.0], 5759)</code></pre></div><p>Interestingly, the <code>StrongWolfe</code> line search converges in one iteration, whilst all the other algorithms take thousands of iterations. This is just luck due to the particular choice of initial condition</p><div><pre><code class="language-julia">ls = StrongWolfe()
 fx_sw, x_sw, iter_sw = gdoptimize(f, g!, fg!, x0, ls)</code></pre><pre><code class="language-none">(0.0, [1.0, 1.0], 1)</code></pre></div><h2><a class="nav-anchor" id="customoptimizer-plain-program-1" href="#customoptimizer-plain-program-1">Plain Program</a></h2><p>Below follows a version of the program without any comments. The file is also available here: <a href="customoptimizer.jl">customoptimizer.jl</a></p><pre><code class="language-julia">function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, linesearch,
@@ -95,8 +85,8 @@ fx_sw, x_sw, iter_sw = gdoptimize(f, g!, fg!, x0, ls)</code></pre><pre><code cla
         s .= -gvec
 
         dϕ_0 = dot(s, gvec)
-        α, fx = perform_linesearch(ϕ, dϕ, ϕdϕ, 1.0,
-                                   fx, dϕ_0, linesearch)
+        α, fx = linesearch(ϕ, dϕ, ϕdϕ, 1.0, fx, dϕ_0)
+
         @. x = x + α*s
         g!(gvec, x)
         gnorm = norm(gvec)
@@ -104,20 +94,6 @@ fx_sw, x_sw, iter_sw = gdoptimize(f, g!, fg!, x0, ls)</code></pre><pre><code cla
 
     return (fx, x, iter)
 end
-
-using LineSearches
-perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   linesearch::BackTracking) =
-                       linesearch(ϕ, α0, ϕ_0, dϕ_0)
-perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   linesearch::HagerZhang) =
-                       linesearch(ϕ, ϕdϕ, α0, ϕ_0, dϕ_0)
-perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   linesearch::MoreThuente) =
-                       linesearch(ϕdϕ, α0, ϕ_0, dϕ_0)
-perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   linesearch::StrongWolfe) =
-                       linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0)
 
 f(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
 
@@ -133,6 +109,8 @@ function fg!(gvec, x)
 end
 
 x0 = [-1., 1.0]
+
+using LineSearches
 ls = BackTracking(order=3)
 fx_bt3, x_bt3, iter_bt3 = gdoptimize(f, g!, fg!, x0, ls)
 
