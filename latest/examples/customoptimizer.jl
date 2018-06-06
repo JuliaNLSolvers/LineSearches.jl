@@ -44,8 +44,8 @@ function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, linesearch,
         s .= -gvec
 
         dϕ_0 = dot(s, gvec)
-        α, fx = perform_linesearch(ϕ, dϕ, ϕdϕ, 1.0,
-                                   fx, dϕ_0, linesearch)
+        α, fx = linesearch(ϕ, dϕ, ϕdϕ, 1.0, fx, dϕ_0)
+
         @. x = x + α*s
         g!(gvec, x)
         gnorm = norm(gvec)
@@ -62,29 +62,12 @@ end
 # LineSearches algorithms do.
 
 # The Gradient Descent `gdoptimize` method selects a descent direction and calls
-# a method `perform_linesearch` that returns the step length `α` and the
+# the line search algorithm  `linesearch` which returns the step length `α` and the
 # objective value `fx = f(x + α*s)`.
 #
-# We use multiple dispatch on `linesearch` to call the different line search procedures:
-
-using LineSearches
-perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   linesearch::BackTracking) =
-                       linesearch(ϕ, α0, ϕ_0, dϕ_0)
-perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   linesearch::HagerZhang) =
-                       linesearch(ϕ, ϕdϕ, α0, ϕ_0, dϕ_0)
-perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   linesearch::MoreThuente) =
-                       linesearch(ϕdϕ, α0, ϕ_0, dϕ_0)
-perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   linesearch::StrongWolfe) =
-                       linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0)
-
 # The functions ϕ and dϕ represent a univariate objective
 # and its derivative, which is used by the line search algorithms.
-# To utilize the `fg!` function call in the optimizer, `HagerZhang`,
-# `MoreThuente`, and `StrongWolfe` also
+# To utilize the `fg!` function call in the optimizer, some of the line searches
 # require a function ϕdϕ which returns the univariate objective and the
 # derivative at the same time.
 
@@ -111,6 +94,8 @@ end
 # from a given initial condition `x0`.
 
 x0 = [-1., 1.0]
+
+using LineSearches
 ls = BackTracking(order=3)
 fx_bt3, x_bt3, iter_bt3 = gdoptimize(f, g!, fg!, x0, ls)
 

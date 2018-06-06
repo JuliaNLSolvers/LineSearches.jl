@@ -29,8 +29,8 @@ function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, linesearch,
         s .= -gvec
 
         dϕ_0 = dot(s, gvec)
-        α, fx = perform_linesearch(ϕ, dϕ, ϕdϕ, 1.0,
-                                   fx, dϕ_0, linesearch)
+        α, fx = linesearch(ϕ, dϕ, ϕdϕ, 1.0, fx, dϕ_0)
+
         @. x = x + α*s
         g!(gvec, x)
         gnorm = norm(gvec)
@@ -38,20 +38,6 @@ function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, linesearch,
 
     return (fx, x, iter)
 end
-
-using LineSearches
-perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   linesearch::BackTracking) =
-                       linesearch(ϕ, α0, ϕ_0, dϕ_0)
-perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   linesearch::HagerZhang) =
-                       linesearch(ϕ, ϕdϕ, α0, ϕ_0, dϕ_0)
-perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   linesearch::MoreThuente) =
-                       linesearch(ϕdϕ, α0, ϕ_0, dϕ_0)
-perform_linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0,
-                   linesearch::StrongWolfe) =
-                       linesearch(ϕ, dϕ, ϕdϕ, α0, ϕ_0, dϕ_0)
 
 f(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
 
@@ -67,6 +53,8 @@ function fg!(gvec, x)
 end
 
 x0 = [-1., 1.0]
+
+using LineSearches
 ls = BackTracking(order=3)
 fx_bt3, x_bt3, iter_bt3 = gdoptimize(f, g!, fg!, x0, ls)
 
