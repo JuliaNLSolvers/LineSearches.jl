@@ -148,6 +148,7 @@ function (is::InitialConstantChange{T})(ls, state, phi_0, dphi_0, df) where T
             αguess = one(state.alpha)
         end
     end
+    is.dϕ_0_previous[] = dphi_0
     state.alpha = αguess
 end
 
