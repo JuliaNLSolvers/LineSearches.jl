@@ -29,6 +29,11 @@
     is(ls, state, phi_0, dphi_0, df)
     @test state.alpha == 0.4999999999999999
     @test ls.mayterminate[] == true
+    dfinf = NLSolversBase.NonDifferentiable(x->Inf, x)
+    is = InitialHagerZhang(α0 = 1.0)
+    is(ls, state, phi_0, dphi_0, dfinf)
+    @test state.alpha == 0
+    @test ls.mayterminate[] == true
 
     # Test Static unscaled
     ls = HagerZhang()
