@@ -1,7 +1,7 @@
 @testset "Literate examples" begin
     # TODO: Remove items from `SKIPFILE` as soon as they run on the latest
     # stable `Optim` (or other dependency)
-    SKIPFILE = ["optim_linesearch.jl", "optim_initialstep.jl"]
+    SKIPFILE = []
 
     EXAMPLEDIR = joinpath(@__DIR__, "../docs/src/examples")
 
