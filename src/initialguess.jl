@@ -225,15 +225,16 @@ function _hzI12(alpha::T,
 
     iterfinite = 1
     while !isfinite(phitest)
-        alphatest = psi3 * alphatest
-
-        phitest = ϕ(alphatest)
-
-        iterfinite += 1
         if iterfinite >= iterfinitemax
-            return T(0), true
-            #             error("Failed to achieve finite test value; alphatest = ", alphatest)
+            mayterminate[] = true
+            return T(0)
+            # TODO: Throw error / LineSearchException instead?
+            # error("Failed to achieve finite test value; alphatest = ", alphatest)
         end
+
+        alphatest = psi3 * alphatest
+        phitest = ϕ(alphatest)
+        iterfinite += 1
     end
     a = ((phitest-phi_0)/alphatest - dphi_0)/alphatest  # quadratic fit
 
