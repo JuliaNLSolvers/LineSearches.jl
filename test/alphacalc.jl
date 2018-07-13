@@ -1,7 +1,7 @@
 @testset "alpha-calculations" begin
     import NLSolversBase
 
-    f(x) = vecdot(x, x)
+    f(x) = dot(x, x)
     function g!(out, x)
         out[:] = 2x
     end
@@ -76,7 +76,7 @@
         s = [42.0,18.0]
 
         mayterminate = Ref{Bool}(false)
-        alpha = 1.0; xtmp = zeros(x0)
+        alpha = 1.0; xtmp = zero(x0)
 
         lsalphas =  [1.0,                  # Static
                      0.01375274240750926,  # HZ

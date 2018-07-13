@@ -28,11 +28,11 @@ function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, linesearch,
     ϕ(α) = f(x .+ α.*s)
     function dϕ(α)
         g!(gvec, x .+ α.*s)
-        return vecdot(gvec, s)
+        return dot(gvec, s)
     end
     function ϕdϕ(α)
         phi = fg!(gvec, x .+ α.*s)
-        dphi = vecdot(gvec, s)
+        dphi = dot(gvec, s)
         return (phi, dphi)
     end
 
@@ -100,7 +100,7 @@ ls = BackTracking(order=3)
 fx_bt3, x_bt3, iter_bt3 = gdoptimize(f, g!, fg!, x0, ls)
 
 ## Test the results                #src
-using Base.Test                    #src
+using Test                         #src
 @test fx_bt3 < 1e-12               #src
 @test iter_bt3 < 10000             #src
 @test x_bt3 ≈ [1.0, 1.0] atol=1e-7 #src

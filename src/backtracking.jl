@@ -29,7 +29,7 @@ function (ls::BackTracking)(df::AbstractObjective, x::AbstractArray{T}, s::Abstr
         dϕ_0 = dϕ(Tα(0))
     end
 
-    α_0 = min(α_0, min(alphamax, ls.maxstep / vecnorm(s, Inf)))
+    α_0 = min(α_0, min(alphamax, ls.maxstep / norm(s, Inf)))
     ls(ϕ, α_0, ϕ_0, dϕ_0)
 end
 
