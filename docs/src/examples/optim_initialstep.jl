@@ -34,7 +34,7 @@ res_hz = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_hz
 # From the result we see that this has reduced the number of function and gradient calls, but increased the number of iterations.
 
 ## Test the results                                       #src
-using Base.Test                                           #src
+using Test                                                #src
 @test Optim.f_calls(res_hz) < Optim.f_calls(res_st)       #src
 @test Optim.g_calls(res_hz) < Optim.g_calls(res_st)       #src
 @test Optim.iterations(res_hz) > Optim.iterations(res_st) #src

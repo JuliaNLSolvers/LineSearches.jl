@@ -33,6 +33,6 @@ res_bt3 = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_b
 
 
 ## Test the results                                #src
-using Base.Test                                    #src
+using Test                                           #src
 @test Optim.f_calls(res_bt3) < Optim.f_calls(res_hz) #src
 @test Optim.g_calls(res_bt3) < Optim.g_calls(res_hz) #src

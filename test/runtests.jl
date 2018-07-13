@@ -1,6 +1,6 @@
 using LineSearches
 using   Compat,
-        Compat.Test,
+        Test,
         Compat.LinearAlgebra
 using OptimTestProblems
 using HigherPrecision
