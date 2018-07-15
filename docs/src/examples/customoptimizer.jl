@@ -100,7 +100,7 @@ ls = BackTracking(order=3)
 fx_bt3, x_bt3, iter_bt3 = gdoptimize(f, g!, fg!, x0, ls)
 
 ## Test the results                #src
-using Base.Test                    #src
+using Test                    #src
 @test fx_bt3 < 1e-12               #src
 @test iter_bt3 < 10000             #src
 @test x_bt3 ≈ [1.0, 1.0] atol=1e-7 #src

@@ -142,7 +142,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
         phi_c, dphi_c = ϕdϕ(c)
     end
     if !(isfinite(phi_c) && isfinite(dphi_c))
-        warn("Failed to achieve finite new evaluation point, using alpha=0")
+        @warn("Failed to achieve finite new evaluation point, using alpha=0")
         mayterminate[] = false # reset in case another initial guess is used next
         return T(0.0), ϕ(T(0.0)) # phi_0
     end

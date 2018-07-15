@@ -1,11 +1,12 @@
-isdefined(Base, :__precompile__) && __precompile__()
+__precompile__()
+
 
 module LineSearches
 
 using   Compat,
         Compat.LinearAlgebra,
         Compat.Distributed,
-        Compat.Printf
+        Printf
 
 using Parameters, NaNMath
 
