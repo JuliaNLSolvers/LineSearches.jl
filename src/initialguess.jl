@@ -14,7 +14,7 @@ end
 
 function (is::InitialStatic{T})(ls, state, phi_0, dphi_0, df) where T
     PT = promote_type(T, real(eltype(state.s)))
-    if is.scaled == true && (ns = real(vecnorm(state.s))) > PT(0)
+    if is.scaled == true && (ns = real(norm(state.s))) > PT(0)
         # TODO: Type instability if there's a type mismatch between is.alpha and ns?
         state.alpha = PT(min(is.alpha, ns)) / ns
     else
@@ -89,7 +89,7 @@ end
 Constant first-order change approximation to determine initial step length.
 
 ** This requires that the optimization algorithm stores dphi0 from the previous iteration **
-(dphi0_previous = real(vecdot(∇f_{k-1}, s_{k-1})), where s is the step direction.
+(dphi0_previous = real(dot(∇f_{k-1}, s_{k-1})), where s is the step direction.
 
 This is meant for methods that do not produce well-scaled search directions,
 such as Gradient Descent and (variations of) Conjugate Gradient methods.
@@ -287,7 +287,7 @@ function _hzI0(x::AbstractArray{Tx},
         if x_max != T(0)
             alpha = psi0 * x_max / gr_max
         elseif f_x != T(0)
-            alpha = psi0 * abs(f_x) / vecnorm(gr)
+            alpha = psi0 * abs(f_x) / norm(gr)
         end
     end
     return alpha

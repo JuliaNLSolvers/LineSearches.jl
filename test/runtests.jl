@@ -1,7 +1,6 @@
 using LineSearches
-using   Compat,
-        Test,
-        Compat.LinearAlgebra
+using Test
+using LinearAlgebra: norm, dot
 using OptimTestProblems
 using HigherPrecision
 import NLSolversBase

@@ -40,7 +40,7 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
     ϕ_a_iminus1 = ϕ_0
     ϕ_a_i = T(NaN)
 
-    # ϕ'(alpha) = vecdot(g(x + alpha * p), p)
+    # ϕ'(alpha) = dot(g(x + alpha * p), p)
     dϕ_a_i = T(NaN)
 
     # Iteration counter

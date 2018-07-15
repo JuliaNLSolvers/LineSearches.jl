@@ -1,5 +1,5 @@
 @testset "Initial step guess" begin
-    f(x) = vecdot(x, x)
+    f(x) = dot(x, x)
     function g!(out, x)
         out[:] = 2x
     end
@@ -48,7 +48,7 @@
     state = getstate()
     is = InitialStatic(alpha = 0.5, scaled = true)
     is(ls, state, phi_0, dphi_0, df)
-    @test state.alpha == 0.5 / vecnorm(state.s)
+    @test state.alpha == 0.5 / norm(state.s)
     @test ls.mayterminate[] == false
     is = InitialStatic(alpha = 0.5, scaled = true)
     state.s .= (is.alpha / 100)

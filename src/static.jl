@@ -43,7 +43,7 @@ function (ls::DeprecatedStatic)(ϕ, α::Tα) where Tα
     @unpack α, scaled = ls
     @assert α > Tα(0) # This should really be done at the constructor level
 
-    if scaled == true && (ns = vecnorm(s)) > Tα(0)
+    if scaled == true && (ns = norm(s)) > Tα(0)
         α = min(α, ns) / ns
     end
 
