@@ -32,6 +32,6 @@ for my_test in my_tests
 end
 
 # Build the docs
-if get(ENV, "TRAVIS_OS_NAME", "") == "linux" && get(ENV, "TRAVIS_JULIA_VERSION", "") == "0.6"
+if get(ENV, "TRAVIS_OS_NAME", "") == "linux" && get(ENV, "TRAVIS_JULIA_VERSION", "") == "0.7"
     include(joinpath(@__DIR__, "../docs/make.jl"))
 end
