@@ -14,11 +14,11 @@ end
 
 function (is::InitialStatic{T})(ls, state, phi_0, dphi_0, df) where T
     PT = promote_type(T, real(eltype(state.s)))
-    if is.scaled == true && (ns = real(vecnorm(state.s))) > PT(0)
+    if is.scaled == true && (ns = real(norm(state.s))) > convert(PT, 0)
         # TODO: Type instability if there's a type mismatch between is.alpha and ns?
-        state.alpha = PT(min(is.alpha, ns)) / ns
+        state.alpha = convert(PT, min(is.alpha, ns)) / ns
     else
-        state.alpha = PT(is.alpha)
+        state.alpha = convert(PT, is.alpha)
     end
 end
 
@@ -70,7 +70,7 @@ If αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.
 end
 
 function (is::InitialQuadratic{T})(ls, state, phi_0, dphi_0, df) where T
-    if !isfinite(state.f_x_previous) || isapprox(dphi_0, T(0), atol=eps(T)) # Need to add a tolerance
+    if !isfinite(state.f_x_previous) || isapprox(dphi_0, convert(T, 0), atol=eps(T)) # Need to add a tolerance
         # If we're at the first iteration
         αguess = is.α0
     else
@@ -89,7 +89,7 @@ end
 Constant first-order change approximation to determine initial step length.
 
 ** This requires that the optimization algorithm stores dphi0 from the previous iteration **
-(dphi0_previous = real(vecdot(∇f_{k-1}, s_{k-1})), where s is the step direction.
+(dphi0_previous = real(dot(∇f_{k-1}, s_{k-1})), where s is the step direction.
 
 This is meant for methods that do not produce well-scaled search directions,
 such as Gradient Descent and (variations of) Conjugate Gradient methods.
@@ -121,7 +121,7 @@ function InitialConstantChange{T}(; αmin = 1e-12,
                         snap2one = (0.75, Inf)) where T
     αmin, αmax, α0, ρ = convert.(T, (αmin, αmax, α0, ρ))
     snap2one = convert.(T, snap2one)
-    InitialConstantChange(αmin, αmax, α0, ρ, snap2one, Ref{T}(T(NaN)))
+    InitialConstantChange(αmin, αmax, α0, ρ, snap2one, Ref{T}(convert(T, NaN)))
 end
 
 # Have to make this constructor without with_kw because Ref(NaN) has to adapt to T
@@ -131,11 +131,12 @@ function InitialConstantChange(; αmin = 1e-12,
                         ρ    = 0.25,
                         snap2one = (0.75, Inf))
     T = promote_type(typeof.((αmin, αmax, α0, ρ))...)
-    InitialConstantChange(αmin, αmax, α0, ρ, snap2one, Ref{T}(T(NaN)))
+    InitialConstantChange(αmin, αmax, α0, ρ, snap2one, Ref{T}(convert(T, NaN)))
 end
 
 function (is::InitialConstantChange{T})(ls, state, phi_0, dphi_0, df) where T
-    if !isfinite(is.dϕ_0_previous[]) || !isfinite(state.alpha) || isapprox(dphi_0, T(0), atol=eps(T))
+    if !isfinite(is.dϕ_0_previous[]) || !isfinite(state.alpha) ||
+        isapprox(dphi_0, convert(T, 0), atol=eps(T))
         # If we're at the first iteration
         αguess = is.α0
     else
@@ -193,7 +194,7 @@ function (is::InitialHagerZhang)(ls::Tls, state, phi_0, dphi_0, df) where Tls
         end
         T = eltype(state.alpha)
         state.alpha = _hzI12(state.alpha, df, state.x, state.s, state.x_ls, phi_0, dphi_0,
-                   is.ψ1, is.ψ2, is.ψ3, T(is.αmax), is.verbose, mayterminate)
+                   is.ψ1, is.ψ2, is.ψ3, convert(T, is.αmax), is.verbose, mayterminate)
     end
     return state.alpha
 end
@@ -227,7 +228,7 @@ function _hzI12(alpha::T,
     while !isfinite(phitest)
         if iterfinite >= iterfinitemax
             mayterminate[] = true
-            return T(0)
+            return convert(T, 0)
             # TODO: Throw error / LineSearchException instead?
             # error("Failed to achieve finite test value; alphatest = ", alphatest)
         end
@@ -279,15 +280,16 @@ end
 function _hzI0(x::AbstractArray{Tx},
                gr::AbstractArray{Tx},
                f_x::T,
-               psi0::T = T(1)/100) where {Tx,T}
-    alpha = one(T)
+               psi0::T = convert(T, 1)/100) where {Tx,T}
+    zeroT = convert(T, 0)
+    alpha = convert(T, 1)
     gr_max = maximum(abs, gr)
-    if gr_max != T(0)
+    if gr_max != zeroT
         x_max = maximum(abs, x)
-        if x_max != T(0)
+        if x_max != zeroT
             alpha = psi0 * x_max / gr_max
-        elseif f_x != T(0)
-            alpha = psi0 * abs(f_x) / vecnorm(gr)
+        elseif f_x != zeroT
+            alpha = psi0 * abs(f_x) / norm(gr)
         end
     end
     return alpha

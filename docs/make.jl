@@ -11,7 +11,7 @@ makedocs(
     format = :html,
     sitename = "LineSearches.jl",
     doctest = false,
-    # strict = VERSION.minor == 6 && sizeof(Int) == 8, # only strict mode on 0.6 and Int64
+    # strict = VERSION.minor == 7 && sizeof(Int) == 8, # only strict mode on 0.7 and Int64
     strict = false,
     pages = Any[
         "Home" => "index.md",
@@ -27,7 +27,7 @@ makedocs(
 deploydocs(
     repo = "github.com/JuliaNLSolvers/LineSearches.jl.git",
     target = "build",
-    julia = "0.6", # deploy from release bot
+    julia = "0.7", # deploy from release bot
     deps = nothing,
     make = nothing,
 )

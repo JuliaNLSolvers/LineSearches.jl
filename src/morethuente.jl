@@ -167,16 +167,18 @@ function (ls::MoreThuente)(ϕdϕ,
     info = 0
     info_cstep = 1 # Info from step
 
+    zeroT = convert(T, 0)
+
     #
     # Check the input parameters for errors.
     #
 
-    if  alpha <= T(0) || f_tol < T(0) || gtol < T(0) ||
-        x_tol < T(0) || alphamin < T(0) || alphamax < alphamin || maxfev <= T(0)
+    if  alpha <= zeroT || f_tol < zeroT || gtol < zeroT ||
+        x_tol < zeroT || alphamin < zeroT || alphamax < alphamin || maxfev <= zeroT
         throw(ArgumentError("Invalid parameters to MoreThuente."))
     end
 
-    if dϕ_0 >= T(0)
+    if dϕ_0 >= zeroT
         throw(ArgumentError("Search direction is not a direction of descent."))
     end
 
@@ -204,10 +206,10 @@ function (ls::MoreThuente)(ϕdϕ,
     # function, and derivative at the current step.
     #
 
-    stx = T(0)
+    stx = zeroT
     fx = finit
     dgx = dϕ_0
-    sty = T(0)
+    sty = zeroT
     fy = finit
     dgy = dϕ_0
 
@@ -232,7 +234,7 @@ function (ls::MoreThuente)(ϕdϕ,
         nfev += 1 # This includes calls to f() and g!()
 
         # Make stmax = (3/2)*alpha < 2alpha in the first iteration below
-        stx = (T(7)/8)*alpha
+        stx = (convert(T, 7)/8)*alpha
     end
     # END: Ensure that the initial step provides finite function values
 
@@ -384,7 +386,7 @@ function (ls::MoreThuente)(ϕdϕ,
         #
 
         if bracketed
-            if abs(sty - stx) >= (T(2)/3) * width1
+            if abs(sty - stx) >= (convert(T, 2)/3) * width1
                 alpha = stx + (sty - stx)/2
             end
             width1 = width
@@ -457,7 +459,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
                bracketed::Bool, alphamin::Real, alphamax::Real)
 
    T = promote_type(typeof(stx), typeof(fx), typeof(dgx), typeof(sty), typeof(fy), typeof(dgy), typeof(alpha), typeof(f), typeof(dg), typeof(alphamin), typeof(alphamax))
-
+   zeroT = convert(T, 0)
    info = 0
 
    #
@@ -465,7 +467,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    #
 
    if (bracketed && (alpha <= min(stx, sty) || alpha >= max(stx, sty))) ||
-     dgx * (alpha - stx) >= T(0) || alphamax < alphamin
+     dgx * (alpha - stx) >= zeroT || alphamax < alphamin
        throw(ArgumentError("Minimizer not bracketed"))
    end
 
@@ -511,7 +513,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    # the cubic step is taken, else the quadratic step is taken
    #
 
-elseif sgnd < T(0)
+elseif sgnd < zeroT
       info = 2
       bound = false
       theta = 3 * (fx - f) / (alpha - stx) + dgx + dg
@@ -564,7 +566,7 @@ elseif sgnd < T(0)
       p = gamma - dg + theta
       q = gamma + dgx - dg + gamma
       r = p / q
-      if r < T(0) && gamma != T(0)
+      if r < zeroT && gamma != zeroT
          alphac = alpha + r * (stx - alpha)
      elseif alpha > stx
          alphac = alphamax
@@ -627,7 +629,7 @@ elseif sgnd < T(0)
       fy = f
       dgy = dg
    else
-      if sgnd < T(0)
+      if sgnd < zeroT
          sty = stx
          fy = fx
          dgy = dgx
@@ -646,9 +648,9 @@ elseif sgnd < T(0)
    alpha = alphaf
    if bracketed && bound
       if sty > stx
-         alpha = min(stx + (T(2)/3) * (sty - stx), alpha)
+         alpha = min(stx + (convert(T, 2)/3) * (sty - stx), alpha)
       else
-         alpha = max(stx + (T(2)/3) * (sty - stx), alpha)
+         alpha = max(stx + (convert(T, 2)/3) * (sty - stx), alpha)
       end
    end
 
