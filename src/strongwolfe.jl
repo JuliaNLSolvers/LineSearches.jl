@@ -15,9 +15,9 @@ use `MoreThuente`, `HagerZhang` or `BackTracking`.
 * `ρ = 2.0` : bracket growth
 """
 @with_kw struct StrongWolfe{T}
-   c_1::T = 1e-4
-   c_2::T = 0.9
-   ρ::T = 2.0
+    c_1::T = 1e-4
+    c_2::T = 0.9
+    ρ::T = 2.0
 end
 
 function (ls::StrongWolfe)(df, x::AbstractArray{T},
@@ -30,18 +30,20 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
                            alpha0::T, ϕ_0, dϕ_0) where T
     @unpack c_1, c_2, ρ = ls
 
+    zeroT = convert(T, 0)
+
     # Step-sizes
-    a_0 = T(0)
+    a_0 = zeroT
     a_iminus1 = a_0
     a_i = alpha0
-    a_max = T(65536)
+    a_max = convert(T, 65536)
 
     # ϕ(alpha) = df.f(x + alpha * p)
     ϕ_a_iminus1 = ϕ_0
-    ϕ_a_i = T(NaN)
+    ϕ_a_i = convert(T, NaN)
 
     # ϕ'(alpha) = dot(g(x + alpha * p), p)
-    dϕ_a_i = T(NaN)
+    dϕ_a_i = convert(T, NaN)
 
     # Iteration counter
     i = 1
@@ -66,7 +68,7 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
         end
 
         # Check condition 3
-        if dϕ_a_i >= T(0) # FIXME untested!
+        if dϕ_a_i >= zeroT # FIXME untested!
             a_star = zoom(a_i, a_iminus1,
                           dϕ_0, ϕ_0, ϕ, dϕ, ϕdϕ)
             return a_star, ϕ(a_star)
@@ -94,11 +96,12 @@ function zoom(a_lo::T,
               ϕ,
               dϕ,
               ϕdϕ,
-              c_1::Real = T(1)/10^4,
-              c_2::Real = T(9)/10) where T
+              c_1::Real = convert(T, 1)/10^4,
+              c_2::Real = convert(T, 9)/10) where T
 
+    zeroT = convert(T, 0)
     # Step-size
-    a_j = T(NaN)
+    a_j = convert(T, NaN)
 
     # Count iterations
     iteration = 0
@@ -139,7 +142,7 @@ function zoom(a_lo::T,
                 return a_j
             end
 
-            if ϕprime_a_j * (a_hi - a_lo) >= T(0)
+            if ϕprime_a_j * (a_hi - a_lo) >= zeroT
                 a_hi = a_lo
             end
 
