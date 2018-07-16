@@ -69,7 +69,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Using LineSearches without Optim/NLsolve",
     "title": "Using LineSearches without Optim/NLsolve",
     "category": "section",
-    "text": "tip: Tip\nThis example is also available as a Jupyter notebook: customoptimizer.ipynbThis tutorial shows you how to use the line search algorithms in LineSearches for your own optimization algorithm that is not part of Optim or NLsolve.Say we have written a gradient descent optimization algorithm but would like to experiment with different line search algorithms. The algorithm is implemented as follows.function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, linesearch,\n                    maxiter::Int = 10000,\n                    g_rtol::T = sqrt(eps(T)), g_atol::T = eps(T)) where T <: Number\n    x = copy(x0)\n    gvec = similar(x)\n    g!(gvec, x)\n    fx = f(x)\n\n    gnorm = norm(gvec)\n    gtol = max(g_rtol*gnorm, g_atol)\n\n    # Univariate line search functions\n    ϕ(α) = f(x .+ α.*s)\n    function dϕ(α)\n        g!(gvec, x .+ α.*s)\n        return vecdot(gvec, s)\n    end\n    function ϕdϕ(α)\n        phi = fg!(gvec, x .+ α.*s)\n        dphi = vecdot(gvec, s)\n        return (phi, dphi)\n    end\n\n    s = similar(gvec) # Step direction\n\n    iter = 0\n    while iter < maxiter && gnorm > gtol\n        iter += 1\n        s .= -gvec\n\n        dϕ_0 = dot(s, gvec)\n        α, fx = linesearch(ϕ, dϕ, ϕdϕ, 1.0, fx, dϕ_0)\n\n        @. x = x + α*s\n        g!(gvec, x)\n        gnorm = norm(gvec)\n    end\n\n    return (fx, x, iter)\nendNote that there are many optimization and line search algorithms that allow the user to evaluate both the objective and the gradient at the same time, for computational efficiency reasons. We have included this functionality in the algorithm as the input function fg!, and even if the Gradient Descent algorithm does not use it explicitly, many of the LineSearches algorithms do.The Gradient Descent gdoptimize method selects a descent direction and calls the line search algorithm  linesearch which returns the step length α and the objective value fx = f(x + α*s).The functions ϕ and dϕ represent a univariate objective and its derivative, which is used by the line search algorithms. To utilize the fg! function call in the optimizer, some of the line searches require a function ϕdϕ which returns the univariate objective and the derivative at the same time."
+    "text": "tip: Tip\nThis example is also available as a Jupyter notebook: customoptimizer.ipynbThis tutorial shows you how to use the line search algorithms in LineSearches for your own optimization algorithm that is not part of Optim or NLsolve.Say we have written a gradient descent optimization algorithm but would like to experiment with different line search algorithms. The algorithm is implemented as follows.function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, linesearch,\n                    maxiter::Int = 10000,\n                    g_rtol::T = sqrt(eps(T)), g_atol::T = eps(T)) where T <: Number\n    x = copy(x0)\n    gvec = similar(x)\n    g!(gvec, x)\n    fx = f(x)\n\n    gnorm = norm(gvec)\n    gtol = max(g_rtol*gnorm, g_atol)\n\n    # Univariate line search functions\n    ϕ(α) = f(x .+ α.*s)\n    function dϕ(α)\n        g!(gvec, x .+ α.*s)\n        return dot(gvec, s)\n    end\n    function ϕdϕ(α)\n        phi = fg!(gvec, x .+ α.*s)\n        dphi = dot(gvec, s)\n        return (phi, dphi)\n    end\n\n    s = similar(gvec) # Step direction\n\n    iter = 0\n    while iter < maxiter && gnorm > gtol\n        iter += 1\n        s .= -gvec\n\n        dϕ_0 = dot(s, gvec)\n        α, fx = linesearch(ϕ, dϕ, ϕdϕ, 1.0, fx, dϕ_0)\n\n        @. x = x + α*s\n        g!(gvec, x)\n        gnorm = norm(gvec)\n    end\n\n    return (fx, x, iter)\nendNote that there are many optimization and line search algorithms that allow the user to evaluate both the objective and the gradient at the same time, for computational efficiency reasons. We have included this functionality in the algorithm as the input function fg!, and even if the Gradient Descent algorithm does not use it explicitly, many of the LineSearches algorithms do.The Gradient Descent gdoptimize method selects a descent direction and calls the line search algorithm  linesearch which returns the step length α and the objective value fx = f(x + α*s).The functions ϕ and dϕ represent a univariate objective and its derivative, which is used by the line search algorithms. To utilize the fg! function call in the optimizer, some of the line searches require a function ϕdϕ which returns the univariate objective and the derivative at the same time."
 },
 
 {
@@ -85,7 +85,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Using LineSearches without Optim/NLsolve",
     "title": "Plain Program",
     "category": "section",
-    "text": "Below follows a version of the program without any comments. The file is also available here: customoptimizer.jlfunction gdoptimize(f, g!, fg!, x0::AbstractArray{T}, linesearch,\n                    maxiter::Int = 10000,\n                    g_rtol::T = sqrt(eps(T)), g_atol::T = eps(T)) where T <: Number\n    x = copy(x0)\n    gvec = similar(x)\n    g!(gvec, x)\n    fx = f(x)\n\n    gnorm = norm(gvec)\n    gtol = max(g_rtol*gnorm, g_atol)\n\n    # Univariate line search functions\n    ϕ(α) = f(x .+ α.*s)\n    function dϕ(α)\n        g!(gvec, x .+ α.*s)\n        return vecdot(gvec, s)\n    end\n    function ϕdϕ(α)\n        phi = fg!(gvec, x .+ α.*s)\n        dphi = vecdot(gvec, s)\n        return (phi, dphi)\n    end\n\n    s = similar(gvec) # Step direction\n\n    iter = 0\n    while iter < maxiter && gnorm > gtol\n        iter += 1\n        s .= -gvec\n\n        dϕ_0 = dot(s, gvec)\n        α, fx = linesearch(ϕ, dϕ, ϕdϕ, 1.0, fx, dϕ_0)\n\n        @. x = x + α*s\n        g!(gvec, x)\n        gnorm = norm(gvec)\n    end\n\n    return (fx, x, iter)\nend\n\nf(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2\n\nfunction g!(gvec, x)\n    gvec[1] = -2.0 * (1.0 - x[1]) - 400.0 * (x[2] - x[1]^2) * x[1]\n    gvec[2] = 200.0 * (x[2] - x[1]^2)\n    gvec\nend\n\nfunction fg!(gvec, x)\n    g!(gvec, x)\n    f(x)\nend\n\nx0 = [-1., 1.0]\n\nusing LineSearches\nls = BackTracking(order=3)\nfx_bt3, x_bt3, iter_bt3 = gdoptimize(f, g!, fg!, x0, ls)\n\nls = StrongWolfe()\nfx_sw, x_sw, iter_sw = gdoptimize(f, g!, fg!, x0, ls)\n\n# This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jlThis page was generated using Literate.jl."
+    "text": "Below follows a version of the program without any comments. The file is also available here: customoptimizer.jlfunction gdoptimize(f, g!, fg!, x0::AbstractArray{T}, linesearch,\n                    maxiter::Int = 10000,\n                    g_rtol::T = sqrt(eps(T)), g_atol::T = eps(T)) where T <: Number\n    x = copy(x0)\n    gvec = similar(x)\n    g!(gvec, x)\n    fx = f(x)\n\n    gnorm = norm(gvec)\n    gtol = max(g_rtol*gnorm, g_atol)\n\n    # Univariate line search functions\n    ϕ(α) = f(x .+ α.*s)\n    function dϕ(α)\n        g!(gvec, x .+ α.*s)\n        return dot(gvec, s)\n    end\n    function ϕdϕ(α)\n        phi = fg!(gvec, x .+ α.*s)\n        dphi = dot(gvec, s)\n        return (phi, dphi)\n    end\n\n    s = similar(gvec) # Step direction\n\n    iter = 0\n    while iter < maxiter && gnorm > gtol\n        iter += 1\n        s .= -gvec\n\n        dϕ_0 = dot(s, gvec)\n        α, fx = linesearch(ϕ, dϕ, ϕdϕ, 1.0, fx, dϕ_0)\n\n        @. x = x + α*s\n        g!(gvec, x)\n        gnorm = norm(gvec)\n    end\n\n    return (fx, x, iter)\nend\n\nf(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2\n\nfunction g!(gvec, x)\n    gvec[1] = -2.0 * (1.0 - x[1]) - 400.0 * (x[2] - x[1]^2) * x[1]\n    gvec[2] = 200.0 * (x[2] - x[1]^2)\n    gvec\nend\n\nfunction fg!(gvec, x)\n    g!(gvec, x)\n    f(x)\nend\n\nx0 = [-1., 1.0]\n\nusing LineSearches\nls = BackTracking(order=3)\nfx_bt3, x_bt3, iter_bt3 = gdoptimize(f, g!, fg!, x0, ls)\n\nls = StrongWolfe()\nfx_sw, x_sw, iter_sw = gdoptimize(f, g!, fg!, x0, ls)\n\n# This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jlThis page was generated using Literate.jl."
 },
 
 {
@@ -93,7 +93,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Optim line search",
     "title": "Optim line search",
     "category": "page",
-    "text": "EditURL = \"https://github.com/JuliaNLSolvers/LineSearches.jl/blob/master/docs/src/examples/optim_linesearch.jl\""
+    "text": ""
 },
 
 {
@@ -109,7 +109,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Optim initial step length guess",
     "title": "Optim initial step length guess",
     "category": "page",
-    "text": "EditURL = \"https://github.com/JuliaNLSolvers/LineSearches.jl/blob/master/docs/src/examples/optim_initialstep.jl\""
+    "text": ""
 },
 
 {
@@ -133,7 +133,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Line search routines",
     "title": "LineSearches.BackTracking",
     "category": "type",
-    "text": "BackTracking specifies a backtracking line-search that uses a quadratic or cubic interpolant to determine the reduction in step-size. E.g., if f(α) > f(0) + c₁ α f\'(0), then the quadratic interpolant of f(0), f\'(0), f(α) has a minimiser α\' in the open interval (0, α). More strongly, there exists a factor ρ = ρ(c₁) such that α\' ≦ ρ α.\n\nThis is a modification of the algorithm described in Nocedal Wright (2nd ed), Sec. 3.5.\n\n\n\n"
+    "text": "BackTracking specifies a backtracking line-search that uses a quadratic or cubic interpolant to determine the reduction in step-size. E.g., if f(α) > f(0) + c₁ α f\'(0), then the quadratic interpolant of f(0), f\'(0), f(α) has a minimiser α\' in the open interval (0, α). More strongly, there exists a factor ρ = ρ(c₁) such that α\' ≦ ρ α.\n\nThis is a modification of the algorithm described in Nocedal Wright (2nd ed), Sec. 3.5.\n\n\n\n\n\n"
 },
 
 {
@@ -141,7 +141,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Line search routines",
     "title": "LineSearches.HagerZhang",
     "category": "type",
-    "text": "Conjugate gradient line search implementation from:   W. W. Hager and H. Zhang (2006) Algorithm 851: CG_DESCENT, a     conjugate gradient method with guaranteed descent. ACM     Transactions on Mathematical Software 32: 113–137.\n\n\n\n"
+    "text": "Conjugate gradient line search implementation from:   W. W. Hager and H. Zhang (2006) Algorithm 851: CG_DESCENT, a     conjugate gradient method with guaranteed descent. ACM     Transactions on Mathematical Software 32: 113–137.\n\n\n\n\n\n"
 },
 
 {
@@ -149,15 +149,15 @@ var documenterSearchIndex = {"docs": [
     "page": "Line search routines",
     "title": "LineSearches.MoreThuente",
     "category": "type",
-    "text": "The line search implementation from:   Moré, Jorge J., and David J. Thuente     Line search algorithms with guaranteed sufficient decrease.     ACM Transactions on Mathematical Software (TOMS) 20.3 (1994): 286-307.\n\n\n\n"
+    "text": "The line search implementation from:   Moré, Jorge J., and David J. Thuente     Line search algorithms with guaranteed sufficient decrease.     ACM Transactions on Mathematical Software (TOMS) 20.3 (1994): 286-307.\n\n\n\n\n\n"
 },
 
 {
     "location": "reference/linesearch.html#LineSearches.Static",
     "page": "Line search routines",
     "title": "LineSearches.Static",
-    "category": "function",
-    "text": "Static: defines a static linesearch which returns the initial step length.\n\nStatic is intended for methods with well-scaled updates; i.e. Newton, on well-behaved problems.\n\n\n\n"
+    "category": "type",
+    "text": "Static: defines a static linesearch which returns the initial step length.\n\nStatic is intended for methods with well-scaled updates; i.e. Newton, on well-behaved problems.\n\n\n\n\n\n"
 },
 
 {
@@ -165,7 +165,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Line search routines",
     "title": "LineSearches.StrongWolfe",
     "category": "type",
-    "text": "StrongWolfe: This linesearch algorithm guarantees that the step length satisfies the (strong) Wolfe conditions. See Nocedal and Wright - Algorithms 3.5 and 3.6\n\nThis algorithm is mostly of theoretical interest, users should most likely use MoreThuente, HagerZhang or BackTracking.\n\nParameters:  (and defaults)\n\nc_1 = 1e-4: Armijo condition\nc_2 = 0.9 : second (strong) Wolfe condition\nρ = 2.0 : bracket growth\n\n\n\n"
+    "text": "StrongWolfe: This linesearch algorithm guarantees that the step length satisfies the (strong) Wolfe conditions. See Nocedal and Wright - Algorithms 3.5 and 3.6\n\nThis algorithm is mostly of theoretical interest, users should most likely use MoreThuente, HagerZhang or BackTracking.\n\nParameters:  (and defaults)\n\nc_1 = 1e-4: Armijo condition\nc_2 = 0.9 : second (strong) Wolfe condition\nρ = 2.0 : bracket growth\n\n\n\n\n\n"
 },
 
 {
@@ -189,7 +189,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Initial step length guess",
     "title": "LineSearches.InitialStatic",
     "category": "type",
-    "text": "Provide static initial step length.\n\nKeyword alpha corresponds to static step length, default is 1.0. If keyword scaled = true, then the initial step length is scaled with the l_2 norm of the step direction.\n\n\n\n"
+    "text": "Provide static initial step length.\n\nKeyword alpha corresponds to static step length, default is 1.0. If keyword scaled = true, then the initial step length is scaled with the l_2 norm of the step direction.\n\n\n\n\n\n"
 },
 
 {
@@ -197,7 +197,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Initial step length guess",
     "title": "LineSearches.InitialPrevious",
     "category": "type",
-    "text": "Use previous step length as initial guess, within the bounds [alphamin, alphamax]\n\nIf state.alpha is NaN, then return fallback value is.alpha\n\n\n\n"
+    "text": "Use previous step length as initial guess, within the bounds [alphamin, alphamax]\n\nIf state.alpha is NaN, then return fallback value is.alpha\n\n\n\n\n\n"
 },
 
 {
@@ -205,7 +205,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Initial step length guess",
     "title": "LineSearches.InitialQuadratic",
     "category": "type",
-    "text": "Quadratic interpolation for initial step length guess.\n\nThis is meant for methods that do not produce well-scaled search directions, such as Gradient Descent and (variations of) Conjugate Gradient methods. See the discussion around Nocedal and Wright, 2nd ed, (3.60).\n\nThis procedure have several arguments, with the following defaults.\n\nα0       = 1.0.         The initial step size at the first iteration.\nαmin     = 1e-12.       The minimum initial step size. (Default arbitrary).\nαmax     = 1.0.         The maximum initial step size.\nρ        = 0.25.        Maximum decrease from previous iteration, αinit ≥ α_{k-1}. (Default arbitrary).\nsnap2one = (0.75, Inf). Set all values within this (closed) interval to 1.0. (Default arbitrary).\n\nIf αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.\n\n\n\n"
+    "text": "Quadratic interpolation for initial step length guess.\n\nThis is meant for methods that do not produce well-scaled search directions, such as Gradient Descent and (variations of) Conjugate Gradient methods. See the discussion around Nocedal and Wright, 2nd ed, (3.60).\n\nThis procedure have several arguments, with the following defaults.\n\nα0       = 1.0.         The initial step size at the first iteration.\nαmin     = 1e-12.       The minimum initial step size. (Default arbitrary).\nαmax     = 1.0.         The maximum initial step size.\nρ        = 0.25.        Maximum decrease from previous iteration, αinit ≥ α_{k-1}. (Default arbitrary).\nsnap2one = (0.75, Inf). Set all values within this (closed) interval to 1.0. (Default arbitrary).\n\nIf αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.\n\n\n\n\n\n"
 },
 
 {
@@ -213,7 +213,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Initial step length guess",
     "title": "LineSearches.InitialConstantChange",
     "category": "type",
-    "text": "Constant first-order change approximation to determine initial step length.\n\n** This requires that the optimization algorithm stores dphi0 from the previous iteration ** (dphi0_previous = real(vecdot(∇f_{k-1}, s_{k-1})), where s is the step direction.\n\nThis is meant for methods that do not produce well-scaled search directions, such as Gradient Descent and (variations of) Conjugate Gradient methods. See the discussion in Nocedal and Wright, 2nd ed, p. 59 on \"Initial Step Length\"\n\nThis procedure have several arguments, with the following defaults.\n\nα0       = 1.0.         The initial step size at the first iteration.\nαmin     = 1e-12.       The minimum initial step size. (Default arbitrary).\nαmax     = 1.0.         The maximum initial step size.\nρ        = 0.25.        Maximum decrease from previous iteration, αinit ≥ α_{k-1}. (Default arbitrary).\nsnap2one = (0.75, Inf). Set all values within this (closed) interval to 1.0. (Default arbitrary).\n\nIf αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.\n\n\n\n"
+    "text": "Constant first-order change approximation to determine initial step length.\n\n** This requires that the optimization algorithm stores dphi0 from the previous iteration ** (dphi0previous = real(dot(∇f{k-1}, s_{k-1})), where s is the step direction.\n\nThis is meant for methods that do not produce well-scaled search directions, such as Gradient Descent and (variations of) Conjugate Gradient methods. See the discussion in Nocedal and Wright, 2nd ed, p. 59 on \"Initial Step Length\"\n\nThis procedure have several arguments, with the following defaults.\n\nα0       = 1.0.         The initial step size at the first iteration.\nαmin     = 1e-12.       The minimum initial step size. (Default arbitrary).\nαmax     = 1.0.         The maximum initial step size.\nρ        = 0.25.        Maximum decrease from previous iteration, αinit ≥ α_{k-1}. (Default arbitrary).\nsnap2one = (0.75, Inf). Set all values within this (closed) interval to 1.0. (Default arbitrary).\n\nIf αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.\n\n\n\n\n\n"
 },
 
 {
@@ -221,7 +221,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Initial step length guess",
     "title": "LineSearches.InitialHagerZhang",
     "category": "type",
-    "text": "Initial step size algorithm from   W. W. Hager and H. Zhang (2006) Algorithm 851: CG_DESCENT, a     conjugate gradient method with guaranteed descent. ACM     Transactions on Mathematical Software 32: 113–137.\n\nIf α0 is NaN, then procedure I0 is called at the first iteration, otherwise, we select according to procedure I1-2, with starting value α0.\n\n\n\n"
+    "text": "Initial step size algorithm from   W. W. Hager and H. Zhang (2006) Algorithm 851: CG_DESCENT, a     conjugate gradient method with guaranteed descent. ACM     Transactions on Mathematical Software 32: 113–137.\n\nIf α0 is NaN, then procedure I0 is called at the first iteration, otherwise, we select according to procedure I1-2, with starting value α0.\n\n\n\n\n\n"
 },
 
 {
