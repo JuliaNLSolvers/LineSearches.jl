@@ -2,7 +2,7 @@ using LineSearches
 using Test
 using LinearAlgebra: norm, dot
 using OptimTestProblems
-using HigherPrecision
+using DoubleFloats
 import NLSolversBase
 
 debug_printing = false

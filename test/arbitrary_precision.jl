@@ -1,4 +1,5 @@
-for T in [Float32, Float64, typeof(DoubleFloat64(1)), BigFloat]
+for T in [Float32, Float64, BigFloat,
+          typeof(Double64(1)), typeof(Double32(1))]
     @eval begin
         @testset "Arbitrary precision - initial step guess: $($T)" begin
             f(x) = dot(x, x)
