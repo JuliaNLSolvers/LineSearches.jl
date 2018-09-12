@@ -1,3 +1,5 @@
+using LinearAlgebra: norm, dot
+
 function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, linesearch,
                     maxiter::Int = 10000,
                     g_rtol::T = sqrt(eps(T)), g_atol::T = eps(T)) where T <: Number
