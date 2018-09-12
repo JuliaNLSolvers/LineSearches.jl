@@ -2,7 +2,7 @@
 # DoubleFloats breaks because of
 # https://github.com/JuliaMath/DoubleFloats.jl/issues/18
 # Include them again when (if) it is fixed.
-doublefloattypes = [,]
+doublefloattypes = []
 
 for T in [Float32, Float64, BigFloat,
           doublefloattypes...]
