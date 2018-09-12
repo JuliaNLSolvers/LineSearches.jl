@@ -3,8 +3,8 @@ import Literate
 
 # TODO: Remove items from `SKIPFILE` as soon as they run on the latest
 # stable `Optim` (or other dependency)
-ONLYSTATIC = ["optim_linesearch.jl", "optim_initialstep.jl"]
-#ONLYSTATIC = []
+#ONLYSTATIC = ["optim_linesearch.jl", "optim_initialstep.jl"]
+ONLYSTATIC = []
 
 EXAMPLEDIR = joinpath(@__DIR__, "src", "examples")
 GENERATEDDIR = joinpath(@__DIR__, "src", "examples", "generated")
