@@ -1,5 +1,11 @@
+#doublefloattypes = [typeof(Double64(1)), typeof(Double32(1))]
+# DoubleFloats breaks because of
+# https://github.com/JuliaMath/DoubleFloats.jl/issues/18
+# Include them again when (if) it is fixed.
+doublefloattypes = [,]
+
 for T in [Float32, Float64, BigFloat,
-          typeof(Double64(1)), typeof(Double32(1))]
+          doublefloattypes...]
     @eval begin
         @testset "Arbitrary precision - initial step guess: $($T)" begin
             f(x) = dot(x, x)
