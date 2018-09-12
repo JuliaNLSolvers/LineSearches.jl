@@ -27,7 +27,7 @@ makedocs(
 deploydocs(
     repo = "github.com/JuliaNLSolvers/LineSearches.jl.git",
     target = "build",
-    julia = "0.7", # deploy from release bot
+    julia = "1.0", # deploy from release bot
     deps = nothing,
     make = nothing,
 )

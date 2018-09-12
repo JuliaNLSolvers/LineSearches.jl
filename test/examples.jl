@@ -3,8 +3,8 @@
     # whenever LineSearches introduces a breaking change that the current
     # Optim release cannot handle.
     #   When the current Optim release works we should add the tests back.
-    SKIPFILE = ["optim_linesearch.jl", "optim_initialstep.jl"]
-    #SKIPFILE = []
+    #SKIPFILE = ["optim_linesearch.jl", "optim_initialstep.jl"]
+    SKIPFILE = []
 
     EXAMPLEDIR = joinpath(@__DIR__, "../docs/src/examples")
     myfilter(str) = occursin(r"\.jl$", str) && !(str in SKIPFILE)
