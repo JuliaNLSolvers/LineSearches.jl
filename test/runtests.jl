@@ -29,8 +29,3 @@ for my_test in my_tests
     println("\n * $(my_test)")
     @time include(my_test)
 end
-
-# Build the docs
-if get(ENV, "TRAVIS_OS_NAME", "") == "linux" && get(ENV, "TRAVIS_JULIA_VERSION", "") == "1.0"
-    include(joinpath(@__DIR__, "../docs/make.jl"))
-end
