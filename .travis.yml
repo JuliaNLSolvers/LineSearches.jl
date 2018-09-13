@@ -9,14 +9,17 @@ julia:
 matrix:
   allow_failures:
     - julia: nightly
-# Workaround for https://github.com/travis-ci/travis-ci/issues/4942
-git:
-  depth: 99999
 notifications:
-  email: false
-# uncomment the following lines to override the default test script
-# script:
-#     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-#     - julia -e 'using Pkg; Pkg.clone(pwd()); Pkg.test("LineSearches", coverage=true)'
+    email: false
+sudo: false
+jobs:
+  include:
+    - stage: "Documentation"
+      julia: 1.0
+      os: linux
+      script:
+        - julia --project=docs/ -e 'using Pkg; Pkg.instantiate(); Pkg.add(PackageSpec(path=pwd()))'
+        - julia --project=docs/ docs/make.jl
+      after_success: skip
 after_success:
-    - julia -e 'using Pkg; cd(Pkg.dir("LineSearches")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+    - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
