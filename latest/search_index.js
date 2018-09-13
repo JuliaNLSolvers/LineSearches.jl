@@ -61,7 +61,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Using LineSearches without Optim/NLsolve",
     "title": "Using LineSearches without Optim/NLsolve",
     "category": "page",
-    "text": "EditURL = \"https://github.com/JuliaNLSolvers/LineSearches.jl/blob/master/docs/src/examples/customoptimizer.jl\""
+    "text": "EditURL = \"https://github.com/JuliaNLSolvers/LineSearches.jl/blob/master/../../../../build/JuliaNLSolvers/LineSearches.jl/docs/src/examples/customoptimizer.jl\""
 },
 
 {
@@ -93,7 +93,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Optim line search",
     "title": "Optim line search",
     "category": "page",
-    "text": "EditURL = \"https://github.com/JuliaNLSolvers/LineSearches.jl/blob/master/docs/src/examples/optim_linesearch.jl\""
+    "text": "EditURL = \"https://github.com/JuliaNLSolvers/LineSearches.jl/blob/master/../../../../build/JuliaNLSolvers/LineSearches.jl/docs/src/examples/optim_linesearch.jl\""
 },
 
 {
@@ -109,7 +109,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Optim initial step length guess",
     "title": "Optim initial step length guess",
     "category": "page",
-    "text": "EditURL = \"https://github.com/JuliaNLSolvers/LineSearches.jl/blob/master/docs/src/examples/optim_initialstep.jl\""
+    "text": "EditURL = \"https://github.com/JuliaNLSolvers/LineSearches.jl/blob/master/../../../../build/JuliaNLSolvers/LineSearches.jl/docs/src/examples/optim_initialstep.jl\""
 },
 
 {
