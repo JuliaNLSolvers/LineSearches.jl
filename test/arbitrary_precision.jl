@@ -1,8 +1,6 @@
 #doublefloattypes = [typeof(Double64(1)), typeof(Double32(1))]
-# DoubleFloats breaks because of
-# https://github.com/JuliaMath/DoubleFloats.jl/issues/18
-# Include them again when (if) it is fixed.
-doublefloattypes = []
+# Can't use Double32(NaN); https://github.com/JuliaMath/DoubleFloats.jl/issues/19
+doublefloattypes = [typeof(Double64(1)),]
 
 for T in [Float32, Float64, BigFloat,
           doublefloattypes...]
