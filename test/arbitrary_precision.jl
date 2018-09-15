@@ -1,6 +1,4 @@
-#doublefloatstypes = [Double64, Double32, Double16]
-# Can't use Double32(NaN); https://github.com/JuliaMath/DoubleFloats.jl/issues/19
-doublefloatstypes = [Double64,]
+doublefloatstypes = [Double64, Double32, Double16]
 
 @testset "Arbitrary precision - initial step guess: $T" for T in
     [Float32, Float64, BigFloat, doublefloatstypes...]
