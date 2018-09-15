@@ -2,7 +2,7 @@ using LineSearches
 using Test
 using LinearAlgebra: norm, dot
 using OptimTestProblems
-#using DoubleFloats
+using DoubleFloats: Double64, Double32, Double16
 import NLSolversBase
 
 debug_printing = false
