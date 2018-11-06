@@ -224,12 +224,14 @@ function _hzI12(alpha::T,
 
     alphatest = psi1 * alpha
     alphatest = min(alphatest, alphamax)
+    alphatest == 0 && return alphatest
     phitest = ϕ(alphatest)
-
     alphatest, phitest = get_finite(alphatest, phitest, ϕ, psi3, iterfinitemax, phi_0, mayterminate)
+    alphatest == 0 && return alphatest
+
     mayterminate[] = quadstep_success = false
-    if quadstep && alphatest > 0
-        a = ((phitest-phi_0)/alphatest - dphi_0)/alphatest  # quadratic fit
+    if quadstep
+        a = ((phitest - phi_0) / alphatest - dphi_0) / alphatest  # quadratic fit
         if verbose == true
             println("quadfit: alphatest = ", alphatest,
                     ", phi_0 = ", phi_0,
@@ -238,10 +240,13 @@ function _hzI12(alpha::T,
                     ", quadcoef = ", a)
         end
         if isfinite(a) && a > 0 && phitest <= phi_0
-            alphatest = -dphi_0 / 2 / a # if convex, choose minimum of quadratic
-            phitest = ϕ(alphatest)
-            if alphatest < alphamax && isfinite(phitest)
+            alphatest2 = -dphi_0 / 2 / a # if convex, choose minimum of quadratic
+            alphatest2 = min(alphatest2, alphamax)
+            phitest2 = ϕ(alphatest2)
+            if isfinite(phitest2)
                 mayterminate[] = quadstep_success = true
+                alphatest = alphatest2
+                phitest = phitest2
                 if verbose == true
                     println("alpha guess (quadratic): ", alphatest,
                             ",(mayterminate = ", mayterminate[], ")")
@@ -249,8 +254,10 @@ function _hzI12(alpha::T,
             end
         end
     end
-    if !quadstep || !quadstep_success
-        alphatest = psi2 * alpha # if no quadstep or it fails, expand the interval
+    if (!quadstep || !quadstep_success) && phitest <= phi_0
+        # If no quadstep or it fails, expand the interval.
+        # While the phitest <= phi_0 condition was not in the paper, it gives a significant boost to the speed. The rationale behind it is that since the slope at alpha = 0 is negative, if phitest > phi_0 then a local minimum must be between alpha = 0 and alpha = alphatest, so alpha_test is good enough to return.
+        alphatest = psi2 * alpha 
         alphatest = min(alphatest, alphamax)
         phitest = ϕ(alphatest)
         alphatest, phitest = get_finite(alphatest, phitest, ϕ, psi3, iterfinitemax, phi_0, mayterminate)
