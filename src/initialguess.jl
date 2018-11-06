@@ -164,13 +164,14 @@ If α0 is NaN, then procedure I0 is called at the first iteration,
 otherwise, we select according to procedure I1-2, with starting value α0.
 """
 @with_kw struct InitialHagerZhang{T}
-    ψ0::T         = 0.01
-    ψ1::T         = 0.2
-    ψ2::T         = 2.0
-    ψ3::T         = 0.1
-    αmax::T       = Inf
-    α0::T         = 1.0 # Initial alpha guess. NaN => algorithm calculates
-    verbose::Bool = false
+    ψ0::T          = 0.01
+    ψ1::T          = 0.2
+    ψ2::T          = 2.0
+    ψ3::T          = 0.1
+    αmax::T        = Inf
+    α0::T          = 1.0 # Initial alpha guess. NaN => algorithm calculates
+    quadstep::Bool = true
+    verbose::Bool  = false
 end
 
 function (is::InitialHagerZhang)(ls::Tls, state, phi_0, dphi_0, df) where Tls
@@ -181,6 +182,7 @@ function (is::InitialHagerZhang)(ls::Tls, state, phi_0, dphi_0, df) where Tls
         # pick the initial step size according to HZ #I0
         state.alpha = _hzI0(state.x, NLSolversBase.gradient(df),
                             NLSolversBase.value(df),
+                            is.αmax,
                             convert(eltype(state.x), is.ψ0)) # Hack to deal with type instability between is{T} and state.x
         if Tls <: HagerZhang
             ls.mayterminate[] = false
@@ -194,7 +196,7 @@ function (is::InitialHagerZhang)(ls::Tls, state, phi_0, dphi_0, df) where Tls
         end
         T = eltype(state.alpha)
         state.alpha = _hzI12(state.alpha, df, state.x, state.s, state.x_ls, phi_0, dphi_0,
-                   is.ψ1, is.ψ2, is.ψ3, convert(T, is.αmax), is.verbose, mayterminate)
+                   is.ψ1, is.ψ2, is.ψ3, T(is.αmax), is.verbose, is.quadstep, mayterminate)
     end
     return state.alpha
 end
@@ -212,6 +214,7 @@ function _hzI12(alpha::T,
                 psi3::Real,
                 alphamax::T,
                 verbose::Bool,
+                quadstep::Bool,
                 mayterminate) where {Tx,T}
     ϕ = make_ϕ(df, x_new, x, s)
 
@@ -221,65 +224,55 @@ function _hzI12(alpha::T,
 
     alphatest = psi1 * alpha
     alphatest = min(alphatest, alphamax)
-
+    alphatest == 0 && return alphatest
     phitest = ϕ(alphatest)
+    alphatest, phitest = get_finite(alphatest, phitest, ϕ, psi3, iterfinitemax, phi_0, mayterminate)
+    alphatest == 0 && return alphatest
 
-    iterfinite = 1
-    while !isfinite(phitest)
-        if iterfinite >= iterfinitemax
-            mayterminate[] = true
-            return convert(T, 0)
-            # TODO: Throw error / LineSearchException instead?
-            # error("Failed to achieve finite test value; alphatest = ", alphatest)
-        end
-
-        alphatest = psi3 * alphatest
-        phitest = ϕ(alphatest)
-        iterfinite += 1
-    end
-    a = ((phitest-phi_0)/alphatest - dphi_0)/alphatest  # quadratic fit
-
-    if verbose == true
-        println("quadfit: alphatest = ", alphatest,
-                ", phi_0 = ", phi_0,
-                ", dphi_0 = ", dphi_0,
-                ", phitest = ", phitest,
-                ", quadcoef = ", a)
-    end
-    mayterminate[] = false
-    if isfinite(a) && a > 0 && phitest <= phi_0
-        alpha = -dphi_0 / 2 / a # if convex, choose minimum of quadratic
-        if alpha == 0
-            error("alpha is zero. dphi_0 = ", dphi_0, ", phi_0 = ", phi_0, ", phitest = ", phitest, ", alphatest = ", alphatest, ", a = ", a)
-        end
-        if alpha <= alphamax
-            mayterminate[] = true
-        else
-            alpha = alphamax
-            mayterminate[] = false
-        end
+    mayterminate[] = quadstep_success = false
+    if quadstep
+        a = ((phitest - phi_0) / alphatest - dphi_0) / alphatest  # quadratic fit
         if verbose == true
-            println("alpha guess (quadratic): ", alpha,
-                    ",(mayterminate = ", mayterminate, ")")
+            println("quadfit: alphatest = ", alphatest,
+                    ", phi_0 = ", phi_0,
+                    ", dphi_0 = ", dphi_0,
+                    ", phitest = ", phitest,
+                    ", quadcoef = ", a)
         end
-    else
-        if phitest > phi_0
-            alpha = alphatest
-        else
-            alpha *= psi2 # if not convex, expand the interval
+        if isfinite(a) && a > 0 && phitest <= phi_0
+            alphatest2 = -dphi_0 / 2 / a # if convex, choose minimum of quadratic
+            alphatest2 = min(alphatest2, alphamax)
+            phitest2 = ϕ(alphatest2)
+            if isfinite(phitest2)
+                mayterminate[] = quadstep_success = true
+                alphatest = alphatest2
+                phitest = phitest2
+                if verbose == true
+                    println("alpha guess (quadratic): ", alphatest,
+                            ",(mayterminate = ", mayterminate[], ")")
+                end
+            end
         end
     end
-    alpha = min(alphamax, alpha)
-    if verbose == true
-        println("alpha guess (expand): ", alpha)
+    if (!quadstep || !quadstep_success) && phitest <= phi_0
+        # If no quadstep or it fails, expand the interval.
+        # While the phitest <= phi_0 condition was not in the paper, it gives a significant boost to the speed. The rationale behind it is that since the slope at alpha = 0 is negative, if phitest > phi_0 then a local minimum must be between alpha = 0 and alpha = alphatest, so alpha_test is good enough to return.
+        alphatest = psi2 * alpha 
+        alphatest = min(alphatest, alphamax)
+        phitest = ϕ(alphatest)
+        alphatest, phitest = get_finite(alphatest, phitest, ϕ, psi3, iterfinitemax, phi_0, mayterminate)
+        if verbose == true
+            println("alpha guess (expand): ", alphatest)
+        end
     end
-    return alpha
+    return alphatest
 end
 
 # Generate initial guess for step size (HZ, stage I0)
 function _hzI0(x::AbstractArray{Tx},
                gr::AbstractArray{Tx},
                f_x::T,
+               alphamax::T,
                psi0::T = convert(T, 1)/100) where {Tx,T}
     zeroT = convert(T, 0)
     alpha = convert(T, 1)
@@ -289,8 +282,23 @@ function _hzI0(x::AbstractArray{Tx},
         if x_max != zeroT
             alpha = psi0 * x_max / gr_max
         elseif f_x != zeroT
-            alpha = psi0 * abs(f_x) / norm(gr)
+            alpha = psi0 * abs(f_x) / norm(gr)^2
         end
     end
-    return alpha
+    return min(alpha, alphamax)
+end
+
+function get_finite(alpha::T, phi, ϕ, factor, itermax, phi_0, mayterminate) where {T}
+    iter = 1
+    while !isfinite(phi)
+        if iter >= itermax
+            mayterminate[] = true
+            return T(0), phi_0
+        end
+
+        alpha = factor * alpha
+        phi = ϕ(alpha)
+        iter += 1
+    end
+    return alpha, phi
 end

@@ -116,8 +116,10 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
     if !(isfinite(phi_0) && isfinite(dphi_0))
         throw(ArgumentError("Value and slope at step length = 0 must be finite."))
     end
-    if dphi_0 >= zeroT
+    if dphi_0 >= eps(T) * abs(phi_0)
         throw(ArgumentError("Search direction is not a direction of descent."))
+    elseif dphi_0 >= 0
+        return zeroT, phi_0
     end
 
     # Prevent values of x_new = x+αs that are likely to make
@@ -132,7 +134,8 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
 
 
     phi_lim = phi_0 + epsilon * abs(phi_0)
-    @assert c > zeroT
+    @assert c >= 0
+    c <= eps(T) && return zeroT, phi_0
     @assert isfinite(c) && c <= alphamax
     phi_c, dphi_c = ϕdϕ(c)
     iterfinite = 1
@@ -145,7 +148,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
     if !(isfinite(phi_c) && isfinite(dphi_c))
         @warn("Failed to achieve finite new evaluation point, using alpha=0")
         mayterminate[] = false # reset in case another initial guess is used next
-        return zeroT, ϕ(zeroT) # phi_0
+        return zeroT, phi_0
     end
     push!(alphas, c)
     push!(values, phi_c)
@@ -191,7 +194,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             # The value is higher, but the slope is downward, so we must
             # have crested over the peak. Use bisection.
             ib = length(alphas)
-            ia = ib - 1
+            ia = 1
             if c ≉  alphas[ib] || slopes[ib] >= zeroT
                 error("c = ", c)
             end
@@ -199,24 +202,32 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             ia, ib = bisect!(ϕdϕ, alphas, values, slopes, ia, ib, phi_lim, display)
             isbracketed = true
         else
-            # We'll still going downhill, expand the interval and try again
+            # We'll still going downhill, expand the interval and try again.
+            # Reaching this branch means that dphi_c < 0 and phi_c <= phi_0 + ϵ_k
+            # So cold = c has a lower objective than phi_0 up to epsilon. 
+            # This makes it a viable step to return if bracketing fails.
+
+            # Bracketing can fail if no cold < c <= alphamax can be found with finite phi_c and dphi_c. 
+            # Going back to the loop with c = cold will only result in infinite cycling.
+            # So returning (cold, phi_cold) and exiting the line search is the best move.
             cold = c
+            phi_cold = phi_c
+            if nextfloat(cold) >= alphamax
+                mayterminate[] = false # reset in case another initial guess is used next
+                return cold, phi_cold
+            end
             c *= rho
             if c > alphamax
-                c = (alphamax + cold)/2
+                c = alphamax
                 if display & BRACKET > 0
-                    println("bracket: exceeding alphamax, bisecting: alphamax = ", alphamax,
-                    ", cold = ", cold, ", new c = ", c)
-                end
-                if c == cold || nextfloat(c) >= alphamax
-                    mayterminate[] = false # reset in case another initial guess is used next
-                    return cold, phi_c
+                    println("bracket: exceeding alphamax, using c = alphamax = ", alphamax,
+                    ", cold = ", cold)
                 end
             end
             phi_c, dphi_c = ϕdϕ(c)
             iterfinite = 1
             while !(isfinite(phi_c) && isfinite(dphi_c)) && c > nextfloat(cold) && iterfinite < iterfinitemax
-                alphamax = c
+                alphamax = c # shrinks alphamax, assumes that steps >= c can never have finite phi_c and dphi_c
                 iterfinite += 1
                 if display & BRACKET > 0
                     println("bracket: non-finite value, bisection")
@@ -225,24 +236,14 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
                 phi_c, dphi_c = ϕdϕ(c)
             end
             if !(isfinite(phi_c) && isfinite(dphi_c))
-                mayterminate[] = false # reset in case another initial guess is used next
-                return cold, ϕ(cold)
-            elseif dphi_c < zeroT && c == alphamax
-                # We're on the edge of the allowed region, and the
-                # value is still decreasing. This can be due to
-                # roundoff error in barrier penalties, a barrier
-                # coefficient being so small that being eps() away
-                # from it still doesn't turn the slope upward, or
-                # mistakes in the user's function.
-                if iterfinite >= iterfinitemax
+                if display & BRACKET > 0
                     println("Warning: failed to expand interval to bracket with finite values. If this happens frequently, check your function and gradient.")
                     println("c = ", c,
                             ", alphamax = ", alphamax,
                             ", phi_c = ", phi_c,
                             ", dphi_c = ", dphi_c)
                 end
-                mayterminate[] = false # reset in case another initial guess is used next
-                return c, phi_c
+                return cold, phi_cold
             end
             push!(alphas, c)
             push!(values, phi_c)
@@ -394,7 +395,7 @@ function secant2!(ϕdϕ,
         # we updated a, do it for b too
         c = secant(alphas, values, slopes, ia, iA)
     end
-    if a <= c <= b
+    if (iA == ic || iB == ic) && a <= c <= b
         if display & SECANT2 > 0
             println("secant2: second c = ", c)
         end
