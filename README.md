@@ -52,7 +52,7 @@ dϕ(x) = 4*(x-π)^3
 dϕ0 = dϕ(0.0)
 
 for ls in (Static,BackTracking,HagerZhang,MoreThuente,StrongWolfe)
-	res = (ls())(ϕ, dϕ, ϕdϕ, α0, ϕ0,dϕ0)
+    res = (ls())(ϕ, dϕ, ϕdϕ, α0, ϕ0,dϕ0)
     println(ls, ": ", res)
 end
 ```
