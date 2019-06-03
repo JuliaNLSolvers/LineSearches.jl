@@ -29,3 +29,11 @@ for my_test in my_tests
     println("\n * $(my_test)")
     @time include(my_test)
 end
+
+@testset "External constructors" begin
+    bt = BackTracking{Float32}()
+    @test typeof(bt) == BackTracking{Float32, Int}
+
+    hz = HagerZhang{Float32}()
+    @test typeof(hz) == HagerZhang{Float32, Base.RefValue{Bool}}
+end
