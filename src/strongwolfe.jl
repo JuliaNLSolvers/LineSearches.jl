@@ -30,13 +30,13 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
                            alpha0::T, ϕ_0, dϕ_0) where T
     @unpack c_1, c_2, ρ = ls
 
-    zeroT = convert(T, 0)
+    zeroT = zero(T)
 
     # Step-sizes
     a_0 = zeroT
     a_iminus1 = a_0
     a_i = alpha0
-    a_max = convert(T, 65536)
+    a_max = convert(T, 65536) 
 
     # ϕ(alpha) = df.f(x + alpha * p)
     ϕ_a_iminus1 = ϕ_0
@@ -96,10 +96,10 @@ function zoom(a_lo::T,
               ϕ,
               dϕ,
               ϕdϕ,
-              c_1::Real = convert(T, 1)/10^4,
-              c_2::Real = convert(T, 9)/10) where T
+              c_1::Real = convert(T, 1e-04),
+              c_2::Real = convert(T, 9.0)/10.0) where T
 
-    zeroT = convert(T, 0)
+    zeroT = zero(T)
     # Step-size
     a_j = convert(T, NaN)
 
