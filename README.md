@@ -38,6 +38,25 @@ For more details and options, see the documentation
 - [STABLE][docs-stable-url] — most recently tagged version of the documentation.
 - [LATEST][docs-latest-url] — in-development version of the documentation.
 
+## Example usage
+Here is how to get a simple linesearch for a one-dimensional function working:
+```julia
+using LineSearches
+
+ϕ(x) = (x - π)^4
+dϕ(x) = 4*(x-π)^3
+ϕdϕ(x) = ϕ(x),dϕ(x)
+
+α0 = 9.0
+ϕ0 = ϕ(0.0)
+dϕ0 = dϕ(0.0)
+
+for ls in (Static,BackTracking,HagerZhang,MoreThuente,StrongWolfe)
+    res = (ls())(ϕ, dϕ, ϕdϕ, α0, ϕ0,dϕ0)
+    println(ls, ": ", res)
+end
+```
+For more examples, see the documentation.
 
 ## References
 - W. W. Hager and H. Zhang (2006) "Algorithm 851: CG_DESCENT, a conjugate gradient method with guaranteed descent." ACM Transactions on Mathematical Software 32: 113-137.
