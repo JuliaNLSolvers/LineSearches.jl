@@ -1,43 +1,53 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Optim line search · LineSearches.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link href="../../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>LineSearches.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../../search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../../index.html">Home</a></li><li><span class="toctext">Examples</span><ul><li><a class="toctext" href="customoptimizer.html">Using LineSearches without Optim/NLsolve</a></li><li class="current"><a class="toctext" href="optim_linesearch.html">Optim line search</a><ul class="internal"></ul></li><li><a class="toctext" href="optim_initialstep.html">Optim initial step length guess</a></li></ul></li><li><span class="toctext">API Reference</span><ul><li><a class="toctext" href="../../reference/linesearch.html">Line search routines</a></li><li><a class="toctext" href="../../reference/initialstep.html">Initial step length guess</a></li></ul></li></ul></nav><article id="docs"><header><nav><ul><li>Examples</li><li><a href="optim_linesearch.html">Optim line search</a></li></ul><a class="edit-page" href="https://github.com/JuliaNLSolvers/LineSearches.jl/blob/master/../../../../build/JuliaNLSolvers/LineSearches.jl/docs/src/examples/optim_linesearch.jl"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Optim line search</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Optim-line-search-1" href="#Optim-line-search-1">Optim line search</a></h1><div class="admonition tip"><div class="admonition-title">Tip</div><div class="admonition-text"><p>This example is also available as a Jupyter notebook: <a href="https://nbviewer.jupyter.org/github/JuliaNLSolvers/LineSearches.jl/blob/gh-pages/dev/examples/generated/optim_linesearch.ipynb"><code>optim_linesearch.ipynb</code></a></p></div></div><p>This example shows how to use <code>LineSearches</code> with <a href="https://github.com/JuliaNLSolvers/Optim.jl">Optim</a>.  We solve the Rosenbrock problem with two different line search algorithms.</p><p>First, run <code>Newton</code> with the default line search algorithm:</p><div><pre><code class="language-julia">using Optim, LineSearches
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Optim line search · LineSearches.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link href="../../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>LineSearches.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../../search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../../index.html">Home</a></li><li><span class="toctext">Examples</span><ul><li><a class="toctext" href="customoptimizer.html">Using LineSearches without Optim/NLsolve</a></li><li class="current"><a class="toctext" href="optim_linesearch.html">Optim line search</a><ul class="internal"></ul></li><li><a class="toctext" href="optim_initialstep.html">Optim initial step length guess</a></li></ul></li><li><span class="toctext">API Reference</span><ul><li><a class="toctext" href="../../reference/linesearch.html">Line search routines</a></li><li><a class="toctext" href="../../reference/initialstep.html">Initial step length guess</a></li></ul></li></ul></nav><article id="docs"><header><nav><ul><li>Examples</li><li><a href="optim_linesearch.html">Optim line search</a></li></ul><a class="edit-page" href="https://github.com/JuliaNLSolvers/LineSearches.jl/blob/master/../../../../build/JuliaNLSolvers/LineSearches.jl/docs/src/examples/optim_linesearch.jl"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Optim line search</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Optim-line-search-1" href="#Optim-line-search-1">Optim line search</a></h1><div class="admonition tip"><div class="admonition-title">Tip</div><div class="admonition-text"><p>This example is also available as a Jupyter notebook: <a href="https://nbviewer.jupyter.org/github/JuliaNLSolvers/LineSearches.jl/blob/gh-pages/devexamples/generated/optim_linesearch.ipynb"><code>optim_linesearch.ipynb</code></a></p></div></div><p>This example shows how to use <code>LineSearches</code> with <a href="https://github.com/JuliaNLSolvers/Optim.jl">Optim</a>.  We solve the Rosenbrock problem with two different line search algorithms.</p><p>First, run <code>Newton</code> with the default line search algorithm:</p><div><pre><code class="language-julia">using Optim, LineSearches
 import OptimTestProblems.MultivariateProblems
 UP = MultivariateProblems.UnconstrainedProblems
 prob = UP.examples[&quot;Rosenbrock&quot;]
 
 algo_hz = Newton(linesearch = HagerZhang())
-res_hz = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_hz)</code></pre><pre><code class="language-none">Results of Optimization Algorithm
- * Algorithm: Newton&#39;s Method
- * Starting Point: [-1.2,1.0]
- * Minimizer: [1.0000000000000033,1.0000000000000067]
- * Minimum: 1.109336e-29
- * Iterations: 23
- * Convergence: true
-   * |x - x&#39;| ≤ 0.0e+00: false
-     |x - x&#39;| = 1.13e-08
-   * |f(x) - f(x&#39;)| ≤ 0.0e+00 |f(x)|: false
-     |f(x) - f(x&#39;)| = 6.35e+13 |f(x)|
-   * |g(x)| ≤ 1.0e-08: true
-     |g(x)| = 6.66e-15
-   * Stopped by an increasing objective: false
-   * Reached Maximum Number of Iterations: false
- * Objective Calls: 71
- * Gradient Calls: 71
- * Hessian Calls: 23</code></pre></div><p>Now we can try <code>Newton</code> with the cubic backtracking line search, which reduced the number of objective and gradient calls.</p><div><pre><code class="language-julia">algo_bt3 = Newton(linesearch = BackTracking(order=3))
-res_bt3 = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_bt3)</code></pre><pre><code class="language-none">Results of Optimization Algorithm
- * Algorithm: Newton&#39;s Method
- * Starting Point: [-1.2,1.0]
- * Minimizer: [1.0,0.9999999999999999]
- * Minimum: 1.232595e-30
- * Iterations: 25
- * Convergence: true
-   * |x - x&#39;| ≤ 0.0e+00: false
-     |x - x&#39;| = 1.76e-09
-   * |f(x) - f(x&#39;)| ≤ 0.0e+00 |f(x)|: false
-     |f(x) - f(x&#39;)| = 9.14e+12 |f(x)|
-   * |g(x)| ≤ 1.0e-08: true
-     |g(x)| = 4.44e-14
-   * Stopped by an increasing objective: false
-   * Reached Maximum Number of Iterations: false
- * Objective Calls: 34
- * Gradient Calls: 26
- * Hessian Calls: 25</code></pre></div><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p><footer><hr/><a class="previous" href="customoptimizer.html"><span class="direction">Previous</span><span class="title">Using LineSearches without Optim/NLsolve</span></a><a class="next" href="optim_initialstep.html"><span class="direction">Next</span><span class="title">Optim initial step length guess</span></a></footer></article></body></html>
+res_hz = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_hz)</code></pre><pre><code class="language-none"> * Status: success
+
+ * Candidate solution
+    Minimizer: [1.00e+00, 1.00e+00]
+    Minimum:   1.109336e-29
+
+ * Found with
+    Algorithm:     Newton&#39;s Method
+    Initial Point: [-1.20e+00, 1.00e+00]
+
+ * Convergence measures
+    |x - x&#39;|               = 1.13e-08 ≰ 0.0e+00
+    |x - x&#39;|/|x&#39;|          = 1.13e-08 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|         = 7.05e-16 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|/|f(x&#39;)| = 6.35e+13 ≰ 0.0e+00
+    |g(x)|                 = 6.66e-15 ≤ 1.0e-08
+
+ * Work counters
+    Seconds run:   0  (vs limit Inf)
+    Iterations:    23
+    f(x) calls:    71
+    ∇f(x) calls:   71
+    ∇²f(x) calls:  23</code></pre></div><p>Now we can try <code>Newton</code> with the cubic backtracking line search, which reduced the number of objective and gradient calls.</p><div><pre><code class="language-julia">algo_bt3 = Newton(linesearch = BackTracking(order=3))
+res_bt3 = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_bt3)</code></pre><pre><code class="language-none"> * Status: success
+
+ * Candidate solution
+    Minimizer: [1.00e+00, 1.00e+00]
+    Minimum:   1.232595e-30
+
+ * Found with
+    Algorithm:     Newton&#39;s Method
+    Initial Point: [-1.20e+00, 1.00e+00]
+
+ * Convergence measures
+    |x - x&#39;|               = 1.76e-09 ≰ 0.0e+00
+    |x - x&#39;|/|x&#39;|          = 1.76e-09 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|         = 1.13e-17 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|/|f(x&#39;)| = 9.14e+12 ≰ 0.0e+00
+    |g(x)|                 = 4.44e-14 ≤ 1.0e-08
+
+ * Work counters
+    Seconds run:   0  (vs limit Inf)
+    Iterations:    25
+    f(x) calls:    34
+    ∇f(x) calls:   26
+    ∇²f(x) calls:  25</code></pre></div><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p><footer><hr/><a class="previous" href="customoptimizer.html"><span class="direction">Previous</span><span class="title">Using LineSearches without Optim/NLsolve</span></a><a class="next" href="optim_initialstep.html"><span class="direction">Next</span><span class="title">Optim initial step length guess</span></a></footer></article></body></html>
