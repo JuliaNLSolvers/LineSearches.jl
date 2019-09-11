@@ -43,7 +43,7 @@
 
 # Display flags are represented as a bitfield
 # (not exported, but can use via LineSearches.ITER, for example)
-const one64 = convert(UInt64, 1)
+const one64       = one(UInt64)
 const FINAL       = one64
 const ITER        = one64 << 1
 const PARAMETERS  = one64 << 2
@@ -111,7 +111,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
     @unpack delta, sigma, alphamax, rho, epsilon, gamma,
             linesearchmax, psi3, display, mayterminate = ls
 
-    zeroT = convert(T, 0)
+    zeroT = zero(T)
 
     if !(isfinite(phi_0) && isfinite(dphi_0))
         throw(ArgumentError("Value and slope at step length = 0 must be finite."))
@@ -294,7 +294,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             if display & LINESEARCH > 0
                 println("Linesearch: secant failed, using bisection")
             end
-            c = (A + B) / convert(T, 2)
+            c = (A + B) / convert(T, 2.0)
 
             phi_c, dphi_c = ϕdϕ(c)
             @assert isfinite(phi_c) && isfinite(dphi_c)
@@ -354,8 +354,8 @@ function secant2!(ϕdϕ,
     dphi_a = slopes[ia]
     dphi_b = slopes[ib]
     T = eltype(slopes)
-    zeroT = convert(T, 0)
-    if !(dphi_a < zeroT && dphi_b >= zeroT)
+    zeroT = zero(T)
+        if !(dphi_a < zeroT && dphi_b >= zeroT)
         error(string("Search direction is not a direction of descent; ",
                      "this error may indicate that user-provided derivatives are inaccurate. ",
                       @sprintf "(dphi_a = %f; dphi_b = %f)" dphi_a dphi_b))
@@ -439,7 +439,7 @@ function update!(ϕdϕ,
     a = alphas[ia]
     b = alphas[ib]
     T = eltype(slopes)
-    zeroT = convert(T, 0)
+    zeroT = zero(T)
     # Debugging (HZ, eq. 4.4):
     @assert slopes[ia] < zeroT
     @assert values[ia] <= phi_lim
@@ -489,7 +489,7 @@ function bisect!(ϕdϕ,
     a = alphas[ia]
     b = alphas[ib]
     # Debugging (HZ, conditions shown following U3)
-    zeroT = convert(T, 0)
+    zeroT = zero(T)
     @assert slopes[ia] < zeroT
     @assert values[ia] <= phi_lim
     @assert slopes[ib] < zeroT       # otherwise we wouldn't be here
@@ -499,7 +499,7 @@ function bisect!(ϕdϕ,
         if display & BISECT > 0
             println("bisect: a = ", a, ", b = ", b, ", b - a = ", b - a)
         end
-        d = (a + b) / convert(T, 2)
+        d = (a + b) / convert(T, 2.0) #probably, most of the time is a float64
         phi_d, gphi = ϕdϕ(d)
         @assert isfinite(phi_d) && isfinite(gphi)
 

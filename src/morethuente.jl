@@ -167,7 +167,7 @@ function (ls::MoreThuente)(ϕdϕ,
     info = 0
     info_cstep = 1 # Info from step
 
-    zeroT = convert(T, 0)
+    zeroT = zero(T)
 
     #
     # Check the input parameters for errors.
@@ -234,7 +234,7 @@ function (ls::MoreThuente)(ϕdϕ,
         nfev += 1 # This includes calls to f() and g!()
 
         # Make stmax = (3/2)*alpha < 2alpha in the first iteration below
-        stx = (convert(T, 7)/8)*alpha
+        stx = (convert(T, 0.875)*alpha #0.875 has an exact binary representation of 7/8
     end
     # END: Ensure that the initial step provides finite function values
 
@@ -386,7 +386,7 @@ function (ls::MoreThuente)(ϕdϕ,
         #
 
         if bracketed
-            if abs(sty - stx) >= (convert(T, 2)/3) * width1
+            if abs(sty - stx) >= (convert(T, 2.0)/3.0) * width1
                 alpha = stx + (sty - stx)/2
             end
             width1 = width
@@ -459,7 +459,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
                bracketed::Bool, alphamin::Real, alphamax::Real)
 
    T = promote_type(typeof(stx), typeof(fx), typeof(dgx), typeof(sty), typeof(fy), typeof(dgy), typeof(alpha), typeof(f), typeof(dg), typeof(alphamin), typeof(alphamax))
-   zeroT = convert(T, 0)
+   zeroT = zero(T)
    info = 0
 
    #
@@ -648,9 +648,9 @@ elseif sgnd < zeroT
    alpha = alphaf
    if bracketed && bound
       if sty > stx
-         alpha = min(stx + (convert(T, 2)/3) * (sty - stx), alpha)
+         alpha = min(stx + (convert(T, 2.0)/3.0) * (sty - stx), alpha)
       else
-         alpha = max(stx + (convert(T, 2)/3) * (sty - stx), alpha)
+         alpha = max(stx + (convert(T, 2.0)/3.0) * (sty - stx), alpha)
       end
    end
 

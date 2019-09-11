@@ -14,7 +14,7 @@ end
 
 function (is::InitialStatic{T})(ls, state, phi_0, dphi_0, df) where T
     PT = promote_type(T, real(eltype(state.s)))
-    if is.scaled == true && (ns = real(norm(state.s))) > convert(PT, 0)
+    if is.scaled == true && (ns = real(norm(state.s))) > zero(PT)
         # TODO: Type instability if there's a type mismatch between is.alpha and ns?
         state.alpha = convert(PT, min(is.alpha, ns)) / ns
     else
@@ -70,7 +70,7 @@ If αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.
 end
 
 function (is::InitialQuadratic{T})(ls, state, phi_0, dphi_0, df) where T
-    if !isfinite(state.f_x_previous) || isapprox(dphi_0, convert(T, 0), atol=eps(T)) # Need to add a tolerance
+    if !isfinite(state.f_x_previous) || isapprox(dphi_0, zero(T), atol=eps(T)) # Need to add a tolerance
         # If we're at the first iteration
         αguess = is.α0
     else
@@ -136,7 +136,7 @@ end
 
 function (is::InitialConstantChange{T})(ls, state, phi_0, dphi_0, df) where T
     if !isfinite(is.dϕ_0_previous[]) || !isfinite(state.alpha) ||
-        isapprox(dphi_0, convert(T, 0), atol=eps(T))
+        isapprox(dphi_0, zero(T), atol=eps(T))
         # If we're at the first iteration
         αguess = is.α0
     else
@@ -273,9 +273,9 @@ function _hzI0(x::AbstractArray{Tx},
                gr::AbstractArray{Tx},
                f_x::T,
                alphamax::T,
-               psi0::T = convert(T, 1)/100) where {Tx,T}
-    zeroT = convert(T, 0)
-    alpha = convert(T, 1)
+               psi0::T = one(T)/100) where {Tx,T}
+    zeroT = zero(T)
+    alpha = one(T)
     gr_max = maximum(abs, gr)
     if gr_max != zeroT
         x_max = maximum(abs, x)
