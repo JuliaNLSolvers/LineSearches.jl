@@ -57,7 +57,7 @@
                     linesearch!(df, x, p, alpha,
                                 xtmp, phi_0, dphi_0)
                 catch ex
-                    @test ex.msg == "Search direction is not a direction of descent."
+                    @test ex.message == "Search direction is not a direction of descent."
                 end
             else
                 α, ϕα = linesearch!(df, x, p, alpha, xtmp, phi_0, dphi_0)
