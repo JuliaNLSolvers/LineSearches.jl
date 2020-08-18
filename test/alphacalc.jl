@@ -51,7 +51,7 @@
             end
 
             if typeof(linesearch!) <: Union{HagerZhang, MoreThuente}
-                @test_throws ArgumentError linesearch!(df, x, p, alpha,
+                @test_throws LineSearchException linesearch!(df, x, p, alpha,
                                                        xtmp, phi_0, dphi_0)
                 try
                     linesearch!(df, x, p, alpha,

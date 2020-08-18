@@ -175,11 +175,11 @@ function (ls::MoreThuente)(ϕdϕ,
 
     if  alpha <= zeroT || f_tol < zeroT || gtol < zeroT ||
         x_tol < zeroT || alphamin < zeroT || alphamax < alphamin || maxfev <= zeroT
-        throw(ArgumentError("Invalid parameters to MoreThuente."))
+        throw(LineSearchException("Invalid parameters to MoreThuente.", 0))
     end
 
     if dϕ_0 >= zeroT
-        throw(ArgumentError("Search direction is not a direction of descent."))
+        throw(LineSearchException("Search direction is not a direction of descent.", 0))
     end
 
     #
