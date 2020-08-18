@@ -112,12 +112,11 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             linesearchmax, psi3, display, mayterminate = ls
 
     zeroT = convert(T, 0)
-
     if !(isfinite(phi_0) && isfinite(dphi_0))
-        throw(LineSearchException("Value and slope at step length = 0 must be finite."), T(0))
+        throw(LineSearchException("Value and slope at step length = 0 must be finite.", T(0)))
     end
     if dphi_0 >= eps(T) * abs(phi_0)
-        throw(LineSearchException("Search direction is not a direction of descent."), T(0))
+        throw(LineSearchException("Search direction is not a direction of descent.", T(0)))
     elseif dphi_0 >= 0
         return zeroT, phi_0
     end
