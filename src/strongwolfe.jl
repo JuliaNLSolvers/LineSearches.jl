@@ -64,7 +64,7 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
 
         # Check condition 2
         if abs(dϕ_a_i) <= -c_2 * dϕ_0
-            return a_i, dϕ_a_i
+            return a_i, ϕ_a_i
         end
 
         # Check condition 3
