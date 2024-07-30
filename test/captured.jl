@@ -7,6 +7,20 @@ if !isdefined(@__MODULE__, :LineSearchTestCase)
     using .TestCases
 end
 
+@testset "Capturing data" begin
+    cache = LineSearchCache{Float64}()
+    lsalgs =  (HagerZhang(; cache), StrongWolfe(; cache), MoreThuente(; cache),
+               BackTracking(; cache), BackTracking(; order=2, cache) )
+    ϕ(x) = (x - π)^4
+    dϕ(x) = 4*(x-π)^3
+    ϕdϕ(x) = (ϕ(x), dϕ(x))
+    for ls in lsalgs
+        α, val = ls(ϕ, dϕ, ϕdϕ, 10.0, ϕ(0), dϕ(0))
+        @test α < 10
+        @test length(cache.alphas) == length(cache.values) && length(cache.alphas) > 1
+    end
+end
+
 # From PR#174
 @testset "PR#174" begin
     tc = LineSearchTestCase(

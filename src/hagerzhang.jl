@@ -128,7 +128,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
     # ϕ(x_new) infinite
     iterfinitemax::Int = ceil(Int, -log2(eps(T)))
     if cache !== nothing
-        @unpack alphas, value, slopes = cache
+        @unpack alphas, values, slopes = cache
     else
         alphas = [zeroT] # for bisection
         values = [phi_0]
