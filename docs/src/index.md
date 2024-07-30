@@ -46,6 +46,14 @@ using LineSearches
 ```
 to load the package.
 
+## Debugging
+
+If you suspect a method of suboptimal performance or find that your code errors,
+create a [`LineSearchCache`](@ref) to record intermediate values for later
+inspection and analysis. If you're using this via Optim.jl, configure it inside
+the method, e.g., `Newton(linesearch=LineSearches.MoreThuente(; cache))`. The
+value stored in the cache will reflect the final iteration of line search during
+optimization.
 
 ## References
 
