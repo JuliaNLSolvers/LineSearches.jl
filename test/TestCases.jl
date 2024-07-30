@@ -17,7 +17,15 @@ struct LineSearchTestCase
         if n != length(values) || n != length(slopes)
             throw(ArgumentError("Lengths of alphas, values, and slopes must match"))
         end
+        # Ensure ordered & unique
         perm = sortperm(alphas)
+        delidx = Int[]
+        for i in firstindex(perm)+1:lastindex(perm)
+            if alphas[perm[i]] == alphas[perm[i-1]]
+                push!(delidx, i)
+            end
+        end
+        deleteat!(perm, delidx)
         alphas, values, slopes = alphas[perm], values[perm], slopes[perm]
         # For interpolation, add a dummy value at the end
         push!(alphas, alphas[end]+1)

@@ -1,5 +1,3 @@
-__precompile__()
-
 module LineSearches
 
 using Printf
@@ -9,12 +7,13 @@ using Parameters, NaNMath
 import NLSolversBase
 import NLSolversBase: AbstractObjective
 
-export LineSearchException
+export LineSearchException, LineSearchCache
 
-export BackTracking, HagerZhang, Static, MoreThuente, StrongWolfe
+export AbstractLineSearch, BackTracking, HagerZhang, Static, MoreThuente, StrongWolfe
 
 export InitialHagerZhang, InitialStatic, InitialPrevious,
     InitialQuadratic, InitialConstantChange
+
 
 function make_ϕ(df, x_new, x, s)
     function ϕ(α)
@@ -90,6 +89,26 @@ function make_ϕ_ϕdϕ(df, x_new, x, s)
 end
 
 include("types.jl")
+
+# The following don't extend `empty!` and `push!` because we want implementations for `nothing`
+# and that would be piracy
+emptycache!(cache::LineSearchCache) = begin
+    empty!(cache.alphas)
+    empty!(cache.values)
+    empty!(cache.slopes)
+end
+emptycache!(::Nothing) = nothing
+pushcache!(cache::LineSearchCache, α, val, slope) = begin
+    push!(cache.alphas, α)
+    push!(cache.values, val)
+    push!(cache.slopes, slope)
+end
+pushcache!(cache::LineSearchCache, α, val) = begin
+    push!(cache.alphas, α)
+    push!(cache.values, val)
+end
+pushcache!(::Nothing, α, val, slope) = nothing
+pushcache!(::Nothing, α, val) = nothing
 
 # Line Search Methods
 include("backtracking.jl")

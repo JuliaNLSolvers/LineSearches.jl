@@ -14,10 +14,11 @@ use `MoreThuente`, `HagerZhang` or `BackTracking`.
 * `c_2 = 0.9` : second (strong) Wolfe condition
 * `ρ = 2.0` : bracket growth
 """
-@with_kw struct StrongWolfe{T}
+@with_kw struct StrongWolfe{T} <: AbstractLineSearch
     c_1::T = 1e-4
     c_2::T = 0.9
     ρ::T = 2.0
+    cache::Union{Nothing,LineSearchCache{T}} = nothing
 end
 
 """
@@ -49,9 +50,11 @@ Both `alpha` and `ϕ(alpha)` are returned.
 """
 function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
                            alpha0::T, ϕ_0, dϕ_0) where T<:Real
-    @unpack c_1, c_2, ρ = ls
+    @unpack c_1, c_2, ρ, cache = ls
+    emptycache!(cache)
 
     zeroT = convert(T, 0)
+    pushcache!(cache, zeroT, ϕ_0, dϕ_0)
 
     # Step-sizes
     a_0 = zeroT
@@ -71,17 +74,21 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
 
     while a_i < a_max
         ϕ_a_i = ϕ(a_i)
+        pushcache!(cache, a_i, ϕ_a_i)
 
         # Test Wolfe conditions
         if (ϕ_a_i > ϕ_0 + c_1 * a_i * dϕ_0) ||
             (ϕ_a_i >= ϕ_a_iminus1 && i > 1)
             a_star = zoom(a_iminus1, a_i,
                           dϕ_0, ϕ_0,
-                          ϕ, dϕ, ϕdϕ)
+                          ϕ, dϕ, ϕdϕ, cache)
             return a_star, ϕ(a_star)
         end
 
         dϕ_a_i = dϕ(a_i)
+        if cache !== nothing
+            push!(cache.slopes, dϕ_a_i)
+        end
 
         # Check condition 2
         if abs(dϕ_a_i) <= -c_2 * dϕ_0
@@ -91,7 +98,7 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
         # Check condition 3
         if dϕ_a_i >= zeroT # FIXME untested!
             a_star = zoom(a_i, a_iminus1,
-                          dϕ_0, ϕ_0, ϕ, dϕ, ϕdϕ)
+                          dϕ_0, ϕ_0, ϕ, dϕ, ϕdϕ, cache)
             return a_star, ϕ(a_star)
         end
 
@@ -117,6 +124,7 @@ function zoom(a_lo::T,
               ϕ,
               dϕ,
               ϕdϕ,
+              cache,
               c_1::Real = convert(T, 1)/10^4,
               c_2::Real = convert(T, 9)/10) where T
 
@@ -133,8 +141,10 @@ function zoom(a_lo::T,
         iteration += 1
 
         ϕ_a_lo, ϕprime_a_lo = ϕdϕ(a_lo)
+        pushcache!(cache, a_lo, ϕ_a_lo, ϕprime_a_lo)
 
         ϕ_a_hi, ϕprime_a_hi = ϕdϕ(a_hi)
+        pushcache!(cache, a_hi, ϕ_a_hi, ϕprime_a_hi)
 
         # Interpolate a_j
         if a_lo < a_hi
@@ -150,6 +160,7 @@ function zoom(a_lo::T,
 
         # Evaluate ϕ(a_j)
         ϕ_a_j = ϕ(a_j)
+        pushcache!(cache, a_j, ϕ_a_j)
 
         # Check Armijo
         if (ϕ_a_j > ϕ_0 + c_1 * a_j * dϕ_0) ||
@@ -158,6 +169,9 @@ function zoom(a_lo::T,
         else
             # Evaluate ϕprime(a_j)
             ϕprime_a_j = dϕ(a_j)
+            if cache !== nothing
+                push!(cache.slopes, ϕprime_a_j)
+            end
 
             if abs(ϕprime_a_j) <= -c_2 * dϕ_0
                 return a_j

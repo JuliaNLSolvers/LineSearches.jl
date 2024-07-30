@@ -80,7 +80,7 @@ Conjugate gradient line search implementation from:
     conjugate gradient method with guaranteed descent. ACM
     Transactions on Mathematical Software 32: 113–137.
 """
-@with_kw struct HagerZhang{T, Tm}
+@with_kw struct HagerZhang{T, Tm} <: AbstractLineSearch
    delta::T = DEFAULTDELTA # c_1 Wolfe sufficient decrease condition
    sigma::T = DEFAULTSIGMA # c_2 Wolfe curvature condition (Recommend 0.1 for GradientDescent)
    alphamax::T = Inf
@@ -91,6 +91,7 @@ Conjugate gradient line search implementation from:
    psi3::T = 0.1
    display::Int = 0
    mayterminate::Tm = Ref{Bool}(false)
+   cache::Union{Nothing,LineSearchCache{T}} = nothing
 end
 HagerZhang{T}(args...; kwargs...) where T = HagerZhang{T, Base.RefValue{Bool}}(args...; kwargs...)
 
@@ -109,9 +110,11 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
                           phi_0::Real,
                           dphi_0::Real) where T # Should c and phi_0 be same type?
     @unpack delta, sigma, alphamax, rho, epsilon, gamma,
-            linesearchmax, psi3, display, mayterminate = ls
+            linesearchmax, psi3, display, mayterminate, cache = ls
+    emptycache!(cache)
 
     zeroT = convert(T, 0)
+    pushcache!(cache, zeroT, phi_0, dphi_0)
     if !(isfinite(phi_0) && isfinite(dphi_0))
         throw(LineSearchException("Value and slope at step length = 0 must be finite.", T(0)))
     end
@@ -124,9 +127,13 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
     # Prevent values of x_new = x+αs that are likely to make
     # ϕ(x_new) infinite
     iterfinitemax::Int = ceil(Int, -log2(eps(T)))
-    alphas = [zeroT] # for bisection
-    values = [phi_0]
-    slopes = [dphi_0]
+    if cache !== nothing
+        @unpack alphas, value, slopes = cache
+    else
+        alphas = [zeroT] # for bisection
+        values = [phi_0]
+        slopes = [dphi_0]
+    end
     if display & LINESEARCH > 0
         println("New linesearch")
     end
@@ -203,10 +210,10 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
         else
             # We'll still going downhill, expand the interval and try again.
             # Reaching this branch means that dphi_c < 0 and phi_c <= phi_0 + ϵ_k
-            # So cold = c has a lower objective than phi_0 up to epsilon. 
+            # So cold = c has a lower objective than phi_0 up to epsilon.
             # This makes it a viable step to return if bracketing fails.
 
-            # Bracketing can fail if no cold < c <= alphamax can be found with finite phi_c and dphi_c. 
+            # Bracketing can fail if no cold < c <= alphamax can be found with finite phi_c and dphi_c.
             # Going back to the loop with c = cold will only result in infinite cycling.
             # So returning (cold, phi_cold) and exiting the line search is the best move.
             cold = c
