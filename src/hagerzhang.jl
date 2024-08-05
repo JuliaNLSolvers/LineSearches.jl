@@ -273,7 +273,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             mayterminate[] = false # reset in case another initial guess is used next
             return a, values[ia] # lsr.value[ia]
         end
-        iswolfe, iA, iB = secant2!(ϕdϕ, alphas, values, slopes, ia, ib, phi_lim, delta, sigma, display)
+        iswolfe, iA, iB, bisected = secant2!(ϕdϕ, alphas, values, slopes, ia, ib, phi_lim, delta, sigma, display)
         if iswolfe
             mayterminate[] = false # reset in case another initial guess is used next
             return alphas[iA], values[iA] # lsr.value[iA]
@@ -281,34 +281,39 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
         A = alphas[iA]
         B = alphas[iB]
         @assert B > A
-        if B - A < gamma * (b - a)
-            if display & LINESEARCH > 0
-                println("Linesearch: secant succeeded")
-            end
-            if nextfloat(values[ia]) >= values[ib] && nextfloat(values[iA]) >= values[iB]
-                # It's so flat, secant didn't do anything useful, time to quit
+        if !bisected
+            if B - A < gamma * (b - a)
                 if display & LINESEARCH > 0
-                    println("Linesearch: secant suggests it's flat")
+                    println("Linesearch: secant succeeded")
                 end
-                mayterminate[] = false # reset in case another initial guess is used next
-                return A, values[iA]
+                if nextfloat(values[ia]) >= values[ib] && nextfloat(values[iA]) >= values[iB]
+                    # It's so flat, secant didn't do anything useful, time to quit
+                    if display & LINESEARCH > 0
+                        println("Linesearch: secant suggests it's flat")
+                    end
+                    mayterminate[] = false # reset in case another initial guess is used next
+                    return A, values[iA]
+                end
+                ia = iA
+                ib = iB
+            else
+                # Secant is converging too slowly, use bisection
+                if display & LINESEARCH > 0
+                    println("Linesearch: secant failed, using bisection")
+                end
+                c = (A + B) / convert(T, 2)
+
+                phi_c, dphi_c = ϕdϕ(c)
+                @assert isfinite(phi_c) && isfinite(dphi_c)
+                push!(alphas, c)
+                push!(values, phi_c)
+                push!(slopes, dphi_c)
+
+                ia, ib = update!(ϕdϕ, alphas, values, slopes, iA, iB, length(alphas), phi_lim, display)
             end
+        else
             ia = iA
             ib = iB
-        else
-            # Secant is converging too slowly, use bisection
-            if display & LINESEARCH > 0
-                println("Linesearch: secant failed, using bisection")
-            end
-            c = (A + B) / convert(T, 2)
-
-            phi_c, dphi_c = ϕdϕ(c)
-            @assert isfinite(phi_c) && isfinite(dphi_c)
-            push!(alphas, c)
-            push!(values, phi_c)
-            push!(slopes, dphi_c)
-
-            ia, ib = update!(ϕdϕ, alphas, values, slopes, iA, iB, length(alphas), phi_lim, display)
         end
         iter += 1
     end
@@ -380,14 +385,15 @@ function secant2!(ϕdϕ,
     push!(slopes, dphi_c)
 
     ic = length(alphas)
+    bisected = false
     if satisfies_wolfe(c, phi_c, dphi_c, phi_0, dphi_0, phi_lim, delta, sigma)
         if display & SECANT2 > 0
             println("secant2: first c satisfied Wolfe conditions")
         end
-        return true, ic, ic
+        return true, ic, ic, bisected
     end
 
-    iA, iB = update!(ϕdϕ, alphas, values, slopes, ia, ib, ic, phi_lim, display)
+    iA, iB, bisected = update!(ϕdϕ, alphas, values, slopes, ia, ib, ic, phi_lim, display)
     if display & SECANT2 > 0
         println("secant2: iA = ", iA, ", iB = ", iB, ", ic = ", ic)
     end
@@ -419,14 +425,14 @@ function secant2!(ϕdϕ,
             if display & SECANT2 > 0
                 println("secant2: second c satisfied Wolfe conditions")
             end
-            return true, ic, ic
+            return true, ic, ic, bisected
         end
         iA, iB = update!(ϕdϕ, alphas, values, slopes, iA, iB, ic, phi_lim, display)
     end
     if display & SECANT2 > 0
         println("secant2 output: a = ", alphas[iA], ", b = ", alphas[iB])
     end
-    return false, iA, iB
+    return false, iA, iB, bisected
 end
 
 # HZ, stages U0-U3
@@ -464,10 +470,10 @@ function update!(ϕdϕ,
                 ", dphi_c = ", dphi_c)
     end
     if c < a || c > b
-        return ia, ib #, 0, 0  # it's out of the bracketing interval
+        return ia, ib, false #, 0, 0  # it's out of the bracketing interval
     end
     if dphi_c >= zeroT
-        return ia, ic #, 0, 0  # replace b with a closer point
+        return ia, ic, false #, 0, 0  # replace b with a closer point
     end
     # We know dphi_c < 0. However, phi may not be monotonic between a
     # and c, so check that the value is also smaller than phi_0.  (It's
@@ -475,11 +481,11 @@ function update!(ϕdϕ,
     # secure environment of alpha=0; that's why we didn't check this
     # above.)
     if phi_c <= phi_lim
-        return ic, ib#, 0, 0  # replace a
+        return ic, ib, false#, 0, 0  # replace a
     end
     # phi_c is bigger than phi_0, which implies that the minimum
     # lies between a and c. Find it via bisection.
-    return bisect!(ϕdϕ, alphas, values, slopes, ia, ic, phi_lim, display)
+    return (bisect!(ϕdϕ, alphas, values, slopes, ia, ic, phi_lim, display)..., true)
 end
 
 # HZ, stage U3 (with theta=0.5)
