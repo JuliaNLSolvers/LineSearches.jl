@@ -3,7 +3,7 @@
 
 `Static` is intended for methods with well-scaled updates; i.e. Newton, on well-behaved problems.
 """
-struct Static end
+struct Static <: AbstractLineSearch end
 
 function (ls::Static)(df::AbstractObjective, x, s, α, x_new = similar(x), ϕ_0 = nothing, dϕ_0 = nothing)
     ϕ = make_ϕ(df, x_new, x, s)

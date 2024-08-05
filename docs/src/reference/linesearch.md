@@ -11,3 +11,9 @@ MoreThuente
 Static
 StrongWolfe
 ```
+
+## Debugging
+
+```@docs
+LineSearchCache
+```

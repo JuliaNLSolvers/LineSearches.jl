@@ -138,13 +138,14 @@ The line search implementation from:
     Line search algorithms with guaranteed sufficient decrease.
     ACM Transactions on Mathematical Software (TOMS) 20.3 (1994): 286-307.
 """
-@with_kw struct MoreThuente{T}
+@with_kw struct MoreThuente{T} <: AbstractLineSearch
     f_tol::T = 1e-4 # c_1 Wolfe sufficient decrease condition
     gtol::T = 0.9   # c_2 Wolfe curvature condition (Recommend 0.1 for GradientDescent)
     x_tol::T = 1e-8
     alphamin::T = 1e-16
     alphamax::T = 65536.0
     maxfev::Int = 100
+    cache::Union{Nothing,LineSearchCache{T}} = nothing
 end
 
 function (ls::MoreThuente)(df::AbstractObjective, x::AbstractArray{T},
@@ -161,13 +162,15 @@ function (ls::MoreThuente)(ϕdϕ,
                            alpha::T,
                            ϕ_0,
                            dϕ_0) where T
-    @unpack f_tol, gtol, x_tol, alphamin, alphamax, maxfev = ls
+    @unpack f_tol, gtol, x_tol, alphamin, alphamax, maxfev, cache = ls
+    emptycache!(cache)
 
     iterfinitemax = -log2(eps(T))
     info = 0
     info_cstep = 1 # Info from step
 
     zeroT = convert(T, 0)
+    pushcache!(cache, zeroT, ϕ_0, dϕ_0)
 
     #
     # Check the input parameters for errors.
@@ -236,7 +239,9 @@ function (ls::MoreThuente)(ϕdϕ,
         # Make stmax = (3/2)*alpha < 2alpha in the first iteration below
         stx = (convert(T, 7)/8)*alpha
     end
+    pushcache!(cache, alpha, f, dg)
     # END: Ensure that the initial step provides finite function values
+    # TODO: check if value is finite (maybe iterfinite > iterfinitemax)
 
     while true
         #
@@ -282,6 +287,7 @@ function (ls::MoreThuente)(ϕdϕ,
         # and compute the directional derivative.
         #
         f, dg = ϕdϕ(alpha)
+        pushcache!(cache, alpha, f, dg)
         nfev += 1 # This includes calls to f() and g!()
 
         if isapprox(dg, 0, atol=eps(T)) # Should add atol value to MoreThuente

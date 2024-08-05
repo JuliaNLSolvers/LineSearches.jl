@@ -8,13 +8,14 @@ there exists a factor ρ = ρ(c₁) such that α' ≦ ρ α.
 
 This is a modification of the algorithm described in Nocedal Wright (2nd ed), Sec. 3.5.
 """
-@with_kw struct BackTracking{TF, TI}
+@with_kw struct BackTracking{TF, TI} <: AbstractLineSearch
     c_1::TF = 1e-4
     ρ_hi::TF = 0.5
     ρ_lo::TF = 0.1
     iterations::TI = 1_000
     order::TI = 3
     maxstep::TF = Inf
+    cache::Union{Nothing,LineSearchCache{TF}} = nothing
 end
 BackTracking{TF}(args...; kwargs...) where TF = BackTracking{TF,Int}(args...; kwargs...)
 
@@ -37,7 +38,9 @@ end
 
 # TODO: Should we deprecate the interface that only uses the ϕ argument?
 function (ls::BackTracking)(ϕ, αinitial::Tα, ϕ_0, dϕ_0) where Tα
-    @unpack c_1, ρ_hi, ρ_lo, iterations, order = ls
+    @unpack c_1, ρ_hi, ρ_lo, iterations, order, cache = ls
+    emptycache!(cache)
+    pushcache!(cache, 0, ϕ_0, dϕ_0)  # backtracking doesn't use the slope except here
 
     iterfinitemax = -log2(eps(real(Tα)))
 
@@ -68,6 +71,8 @@ function (ls::BackTracking)(ϕ, αinitial::Tα, ϕ_0, dϕ_0) where Tα
 
         ϕx_1 = ϕ(α_2)
     end
+    pushcache!(cache, αinitial, ϕx_1)
+    # TODO: check if value is finite (maybe iterfinite > iterfinitemax)
 
     # Backtrack until we satisfy sufficient decrease condition
     while ϕx_1 > ϕ_0 + c_1 * α_2 * dϕ_0
@@ -112,6 +117,7 @@ function (ls::BackTracking)(ϕ, αinitial::Tα, ϕ_0, dϕ_0) where Tα
 
         # Evaluate f(x) at proposed position
         ϕx_0, ϕx_1 = ϕx_1, ϕ(α_2)
+        pushcache!(cache, α_2, ϕx_1)
     end
 
     return α_2, ϕx_1
