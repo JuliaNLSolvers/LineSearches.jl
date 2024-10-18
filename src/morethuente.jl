@@ -175,8 +175,8 @@ function (ls::MoreThuente)(ϕdϕ,
     # Check the input parameters for errors.
     #
 
-    if  alpha <= zero(T) || f_tol < zeroT || gtol < zeroT ||
-        x_tol < zero(T) || alphamin < zeroT || alphamax < alphamin || maxfev <= zeroT
+    if  alpha <= zero(T) || f_tol < zero(T) || gtol < zero(T) ||
+        x_tol < zero(T) || alphamin < zero(T) || alphamax < alphamin || maxfev <= zero(T)
         throw(LineSearchException("Invalid parameters to MoreThuente.", 0))
     end
 
@@ -570,7 +570,7 @@ elseif sgnd < zero(T)
       p = gamma - dg + theta
       q = gamma + dgx - dg + gamma
       r = p / q
-      if r < zero(T) && gamma != zeroT
+      if r < zero(T) && gamma != zero(T)
          alphac = alpha + r * (stx - alpha)
      elseif alpha > stx
          alphac = alphamax
