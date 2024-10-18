@@ -5,7 +5,7 @@ using OptimTestProblems
 using DoubleFloats: Double64, Double32, Double16
 import NLSolversBase
 
-debug_printing = false
+dddebug_printing = false
 
 lstypes =  (Static(), HagerZhang(), StrongWolfe(), MoreThuente(),
             BackTracking(), BackTracking(order=2) )
