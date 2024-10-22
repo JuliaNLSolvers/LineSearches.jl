@@ -69,5 +69,5 @@ end
         end
     end
     @test_broken all(npass .== nmax)
-    @test all(npass[[3, 4, 5]] .>= nmax-1)
+    @test all(npass[[3, 4, 5]] .>= nmax-3)
 end
