@@ -285,14 +285,14 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             if display & LINESEARCH > 0
                 println("Linesearch: secant succeeded")
             end
-            if nextfloat(values[ia]) >= values[ib] && nextfloat(values[iA]) >= values[iB]
-                # It's so flat, secant didn't do anything useful, time to quit
-                if display & LINESEARCH > 0
-                    println("Linesearch: secant suggests it's flat")
-                end
-                mayterminate[] = false # reset in case another initial guess is used next
-                return A, values[iA]
-            end
+            # if nextfloat(values[ia]) >= values[ib] && nextfloat(values[iA]) >= values[iB]
+            #     # It's so flat, secant didn't do anything useful, time to quit
+            #     if display & LINESEARCH > 0
+            #         println("Linesearch: secant suggests it's flat")
+            #     end
+            #     mayterminate[] = false # reset in case another initial guess is used next
+            #     return A, values[iA]
+            # end
             ia = iA
             ib = iB
         else
