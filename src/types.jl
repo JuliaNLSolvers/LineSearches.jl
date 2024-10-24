@@ -38,3 +38,6 @@ Because `BackTracking` doesn't use derivatives except at `α=0`, only the initia
 Other methods may store all three.
 """
 LineSearchCache{T}() where T = LineSearchCache{T}(T[], T[], T[])
+
+Base.eltype(::Type{LineSearchCache{T}}) where T = T
+Base.eltype(cache::LineSearchCache) = eltype(typeof(cache))
