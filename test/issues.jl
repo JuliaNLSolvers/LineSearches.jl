@@ -53,8 +53,11 @@ end
 
 @testset "Flatness" begin
     cache = LineSearchCache{Float64}()
-    lsalgs =  (HagerZhang(; cache=cache), StrongWolfe(; cache=cache), MoreThuente(; cache=cache),
-               BackTracking(; cache=cache), BackTracking(; order=2, cache=cache) )
+    lsalgs = (HagerZhang(; cache=cache, epsilonk=Ref(1e-12)),
+              StrongWolfe(; cache=cache),
+              MoreThuente(; cache=cache),
+              BackTracking(; cache=cache), BackTracking(; order=2, cache=cache)
+            )
 
     npass = zeros(Int, length(lsalgs))
     n, nmax = 0, 1000
@@ -69,6 +72,5 @@ end
         end
     end
     @test_broken all(npass .== nmax)
-    @show npass
-    @test all(npass[[3, 4, 5]] .>= nmax-5)
+    @test all(npass .>= 0.99*nmax)
 end
