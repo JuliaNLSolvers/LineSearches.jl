@@ -134,8 +134,8 @@ end
         end
 
         res, res_cache = test_tc(tc1, true)
-        @warn res
-        @warn res_cache
+        @show res
+        @show res_cache
         @test_broken minimum(res_cache.values) == res[2]
 
         res2, res_cache2 = test_tc(tc1, false)
