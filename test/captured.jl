@@ -31,5 +31,5 @@ end
     fdf = OnceDifferentiable(tc)
     hz = HagerZhang()
     α, val = hz(fdf.f, fdf.fdf, 1.0, fdf.fdf(0.0)...)
-    @test_broken val <= minimum(tc)
+    @test val <= minimum(tc)
 end

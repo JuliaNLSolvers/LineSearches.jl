@@ -15,7 +15,8 @@ my_tests = [
     "alphacalc.jl",
     "arbitrary_precision.jl",
     "examples.jl",
-    "captured.jl"
+    "captured.jl",
+    "issues.jl",
 ]
 
 mutable struct StateDummy

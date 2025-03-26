@@ -37,12 +37,6 @@ res = (StrongWolfe())(ϕ, dϕ, ϕdϕ, α0, ϕ0, dϕ0)
 @test res[2] > 0
 @test res[2] == ϕ(res[1])
 
-struct LineSearchTestCase
-    alphas::Vector{Float64}
-    values::Vector{Float64}
-    slopes::Vector{Float64}
-end
-
 @testset "HZ convergence issues" begin
     @testset "Flatness check issues" begin
         function prepare_test_case(; alphas, values, slopes)
