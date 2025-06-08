@@ -92,6 +92,7 @@ Conjugate gradient line search implementation from:
    display::Int = 0
    mayterminate::Tm = Ref{Bool}(false)
    cache::Union{Nothing,LineSearchCache{T}} = nothing
+   check_flatness::Bool = false
 end
 HagerZhang{T}(args...; kwargs...) where T = HagerZhang{T, Base.RefValue{Bool}}(args...; kwargs...)
 
@@ -285,12 +286,13 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             if display & LINESEARCH > 0
                 println("Linesearch: secant succeeded")
             end
-            if nextfloat(values[ia]) >= values[ib] && nextfloat(values[iA]) >= values[iB]
+            if ls.check_flatness && nextfloat(values[ia]) >= values[ib] && nextfloat(values[iA]) >= values[iB]
                 # It's so flat, secant didn't do anything useful, time to quit
                 if display & LINESEARCH > 0
                     println("Linesearch: secant suggests it's flat")
                 end
                 mayterminate[] = false # reset in case another initial guess is used next
+
                 return A, values[iA]
             end
             ia = iA
