@@ -274,14 +274,13 @@ function _hzI0(x::AbstractArray{Tx},
                f_x::T,
                alphamax::T,
                psi0::T = convert(T, 1)/100) where {Tx,T}
-    zeroT = convert(T, 0)
-    alpha = convert(T, 1)
+    alpha = one(T) 
     gr_max = maximum(abs, gr)
-    if gr_max != zeroT
+    if gr_max != zero(T)
         x_max = maximum(abs, x)
-        if x_max != zeroT
+        if x_max != zero(T)
             alpha = psi0 * x_max / gr_max
-        elseif f_x != zeroT
+        elseif f_x != zero(T)
             alpha = psi0 * abs(f_x) / norm(gr)^2
         end
     end
