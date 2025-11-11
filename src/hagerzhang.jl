@@ -315,10 +315,9 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
         iter += 1
     end
 
+    best_alpha = alphas[argmin(values)]
     throw(LineSearchException("Linesearch failed to converge, reached maximum iterations $(linesearchmax).",
-                              alphas[ia]))
-
-
+                              best_alpha))
 end
 
 # Check Wolfe & approximate Wolfe
