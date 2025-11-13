@@ -13,6 +13,8 @@ is scaled with the `l_2` norm of the step direction.
 end
 
 function (is::InitialStatic{T})(ls, state, phi_0, dphi_0, df) where T
+    # phi_0 is (or should be) equal to NLSolversBase.value(df, state.x) and `state.f_x`
+    @assert phi_0 == state.f_x
     PT = promote_type(T, real(eltype(state.s)))
     if is.scaled == true && (ns = real(norm(state.s))) > convert(PT, 0)
         # TODO: Type instability if there's a type mismatch between is.alpha and ns?
@@ -70,11 +72,13 @@ If αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.
 end
 
 function (is::InitialQuadratic{T})(ls, state, phi_0, dphi_0, df) where T
+    # phi_0 is (or should be) equal to NLSolversBase.value(df, state.x) and `state.f_x`
+    @assert phi_0 == state.f_x
     if !isfinite(state.f_x_previous) || isapprox(dphi_0, convert(T, 0), atol=eps(T)) # Need to add a tolerance
         # If we're at the first iteration
         αguess = is.α0
     else
-        αguess = 2 * (phi_0 - state.f_x_previous) / dphi_0
+        αguess = 2 * (state.f_x - state.f_x_previous) / dphi_0
         αguess = NaNMath.max(is.αmin, state.alpha*is.ρ, αguess)
         αguess = NaNMath.min(is.αmax, αguess)
         # if αguess ≈ 1, then make it 1 (Newton-type behaviour)
@@ -135,6 +139,8 @@ function InitialConstantChange(; αmin = 1e-12,
 end
 
 function (is::InitialConstantChange{T})(ls, state, phi_0, dphi_0, df) where T
+    # phi_0 is (or should be) equal to NLSolversBase.value(df, state.x) and `state.f_x`
+    @assert phi_0 == state.f_x
     if !isfinite(is.dϕ_0_previous[]) || !isfinite(state.alpha) ||
         isapprox(dphi_0, convert(T, 0), atol=eps(T))
         # If we're at the first iteration
@@ -175,15 +181,19 @@ otherwise, we select according to procedure I1-2, with starting value α0.
 end
 
 function (is::InitialHagerZhang)(ls::Tls, state, phi_0, dphi_0, df) where Tls
+    # phi_0 is (or should be) equal to NLSolversBase.value(df, state.x) and `state.f_x`
+    @assert phi_0 == state.f_x
     if isnan(state.f_x_previous) && isnan(is.α0)
         # If we're at the first iteration (f_x_previous is NaN)
         # and the user has not provided an initial step size (is.α0 is NaN),
         # then we
         # pick the initial step size according to HZ #I0
-        # phi_0 is (or should be) equal to NLSolversBase.value(df, state.x) 
-        # TODO: Make the gradient available as part of the state?
-        g_x = NLSolversBase.gradient!(df, state.x)
-        state.alpha = _hzI0(state.x, g_x, phi_0,
+        g_x = if hasproperty(state, :g_x)
+            state.g_x
+        else
+            NLSolversBase.gradient!(df, state.x)
+        end
+        state.alpha = _hzI0(state.x, g_x, state.f_x,
                             is.αmax,
                             convert(eltype(state.x), is.ψ0)) # Hack to deal with type instability between is{T} and state.x
         if Tls <: HagerZhang

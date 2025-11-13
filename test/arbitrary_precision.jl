@@ -22,7 +22,7 @@ doublefloatstypes = [Double64, Double32, Double16]
     @test dphi_0 isa T
 
     function getstate()
-        state = StateDummy(convert(T, 1),  x, similar(x), convert(T, NaN), p)
+        state = StateDummy(convert(T, 1),  x,  phi_0, grtmp, similar(x), convert(T, NaN), p)
     end
     # Test HagerZhang I0
     ls = HagerZhang{T}()
@@ -98,6 +98,7 @@ doublefloatstypes = [Double64, Double32, Double16]
     ls = HagerZhang{T}()
     state = getstate()
     state.f_x_previous = 2*phi_0
+    state.x_ls = zeros(T, 2)
     is = InitialQuadratic{T}(snap2one=(convert(T, 0.9),convert(T, Inf)))
     is(ls, state, phi_0, dphi_0, df)
     @test !isnan(state.alpha)
@@ -107,6 +108,7 @@ doublefloatstypes = [Double64, Double32, Double16]
     ls = HagerZhang{T}()
     state = getstate()
     state.f_x_previous = 2*phi_0
+    state.x_ls = zeros(T, 2)
     is = InitialQuadratic{T}(snap2one=(convert(T, 0.75),convert(T, Inf)))
     is(ls, state, phi_0, dphi_0, df)
     @test !isnan(state.alpha)
