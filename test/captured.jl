@@ -43,6 +43,6 @@ end
     ϕ0 = ϕ(0.0)
     dϕ0 = dϕ(0.0)
 
-    (; value) = @test_throws LineSearchException (HagerZhang())(ϕ, dϕ, ϕdϕ, α0, ϕ0, dϕ0)
-    @test value.alpha > α0 # Should be something gigantic like 1e34
+    _error_msg = @test_throws LineSearchException (HagerZhang())(ϕ, dϕ, ϕdϕ, α0, ϕ0, dϕ0)
+    @test _error_msg.value.alpha > α0 # Should be something gigantic like 1e34
 end
