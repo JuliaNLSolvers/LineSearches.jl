@@ -33,3 +33,16 @@ end
     α, val = hz(fdf.f, fdf.fdf, 1.0, fdf.fdf(0.0)...)
     @test val <= minimum(tc)
 end
+
+@testset "PR#185" begin
+    ϕ(α) = 1/(α+1)
+    dϕ(α) = -1/(α+1)^2
+    ϕdϕ(α) = ϕ(α), dϕ(α)
+
+    α0 = 1.0
+    ϕ0 = ϕ(0.0)
+    dϕ0 = dϕ(0.0)
+
+    _error_msg = @test_throws LineSearchException (HagerZhang())(ϕ, dϕ, ϕdϕ, α0, ϕ0, dϕ0)
+    @test _error_msg.value.alpha > α0 # Should be something gigantic like 1e34
+end
