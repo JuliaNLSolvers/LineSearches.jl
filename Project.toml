@@ -11,7 +11,7 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [compat]
 DoubleFloats = "1"
-NLSolversBase = "7"
+NLSolversBase = "8"
 NaNMath = "1"
 Optim = "1"
 OptimTestProblems = "2"
