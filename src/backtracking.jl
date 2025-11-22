@@ -8,7 +8,7 @@ there exists a factor ρ = ρ(c₁) such that α' ≦ ρ α.
 
 This is a modification of the algorithm described in Nocedal Wright (2nd ed), Sec. 3.5.
 """
-@with_kw struct BackTracking{TF, TI} <: AbstractLineSearch
+@kwdef struct BackTracking{TF, TI} <: AbstractLineSearch
     c_1::TF = 1e-4
     ρ_hi::TF = 0.5
     ρ_lo::TF = 0.1
@@ -38,7 +38,7 @@ end
 
 # TODO: Should we deprecate the interface that only uses the ϕ argument?
 function (ls::BackTracking)(ϕ, αinitial::Tα, ϕ_0, dϕ_0) where Tα
-    @unpack c_1, ρ_hi, ρ_lo, iterations, order, cache = ls
+    (; c_1, ρ_hi, ρ_lo, iterations, order, cache) = ls
     emptycache!(cache)
     pushcache!(cache, 0, ϕ_0, dϕ_0)  # backtracking doesn't use the slope except here
 
