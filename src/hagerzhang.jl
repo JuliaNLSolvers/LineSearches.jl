@@ -80,7 +80,7 @@ Conjugate gradient line search implementation from:
     conjugate gradient method with guaranteed descent. ACM
     Transactions on Mathematical Software 32: 113–137.
 """
-@with_kw struct HagerZhang{T, Tm} <: AbstractLineSearch
+@kwdef struct HagerZhang{T, Tm} <: AbstractLineSearch
    delta::T = DEFAULTDELTA # c_1 Wolfe sufficient decrease condition
    sigma::T = DEFAULTSIGMA # c_2 Wolfe curvature condition (Recommend 0.1 for GradientDescent)
    alphamax::T = Inf
@@ -110,8 +110,8 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
                           c::T,
                           phi_0::Real,
                           dphi_0::Real) where T # Should c and phi_0 be same type?
-    @unpack delta, sigma, alphamax, rho, epsilon, gamma,
-            linesearchmax, psi3, display, mayterminate, cache = ls
+    (; delta, sigma, alphamax, rho, epsilon, gamma,
+            linesearchmax, psi3, display, mayterminate, cache) = ls
     emptycache!(cache)
 
     zeroT = convert(T, 0)
@@ -129,7 +129,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
     # ϕ(x_new) infinite
     iterfinitemax::Int = ceil(Int, -log2(eps(T)))
     if cache !== nothing
-        @unpack alphas, values, slopes = cache
+        (; alphas, values, slopes) = cache
     else
         alphas = [zeroT] # for bisection
         values = [phi_0]
