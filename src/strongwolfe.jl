@@ -14,7 +14,7 @@ use `MoreThuente`, `HagerZhang` or `BackTracking`.
 * `c_2 = 0.9` : second (strong) Wolfe condition
 * `ρ = 2.0` : bracket growth
 """
-@with_kw struct StrongWolfe{T} <: AbstractLineSearch
+@kwdef struct StrongWolfe{T} <: AbstractLineSearch
     c_1::T = 1e-4
     c_2::T = 0.9
     ρ::T = 2.0
@@ -50,7 +50,7 @@ Both `alpha` and `ϕ(alpha)` are returned.
 """
 function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
                            alpha0::T, ϕ_0, dϕ_0) where T<:Real
-    @unpack c_1, c_2, ρ, cache = ls
+    (; c_1, c_2, ρ, cache) = ls
     emptycache!(cache)
 
     zeroT = convert(T, 0)

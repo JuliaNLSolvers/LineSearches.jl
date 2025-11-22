@@ -2,7 +2,7 @@ module LineSearches
 
 using Printf
 import LinearAlgebra: dot, norm
-using Parameters, NaNMath
+using NaNMath
 
 import NLSolversBase
 import NLSolversBase: AbstractObjective
