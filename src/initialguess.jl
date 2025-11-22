@@ -121,7 +121,7 @@ function InitialConstantChange{T}(; αmin = 1e-12,
                         snap2one = (0.75, Inf)) where T
     αmin, αmax, α0, ρ = convert.(T, (αmin, αmax, α0, ρ))
     snap2one = convert.(T, snap2one)
-    InitialConstantChange(αmin, αmax, α0, ρ, snap2one, Ref{T}(convert(T, NaN)))
+    InitialConstantChange(αmin, αmax, α0, ρ, snap2one, Ref(convert(T, NaN)))
 end
 
 # Have to make this constructor without with_kw because Ref(NaN) has to adapt to T
@@ -131,7 +131,7 @@ function InitialConstantChange(; αmin = 1e-12,
                         ρ    = 0.25,
                         snap2one = (0.75, Inf))
     T = promote_type(typeof.((αmin, αmax, α0, ρ))...)
-    InitialConstantChange(αmin, αmax, α0, ρ, snap2one, Ref{T}(convert(T, NaN)))
+    InitialConstantChange(αmin, αmax, α0, ρ, snap2one, Ref(convert(T, NaN)))
 end
 
 function (is::InitialConstantChange{T})(ls, state, phi_0, dphi_0, df) where T

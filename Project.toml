@@ -9,18 +9,27 @@ NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [compat]
+Aqua = "0.8.14"
 DoubleFloats = "1"
+ExplicitImports = "1.14"
+JET = "0.9, 0.10"
+LinearAlgebra = "<0.0.1, 1"
 NLSolversBase = "7"
 NaNMath = "1"
 Optim = "1"
 OptimTestProblems = "2"
+Printf = "<0.0.1, 1"
+Test = "<0.0.1, 1"
 julia = "1.10"
 
 [extras]
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 DoubleFloats = "497a8b3b-efae-58df-a0af-a86822472b78"
+ExplicitImports = "7d51a73a-1435-4ff3-83d9-f097790105c7"
+JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 OptimTestProblems = "cec144fc-5a64-5bc6-99fb-dde8f63e154c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "OptimTestProblems", "Optim", "DoubleFloats"]
+test = ["Aqua", "ExplicitImports", "JET", "Test", "OptimTestProblems", "Optim", "DoubleFloats"]

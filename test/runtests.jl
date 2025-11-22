@@ -17,6 +17,7 @@ my_tests = [
     "examples.jl",
     "captured.jl",
     "issues.jl",
+    "qa.jl",
 ]
 
 mutable struct StateDummy
