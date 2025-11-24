@@ -7,7 +7,7 @@ Keyword `alpha` corresponds to static step length, default is 1.0.
 If keyword `scaled = true`, then the initial step length
 is scaled with the `l_2` norm of the step direction.
 """
-@with_kw struct InitialStatic{T}
+@kwdef struct InitialStatic{T}
     alpha::T = 1.0
     scaled::Bool = false # Scales step. alpha ← min(alpha,||s||_2) / ||s||_2
 end
@@ -29,7 +29,7 @@ within the bounds [alphamin, alphamax]
 
 If state.alpha is NaN, then return fallback value is.alpha
 """
-@with_kw struct InitialPrevious{T}
+@kwdef struct InitialPrevious{T}
     alpha::T = 1.0
     alphamin::T = 0.0
     alphamax::T = Inf
@@ -61,7 +61,7 @@ This procedure have several arguments, with the following defaults.
 
 If αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.
 """
-@with_kw struct InitialQuadratic{T}
+@kwdef struct InitialQuadratic{T}
     αmin::T = 1e-12 # Minimum initial step size (value somewhat arbitrary)
     αmax::T = 1.0   # Maximum initial step size (advised by Nocedal+Wright)
     α0::T   = 1.0   # Fallback at first iteration
@@ -121,7 +121,7 @@ function InitialConstantChange{T}(; αmin = 1e-12,
                         snap2one = (0.75, Inf)) where T
     αmin, αmax, α0, ρ = convert.(T, (αmin, αmax, α0, ρ))
     snap2one = convert.(T, snap2one)
-    InitialConstantChange(αmin, αmax, α0, ρ, snap2one, Ref{T}(convert(T, NaN)))
+    InitialConstantChange(αmin, αmax, α0, ρ, snap2one, Ref(convert(T, NaN)))
 end
 
 # Have to make this constructor without with_kw because Ref(NaN) has to adapt to T
@@ -131,7 +131,7 @@ function InitialConstantChange(; αmin = 1e-12,
                         ρ    = 0.25,
                         snap2one = (0.75, Inf))
     T = promote_type(typeof.((αmin, αmax, α0, ρ))...)
-    InitialConstantChange(αmin, αmax, α0, ρ, snap2one, Ref{T}(convert(T, NaN)))
+    InitialConstantChange(αmin, αmax, α0, ρ, snap2one, Ref(convert(T, NaN)))
 end
 
 function (is::InitialConstantChange{T})(ls, state, phi_0, dphi_0, df) where T
@@ -163,7 +163,7 @@ Initial step size algorithm from
 If α0 is NaN, then procedure I0 is called at the first iteration,
 otherwise, we select according to procedure I1-2, with starting value α0.
 """
-@with_kw struct InitialHagerZhang{T}
+@kwdef struct InitialHagerZhang{T}
     ψ0::T          = 0.01
     ψ1::T          = 0.2
     ψ2::T          = 2.0
