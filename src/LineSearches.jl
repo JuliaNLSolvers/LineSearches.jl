@@ -1,11 +1,9 @@
 module LineSearches
 
-using Printf
-import LinearAlgebra: dot, norm
-using NaNMath
-
-import NLSolversBase
-import NLSolversBase: AbstractObjective
+using Printf: @sprintf
+using LinearAlgebra: dot, norm
+using NaNMath: NaNMath
+using NLSolversBase: NLSolversBase, AbstractObjective
 
 export LineSearchException, LineSearchCache
 
