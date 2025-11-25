@@ -1,7 +1,7 @@
 module LineSearches
 
 using Printf: @sprintf
-using LinearAlgebra: dot, norm
+using LinearAlgebra: norm
 using NaNMath: NaNMath
 using NLSolversBase: NLSolversBase, AbstractObjective
 
@@ -16,74 +16,40 @@ export InitialHagerZhang, InitialStatic, InitialPrevious,
 function make_ϕ(df, x_new, x, s)
     function ϕ(α)
         # Move a distance of alpha in the direction of s
-        x_new .= x .+ α.*s
+        x_new .= muladd.(α, s, x)
 
         # Evaluate f(x+α*s)
-        NLSolversBase.value!(df, x_new)
+        return NLSolversBase.value!(df, x_new)
     end
     ϕ
 end
 function make_ϕdϕ(df, x_new, x, s)
     function ϕdϕ(α)
         # Move a distance of alpha in the direction of s
-        x_new .= x .+ α.*s
-
-        # Evaluate ∇f(x+α*s)
-        NLSolversBase.value_gradient!(df, x_new)
+        x_new .= muladd.(α, s, x)
 
         # Calculate ϕ(a_i), ϕ'(a_i)
-        NLSolversBase.value(df), real(dot(NLSolversBase.gradient(df), s))
+        ϕ, dϕ = NLSolversBase.value_jvp!(df, x_new, s)
+
+        return ϕ, real(dϕ)
     end
     ϕdϕ
 end
 function make_ϕ_dϕ(df, x_new, x, s)
     function dϕ(α)
         # Move a distance of alpha in the direction of s
-        x_new .= x .+ α.*s
-
-        # Evaluate ∇f(x+α*s)
-        NLSolversBase.gradient!(df, x_new)
+        x_new .= muladd.(α, s, x)
 
         # Calculate ϕ'(a_i)
-        real(dot(NLSolversBase.gradient(df), s))
+        return real(NLSolversBase.jvp!(df, x_new, s))
     end
     make_ϕ(df, x_new, x, s), dϕ
 end
 function make_ϕ_dϕ_ϕdϕ(df, x_new, x, s)
-    function dϕ(α)
-        # Move a distance of alpha in the direction of s
-        x_new .= x .+ α.*s
-
-        # Evaluate f(x+α*s) and ∇f(x+α*s)
-        NLSolversBase.gradient!(df, x_new)
-
-        # Calculate ϕ'(a_i)
-        real(dot(NLSolversBase.gradient(df), s))
-    end
-    function ϕdϕ(α)
-        # Move a distance of alpha in the direction of s
-        x_new .= x .+ α.*s
-
-        # Evaluate ∇f(x+α*s)
-        NLSolversBase.value_gradient!(df, x_new)
-
-        # Calculate ϕ'(a_i)
-        NLSolversBase.value(df), real(dot(NLSolversBase.gradient(df), s))
-    end
-    make_ϕ(df, x_new, x, s), dϕ, ϕdϕ
+    make_ϕ_dϕ(df, x_new, x, s)..., make_ϕdϕ(df, x_new, x, s)
 end
 function make_ϕ_ϕdϕ(df, x_new, x, s)
-    function ϕdϕ(α)
-        # Move a distance of alpha in the direction of s
-        x_new .= x .+ α.*s
-
-        # Evaluate ∇f(x+α*s)
-        NLSolversBase.value_gradient!(df, x_new)
-
-        # Calculate ϕ'(a_i)
-        NLSolversBase.value(df), real(dot(NLSolversBase.gradient(df), s))
-    end
-    make_ϕ(df, x_new, x, s), ϕdϕ
+    make_ϕ(df, x_new, x, s), make_ϕdϕ(df, x_new, x, s)
 end
 
 include("types.jl")
