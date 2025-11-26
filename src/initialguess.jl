@@ -74,7 +74,7 @@ function (is::InitialQuadratic{T})(ls, state, phi_0, dphi_0, df) where T
         # If we're at the first iteration
         αguess = is.α0
     else
-        αguess = 2 * (NLSolversBase.value(df) - state.f_x_previous) / dphi_0
+        αguess = 2 * (phi_0 - state.f_x_previous) / dphi_0
         αguess = NaNMath.max(is.αmin, state.alpha*is.ρ, αguess)
         αguess = NaNMath.min(is.αmax, αguess)
         # if αguess ≈ 1, then make it 1 (Newton-type behaviour)
@@ -180,8 +180,10 @@ function (is::InitialHagerZhang)(ls::Tls, state, phi_0, dphi_0, df) where Tls
         # and the user has not provided an initial step size (is.α0 is NaN),
         # then we
         # pick the initial step size according to HZ #I0
-        state.alpha = _hzI0(state.x, NLSolversBase.gradient(df),
-                            NLSolversBase.value(df),
+        # phi_0 is (or should be) equal to NLSolversBase.value(df, state.x) 
+        # TODO: Make the gradient available as part of the state?
+        g_x = NLSolversBase.gradient!(df, state.x)
+        state.alpha = _hzI0(state.x, g_x, phi_0,
                             is.αmax,
                             convert(eltype(state.x), is.ψ0)) # Hack to deal with type instability between is{T} and state.x
         if Tls <: HagerZhang
