@@ -1,6 +1,6 @@
 name = "LineSearches"
 uuid = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
-version = "7.5.1"
+version = "7.6.0"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -14,9 +14,8 @@ DoubleFloats = "1"
 ExplicitImports = "1.14"
 JET = "0.9, 0.10"
 LinearAlgebra = "<0.0.1, 1"
-NLSolversBase = "7"
+NLSolversBase = "8"
 NaNMath = "1"
-Optim = "1"
 OptimTestProblems = "2"
 Printf = "<0.0.1, 1"
 Test = "<0.0.1, 1"
@@ -27,9 +26,11 @@ Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 DoubleFloats = "497a8b3b-efae-58df-a0af-a86822472b78"
 ExplicitImports = "7d51a73a-1435-4ff3-83d9-f097790105c7"
 JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
-Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 OptimTestProblems = "cec144fc-5a64-5bc6-99fb-dde8f63e154c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Aqua", "ExplicitImports", "JET", "Test", "OptimTestProblems", "Optim", "DoubleFloats"]
+test = ["Aqua", "ExplicitImports", "JET", "Test", "OptimTestProblems", "DoubleFloats"]
+
+[sources]
+NLSolversBase = { url = "https://github.com/devmotion/NLSolversBase.jl.git", rev = "dmw/jvp" }

@@ -12,7 +12,7 @@
     dphi_0 = dot(p, grtmp)
 
     function getstate()
-        state = StateDummy(1.0,  x, similar(x), NaN, p)
+        state = StateDummy(1.0,  x, phi_0, grtmp, similar(x), NaN, p)
     end
     # Test HagerZhang I0
     ls = HagerZhang()
@@ -88,6 +88,7 @@
     ls = HagerZhang()
     state = getstate()
     state.f_x_previous = 2*phi_0
+    state.x_ls = zeros(2)
     is = InitialQuadratic(snap2one=(0.9,Inf))
     is(ls, state, phi_0, dphi_0, df)
     @test state.alpha == 0.5
