@@ -7,3 +7,6 @@ OptimTestProblems = "cec144fc-5a64-5bc6-99fb-dde8f63e154c"
 
 [compat]
 Documenter = "~0.19"
+
+[sources.LineSearches]
+path = ".."

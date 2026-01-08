@@ -1,7 +1,7 @@
 module LineSearches
 
 using Printf: @sprintf
-using LinearAlgebra: dot, norm
+using LinearAlgebra: norm
 using NaNMath: NaNMath
 using NLSolversBase: NLSolversBase, AbstractObjective
 
@@ -16,36 +16,32 @@ export InitialHagerZhang, InitialStatic, InitialPrevious,
 function make_ϕ(df, x_new, x, s)
     function ϕ(α)
         # Move a distance of alpha in the direction of s
-        x_new .= x .+ α.*s
+        x_new .= muladd.(α, s, x)
 
         # Evaluate f(x+α*s)
-        NLSolversBase.value!(df, x_new)
+        return NLSolversBase.value!(df, x_new)
     end
     ϕ
 end
 function make_ϕdϕ(df, x_new, x, s)
     function ϕdϕ(α)
         # Move a distance of alpha in the direction of s
-        x_new .= x .+ α.*s
-
-        # Evaluate ∇f(x+α*s)
-        f_x_new, g_x_new = NLSolversBase.value_gradient!(df, x_new)
+        x_new .= muladd.(α, s, x)
 
         # Calculate ϕ(a_i), ϕ'(a_i)
-        return f_x_new, real(dot(g_x_new, s))
+        ϕ, dϕ = NLSolversBase.value_jvp!(df, x_new, s)
+
+        return ϕ, real(dϕ)
     end
     ϕdϕ
 end
 function make_ϕ_dϕ(df, x_new, x, s)
     function dϕ(α)
         # Move a distance of alpha in the direction of s
-        x_new .= x .+ α.*s
-
-        # Evaluate ∇f(x+α*s)
-        g_x_new = NLSolversBase.gradient!(df, x_new)
+        x_new .= muladd.(α, s, x)
 
         # Calculate ϕ'(a_i)
-        return real(dot(g_x_new, s))
+        return real(NLSolversBase.jvp!(df, x_new, s))
     end
     make_ϕ(df, x_new, x, s), dϕ
 end
