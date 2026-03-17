@@ -84,7 +84,7 @@ struct HagerZhangLS{T,Tepsilon} <: AbstractLineSearch
     curvature::T
     θ::T
     γ::T
-    ϵk::Tepsilon
+    ϵ::Tepsilon
     maxiter::Int
     maxiter_U3::Int
     maxiter_finite_check::Int
@@ -93,7 +93,7 @@ struct HagerZhangLS{T,Tepsilon} <: AbstractLineSearch
 end
 
 Base.summary(::HagerZhangLS) = "Approximate Wolfe Line Search (Hager & Zhang)"
-HagerZhangLS{T}(hzl::HagerZhangLS) where {T} = HagerZhangLS(T(hzl.decrease), T(hzl.curvature), T(hzl.θ), T(hzl.γ), T(hzl.ϵk), hzl.maxiter, hzl.maxiter_U3, hzl.maxiter_finite_check, T(hzl.ρ), T(hzl.ρ_finite_check))
+HagerZhangLS{T}(hzl::HagerZhangLS) where {T} = HagerZhangLS(T(hzl.decrease), T(hzl.curvature), T(hzl.θ), T(hzl.γ), T(hzl.ϵ), hzl.maxiter, hzl.maxiter_U3, hzl.maxiter_finite_check, T(hzl.ρ), T(hzl.ρ_finite_check))
 function HagerZhangLS(; decrease = 0.1, curvature = 0.9, theta = 0.5, gamma = 2 / 3, maxiter = 50, maxiter_U3 = 50, maxiter_finite_check = 100, epsilon_k = 1e-6, rho = 5.0, rho_finite_check = 1/10)
     if !(0 < decrease ≤ curvature)
         throw(ArgumentError(
@@ -129,10 +129,10 @@ struct WolfeSetup{T}
     dφ0::T
     δ::T
     σ::T
-    ϵk::T # [p.182, HZ2005] uses |f(x_k)| see also [p. 122, CG_DESCENT_851] but we do not implement Ck
+    ϵ::T # [p.182, HZ2005] uses |f(x_k)| see also [p. 122, CG_DESCENT_851] but we do not implement Ck. could rename this to epsilon_rel and have an abs as well.
 end
-function WolfeSetup(Σ0::TrialBundle, δ, σ, ϵk)
-    WolfeSetup(Σ0.φ, Σ0.dφ, δ, σ, ϵk)
+function WolfeSetup(Σ0::TrialBundle, δ, σ, ϵ)
+    WolfeSetup(Σ0.φ, Σ0.dφ, δ, σ, ϵ)
 end
 
 # [eq (22), p.120, CG_DESCENT_851]
@@ -144,10 +144,10 @@ function is_wolfe(wc::WolfeSetup, Σc::TrialBundle)
 end
 # [eq (23), p.120, CG_DESCENT_851]
 function is_approx_wolfe(awc::WolfeSetup,Σc::TrialBundle)
-    (; φ0, dφ0, δ, σ, ϵk) = awc
+    (; φ0, dφ0, δ, σ, ϵ) = awc
     φc, dφc, c = Σc.φ, Σc.dφ, Σc.p
     # Satisfies T2 and eqn (27) [p. 122, CG_DESCENT_851]
-    (2 * δ - 1) * dφ0 ≥ dφc ≥ σ * dφ0 && φc ≤ φ0 + ϵk * abs(φ0)
+    (2 * δ - 1) * dφ0 ≥ dφc ≥ σ * dφ0 && φc ≤ φ0 + ϵ * abs(φ0)
 end
 
 # Roughly equivalent to L0-L3 but we add L0' where
@@ -159,7 +159,7 @@ function find_steplength(hzl::HagerZhangLS, φ, φ0, dφ0, c::T) where {T}
     σ = hzl.curvature
     ρ = hzl.ρ
     ρ_finite_check = hzl.ρ_finite_check # 1/psi3 in the other implementation
-    ϵk = hzl.ϵk
+    ϵ = hzl.ϵ
     Σ0 = TrialBundle(T(0), φ0, dφ0)
     if !isfinite(Σ0)
         println("Function value or directional derivative at 0 is not finite, cannot perform line search.")
@@ -179,7 +179,7 @@ function find_steplength(hzl::HagerZhangLS, φ, φ0, dφ0, c::T) where {T}
         println("Failed to find a feasible initial step length after $(hzl.maxiter_finite_check) iterations of backtracking.")
         return T(NaN), T(NaN), false
     end
-    wolfesetup = WolfeSetup(Σ0, δ, σ, ϵk)
+    wolfesetup = WolfeSetup(Σ0, δ, σ, ϵ)
 
     # Wolfe conditions
     is_wolfe(wolfesetup, Σc) && return Σc.p, Σc.φ, true
@@ -194,7 +194,7 @@ function find_steplength(hzl::HagerZhangLS, φ, φ0, dφ0, c::T) where {T}
         # update each end of the interval. First a secant step will move one endpoint,
         # then the other endpoint will be updated by the second secant step. An exception
         # can be that one secant step ends outside of the interval.
-        Σa, Σb = secant²(hzl, φ, φ0, Σaj, Σbj, ϵk)
+        Σa, Σb = secant²(hzl, φ, φ0, Σaj, Σbj, ϵ)
 
         # === Step L2: Bisection if insufficient decrease ===
         # When the interval was not decreasing by at least a factor of γ, we bisect instead.
@@ -203,7 +203,7 @@ function find_steplength(hzl::HagerZhangLS, φ, φ0, dφ0, c::T) where {T}
         aj, bj = Σa.p, Σb.p
         Σaj, Σbj = if b - a > hzl.γ * (bj - aj)
             c = (a + b) / 2
-            update(hzl, Σa, Σb, c, φ, φ0, ϵk)
+            update(hzl, Σa, Σb, c, φ, φ0, ϵ)
         else
             Σa, Σb
         end
@@ -235,7 +235,7 @@ Used to take step U3 of the updating procedure [p.123, CG_DESCENT_851]. The othe
 are in update, but this step is separated out to be able to use it in
 step B2 of bracket. Initialization of ā and b̄ is done outside this call.
 """
-function update_U3_a_c(hzl::HagerZhangLS, φ, φ0, Σā::TrialBundle{T}, Σb̄::TrialBundle{T}, ϵk) where {T}
+function update_U3_a_c(hzl::HagerZhangLS, φ, φ0, Σā::TrialBundle{T}, Σb̄::TrialBundle{T}, ϵ) where {T}
     # verified against paper description [p. 123, CG_DESCENT_851]
     θ = hzl.θ
 
@@ -249,10 +249,10 @@ function update_U3_a_c(hzl::HagerZhangLS, φ, φ0, Σā::TrialBundle{T}, Σb̄::
             # found point of increasing objective; return with upper bound d
             return Σā, Σd
         else # now Σd.dφ < T(0)
-            if Σd.φ ≤ φ0 + ϵk
+            if Σd.φ ≤ φ0 + ϵ * abs(φ0)
                 # === Step U3.b ===
                 Σā = Σd
-            else # φ(d) ≥ φ0 + ϵk
+            else # φ(d) ≥ φ0 + ϵ * abs(φ0)
                 # === Step U3.c ===
                 Σb̄ = Σd
             end
@@ -263,7 +263,7 @@ function update_U3_a_c(hzl::HagerZhangLS, φ, φ0, Σā::TrialBundle{T}, Σb̄::
     return Σā, Σb̄
 end
 
-function update(hzl::HZ, Σa, Σb, c::T, φ, φ0, ϵk) where {HZ<:HagerZhangLS,T}
+function update(hzl::HZ, Σa, Σb, c::T, φ, φ0, ϵ) where {HZ<:HagerZhangLS,T}
     # verified against paper description [p. 123, CG_DESCENT_851]
     # === Step U0: Check c is interior to interval ===
     a, b = Σa.p, Σb.p
@@ -277,12 +277,12 @@ function update(hzl::HZ, Σa, Σb, c::T, φ, φ0, ϵk) where {HZ<:HagerZhangLS,T
         return Σa, Σc
     else # Σc.dφ < T(0)
         # === Step U2: Negative derivative with sufficient decrease ===
-        if Σc.φ ≤ φ0 + ϵk
+        if Σc.φ ≤ φ0 + ϵ * abs(φ0)
             return Σc, Σb
         end
         # === Step U3: Negative derivative without sufficient decrease ===
         Σā, Σb̄ = Σa, Σc
-        Σa, Σb = update_U3_a_c(hzl, φ, φ0, Σā, Σb̄, ϵk)
+        Σa, Σb = update_U3_a_c(hzl, φ, φ0, Σā, Σb̄, ϵ)
         return Σa, Σb
     end
 end
@@ -313,11 +313,11 @@ function bracket(hzl::HagerZhangLS, Σ0::TrialBundle{T}, Σc::TrialBundle{T}, φ
     j = 0
     while j < maxj && Σcj.dφ < T(0)
         j += 1
-        if Σcj.φ > Σ0.φ + hzl.ϵk # we could collect all condition checks on one type instad of the wolfe and approx wolfe
+        if Σcj.φ > Σ0.φ + hzl.ϵ # we could collect all condition checks on one type instad of the wolfe and approx wolfe
             # === Step B2: Decreasing derivative without sufficient decrease ===
             # φ is decreasing at cj but function value is sufficiently larger than
             # φ0 so we must have passed a place with increasing φ, use U3 to update.
-            Σa, Σb = update_U3_a_c(hzl, φ, φ0, Σ0, Σcj, hzl.ϵk)
+            Σa, Σb = update_U3_a_c(hzl, φ, φ0, Σ0, Σcj, hzl.ϵ)
             return Σa, Σb
         end
 
@@ -351,12 +351,12 @@ function secant(hzl::HagerZhangLS, Σa::TrialBundle{T}, Σb::TrialBundle{T}) whe
     end
     return sec
 end
-function secant²(hzl::HagerZhangLS, φ, φ0, Σa::TrialBundle{T}, Σb::TrialBundle{T}, ϵk) where {T}
+function secant²(hzl::HagerZhangLS, φ, φ0, Σa::TrialBundle{T}, Σb::TrialBundle{T}, ϵ) where {T}
     # verified against paper description [p. 123, CG_DESCENT_851]
     # === Step S1: First secant step ===
     c = secant(hzl, Σa, Σb)
     # First update
-    ΣA, ΣB = update(hzl, Σa, Σb, c, φ, φ0, ϵk)
+    ΣA, ΣB = update(hzl, Σa, Σb, c, φ, φ0, ϵ)
     updated = false
     c̄ = c
     if c == ΣB.p # B == c
@@ -371,14 +371,14 @@ function secant²(hzl::HagerZhangLS, φ, φ0, Σa::TrialBundle{T}, Σb::TrialBun
         updated = true
     end
     # === Step S4 ===
-    Σā, Σb̄ = secant²_S4(hzl, ΣA, ΣB, c̄, φ, φ0, ϵk, updated)
+    Σā, Σb̄ = secant²_S4(hzl, ΣA, ΣB, c̄, φ, φ0, ϵ, updated)
     return Σā, Σb̄
 end
-function secant²_S4(hzl::HagerZhangLS, ΣA, ΣB, c̄, φ, φ0, ϵk, updated)
+function secant²_S4(hzl::HagerZhangLS, ΣA, ΣB, c̄, φ, φ0, ϵ, updated)
     if updated
         # === Step S4 (variant 1): Update with second secant point ===
         # Second update, ā, b̄
-        Σā, Σb̄ = update(hzl, ΣA, ΣB, c̄, φ, φ0, ϵk)
+        Σā, Σb̄ = update(hzl, ΣA, ΣB, c̄, φ, φ0, ϵ)
     else
         # === Step S4 (variant 2): Return without second secant ===
         # c was neither endpoint, ā, b̄ = ΣA, ΣB
