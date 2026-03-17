@@ -7,7 +7,7 @@ using NLSolversBase: NLSolversBase, AbstractObjective
 
 export LineSearchException, LineSearchCache
 
-export AbstractLineSearch, BackTracking, HagerZhang, Static, MoreThuente, StrongWolfe
+export AbstractLineSearch, BackTracking, HagerZhang, HagerZhangLS, Static, MoreThuente, StrongWolfe
 
 export InitialHagerZhang, InitialStatic, InitialPrevious,
     InitialQuadratic, InitialConstantChange
@@ -27,10 +27,8 @@ function make_ϕdϕ(df, x_new, x, s)
     function ϕdϕ(α)
         # Move a distance of alpha in the direction of s
         x_new .= muladd.(α, s, x)
-
         # Calculate ϕ(a_i), ϕ'(a_i)
         ϕ, dϕ = NLSolversBase.value_jvp!(df, x_new, s)
-
         return ϕ, real(dϕ)
     end
     ϕdϕ
@@ -39,7 +37,6 @@ function make_ϕ_dϕ(df, x_new, x, s)
     function dϕ(α)
         # Move a distance of alpha in the direction of s
         x_new .= muladd.(α, s, x)
-
         # Calculate ϕ'(a_i)
         return real(NLSolversBase.jvp!(df, x_new, s))
     end
@@ -80,6 +77,7 @@ include("strongwolfe.jl")
 include("morethuente.jl")
 include("hagerzhang.jl") # Also includes InitialHagerZhang
 include("static.jl")
+include("hagerzhangls.jl")
 
 # Initial guess methods
 include("initialguess.jl")

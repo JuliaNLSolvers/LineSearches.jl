@@ -7,6 +7,16 @@ if !isdefined(@__MODULE__, :LineSearchTestCase)
     using .TestCases
 end
 
+@testset "HagerZhangLS" begin
+    ls = HagerZhangLS()
+    ϕ(x) = (x - π)^4
+    dϕ(x) = 4*(x-π)^3
+    ϕdϕ(x) = (ϕ(x), dϕ(x))
+    α, val = ls(ϕ, dϕ, ϕdϕ, 10.0, ϕ(0), dϕ(0))
+    @test α < 10
+    @test val < ϕ(0)
+end
+
 @testset "Capturing data" begin
     cache = LineSearchCache{Float64}()
     lsalgs =  (HagerZhang(; cache), StrongWolfe(; cache), MoreThuente(; cache),
@@ -35,14 +45,14 @@ end
 end
 
 @testset "PR#185" begin
-    ϕ(α) = 1/(α+1)
-    dϕ(α) = -1/(α+1)^2
+    ϕ(α) = -exp(α)
+    dϕ(α) = -exp(α)
     ϕdϕ(α) = ϕ(α), dϕ(α)
 
     α0 = 1.0
     ϕ0 = ϕ(0.0)
     dϕ0 = dϕ(0.0)
 
-    _error_msg = @test_throws LineSearchException (HagerZhang())(ϕ, dϕ, ϕdϕ, α0, ϕ0, dϕ0)
+    _error_msg = @test_throws LineSearchException (HagerZhang(linesearchmax=14))(ϕ, dϕ, ϕdϕ, α0, ϕ0, dϕ0)
     @test _error_msg.value.alpha > α0 # Should be something gigantic like 1e34
 end
