@@ -86,7 +86,7 @@ Conjugate gradient line search implementation from:
    alphamax::T = Inf
    rho::T = 5.0
    epsilon::T = 1e-6
-   gamma::T = 0.66
+   gamma::T = 2 / 3
    linesearchmax::Int = 50
    psi3::T = 0.1
    display::Int = 0
