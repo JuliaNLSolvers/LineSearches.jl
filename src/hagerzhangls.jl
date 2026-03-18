@@ -198,7 +198,7 @@ function find_steplength(hzl::HagerZhangLS, φ, φ0, dφ0, c::T) where {T}
         if iswolfe
             return Σa.p, Σa.φ, true
         end
-        @info Σa, Σb
+
         # === Step L2: Bisection if insufficient decrease ===
         # When the interval was not decreasing by at least a factor of γ, we bisect instead.
         # Notice that this forces us not to be in U0 so the interval *will* change.
