@@ -194,13 +194,16 @@ function find_steplength(hzl::HagerZhangLS, φ, φ0, dφ0, c::T) where {T}
         # update each end of the interval. First a secant step will move one endpoint,
         # then the other endpoint will be updated by the second secant step. An exception
         # can be that one secant step ends outside of the interval.
-        Σa, Σb = secant²(hzl, φ, φ0, Σaj, Σbj, ϵ)
-
+        Σa, Σb, iswolfe = secant²(hzl, φ, φ0, Σaj, Σbj, ϵ, wolfesetup)
+        if iswolfe
+            return Σa.p, Σa.φ, true
+        end
+        @info Σa, Σb
         # === Step L2: Bisection if insufficient decrease ===
         # When the interval was not decreasing by at least a factor of γ, we bisect instead.
         # Notice that this forces us not to be in U0 so the interval *will* change.
-        a, b = Σaj.p, Σbj.p
-        aj, bj = Σa.p, Σb.p
+        aj, bj = Σaj.p, Σbj.p
+        a, b = Σa.p, Σb.p
         Σaj, Σbj = if b - a > hzl.γ * (bj - aj)
             c = (a + b) / 2
             update(hzl, Σa, Σb, c, φ, φ0, ϵ)
@@ -263,15 +266,21 @@ function update_U3_a_c(hzl::HagerZhangLS, φ, φ0, Σā::TrialBundle{T}, Σb̄::
     return Σā, Σb̄
 end
 
+in_bounds(c, Σa, Σb) = Σa.p <= c <= Σb.p
+
+# Full update: bounds check + evaluate + U1-U3. Used by L2 bisection.
 function update(hzl::HZ, Σa, Σb, c::T, φ, φ0, ϵ) where {HZ<:HagerZhangLS,T}
-    # verified against paper description [p. 123, CG_DESCENT_851]
     # === Step U0: Check c is interior to interval ===
-    a, b = Σa.p, Σb.p
-    if c ≤ a || c ≥ b # c ∉ (a, b)
+    if !in_bounds(c, Σa, Σb)
         return Σa, Σb
     end
-
     Σc = TrialBundle(c, φ(c))
+    _update(hzl, Σa, Σb, Σc, φ, φ0, ϵ)
+end
+
+# Inner update with pre-evaluated Σc: U1-U3 only. Used by secant² after Wolfe check.
+function _update(hzl::HZ, Σa, Σb, Σc::TrialBundle{T}, φ, φ0, ϵ) where {HZ<:HagerZhangLS,T}
+    # verified against paper description [p. 123, CG_DESCENT_851]
     # === Step U1: Positive derivative (update upper bound) ===
     if Σc.dφ ≥ T(0)
         return Σa, Σc
@@ -313,7 +322,7 @@ function bracket(hzl::HagerZhangLS, Σ0::TrialBundle{T}, Σc::TrialBundle{T}, φ
     j = 0
     while j < maxj && Σcj.dφ < T(0)
         j += 1
-        if Σcj.φ > Σ0.φ + hzl.ϵ # we could collect all condition checks on one type instad of the wolfe and approx wolfe
+        if Σcj.φ > Σ0.φ + Σ0.φ * hzl.ϵ # we could collect all condition checks on one type instad of the wolfe and approx wolfe
             # === Step B2: Decreasing derivative without sufficient decrease ===
             # φ is decreasing at cj but function value is sufficiently larger than
             # φ0 so we must have passed a place with increasing φ, use U3 to update.
@@ -351,40 +360,46 @@ function secant(hzl::HagerZhangLS, Σa::TrialBundle{T}, Σb::TrialBundle{T}) whe
     end
     return sec
 end
-function secant²(hzl::HagerZhangLS, φ, φ0, Σa::TrialBundle{T}, Σb::TrialBundle{T}, ϵ) where {T}
+function secant²(hzl::HagerZhangLS, φ, φ0, Σa::TrialBundle{T}, Σb::TrialBundle{T}, ϵ, wolfesetup) where {T}
     # verified against paper description [p. 123, CG_DESCENT_851]
     # === Step S1: First secant step ===
     c = secant(hzl, Σa, Σb)
-    # First update
-    ΣA, ΣB = update(hzl, Σa, Σb, c, φ, φ0, ϵ)
+    if !in_bounds(c, Σa, Σb)
+        return Σa, Σb, false
+    end
+    Σc = TrialBundle(c, φ(c))
+    if is_wolfe(wolfesetup, Σc) || is_approx_wolfe(wolfesetup, Σc)
+        return Σc, Σc, true
+    end
+    # First update (U1-U3 with pre-evaluated Σc)
+    ΣA, ΣB = _update(hzl, Σa, Σb, Σc, φ, φ0, ϵ)
     updated = false
     c̄ = c
     if c == ΣB.p # B == c
         # === Step S2: Second secant with new upper bound ===
-        # c is the new upper bound
         c̄ = secant(hzl, Σb, ΣB)
         updated = true
     elseif c == ΣA.p # A == c
         # === Step S3: Second secant with new lower bound ===
-        # c is the new lower bound
         c̄ = secant(hzl, Σa, ΣA)
         updated = true
     end
+
     # === Step S4 ===
-    Σā, Σb̄ = secant²_S4(hzl, ΣA, ΣB, c̄, φ, φ0, ϵ, updated)
-    return Σā, Σb̄
-end
-function secant²_S4(hzl::HagerZhangLS, ΣA, ΣB, c̄, φ, φ0, ϵ, updated)
-    if updated
-        # === Step S4 (variant 1): Update with second secant point ===
-        # Second update, ā, b̄
-        Σā, Σb̄ = update(hzl, ΣA, ΣB, c̄, φ, φ0, ϵ)
-    else
+    if !updated # so !(c==A || c==B from the paper)
         # === Step S4 (variant 2): Return without second secant ===
-        # c was neither endpoint, ā, b̄ = ΣA, ΣB
-        Σā, Σb̄ = ΣA, ΣB
+        return ΣA, ΣB, false
     end
-    return Σā, Σb̄
+    if !in_bounds(c̄, ΣA, ΣB)
+        return ΣA, ΣB, false
+    end
+    Σc̄ = TrialBundle(c̄, φ(c̄))
+    if is_wolfe(wolfesetup, Σc̄) || is_approx_wolfe(wolfesetup, Σc̄)
+        return Σc̄, Σc̄, true
+    end
+    # === Step S4 (variant 1): Update with second secant point ===
+    Σā, Σb̄ = _update(hzl, ΣA, ΣB, Σc̄, φ, φ0, ϵ)
+    return Σā, Σb̄, false
 end
 
 function (ls::HagerZhangLS)(ϕ, dϕ, ϕdϕ, α_0, ϕ_0, dϕ_0)
