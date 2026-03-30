@@ -1,0 +1,345 @@
+---
+title: "Line Search Tests"
+format:
+  html:
+    code-fold: false
+    toc: true
+    embed-resources: true
+engine: julia
+---
+
+## Setup
+
+```{julia}
+using LinearAlgebra, CairoMakie
+abstract type LineSearcher end
+include("hz.jl")
+include("backtracking.jl")
+```
+
+Helper to run a test case and plot the result:
+
+```{julia}
+function test_linesearch(φdφ, φ0, dφ0, c0; αplot = nothing, title = "")
+    # Run line search
+    α, fα, success = find_steplength(HZAW(), φdφ, φ0, dφ0, c0)
+    # Plot range
+    αmax = isnothing(αplot) ? 2 * max(α, c0) : αplot
+    αs = range(0, αmax, length = 1000)
+    vals = [φdφ(a) for a in αs]
+    φs = [v.ϕ for v in vals]
+    dφs = [v.dϕ for v in vals]
+
+    δ, σ, ϵk = 0.1, 0.9, 1e-6
+
+    # Compute condition masks (skip α=0)
+    wolfe = map(eachindex(αs)) do i
+        a, φc, dφc = αs[i], φs[i], dφs[i]
+        a > 0 && δ * dφ0 ≥ (φc - φ0) / a && dφc ≥ σ * dφ0
+    end
+    swolfe = map(eachindex(αs)) do i
+        a, φc, dφc = αs[i], φs[i], dφs[i]
+        a > 0 && δ * dφ0 ≥ (φc - φ0) / a && abs(dφc) ≤ σ * abs(dφ0)
+    end
+    awolfe = map(eachindex(αs)) do i
+        φc, dφc = φs[i], dφs[i]
+        (2δ - 1) * dφ0 ≥ dφc ≥ σ * dφ0 && φc ≤ φ0 + ϵk*abs(φ0)
+    end
+
+    fig = Figure(size = (600, 350))
+    ax = Axis(fig[1, 1]; xlabel = "α", ylabel = "φ(α)", title)
+
+    # Shade Wolfe (top) / Strong Wolfe (mid) / approx Wolfe (bottom) regions
+    ylo, yhi = extrema(φs)
+    pad = (yhi - ylo) * 0.05
+    ylo -= pad; yhi += pad
+    ythird = (yhi - ylo) / 3
+
+    for (mask, color, label, y0, y1) in [(wolfe, (:green, 0.2), "Wolfe", ylo + 2ythird, yhi),
+                                          (swolfe, (:purple, 0.2), "Strong Wolfe", ylo + ythird, ylo + 2ythird),
+                                          (awolfe, (:orange, 0.2), "≈ Wolfe", ylo, ylo + ythird)]
+        i = 1
+        first_span = true
+        while i ≤ length(αs)
+            if mask[i]
+                j = i
+                while j < length(αs) && mask[j+1]
+                    j += 1
+                end
+                xs = [αs[i], αs[j], αs[j], αs[i]]
+                ys = [y0, y0, y1, y1]
+                poly!(ax, Point2f.(xs, ys); color = color, label = first_span ? label : nothing)
+                first_span = false
+                i = j + 1
+            else
+                i += 1
+            end
+        end
+    end
+
+    lines!(ax, αs, φs; color = :gray30, label = "φ(α)")
+
+    # Armijo line: φ0 + δ·dφ0·α
+    armijo = [φ0 + δ * dφ0 * a for a in αs]
+    lines!(ax, αs, armijo; color = :steelblue, linestyle = :dash, label = "Armijo (δ=$δ)")
+
+    # Mark solution
+    if success && isfinite(α)
+        scatter!(ax, [α], [fα]; color = :red, markersize = 12, label = "α = $(round(α; digits=6))")
+    end
+
+    axislegend(ax; position = :rt)
+    fig
+end
+```
+
+## Test 1
+
+$$\phi(\alpha) = e^{-\alpha} \cos(5\alpha)$$
+
+$\phi'(\alpha) = -e^{-\alpha}(\cos(5\alpha) + 5\sin(5\alpha))$. Multiple local minima, exponentially decaying envelope.
+
+```{julia}
+function φdφ_osc(α)
+    e = exp(-α)
+    o = e * cos(5α)
+    g = -e * (cos(5α) + 5sin(5α))
+    (ϕ = o, dϕ = g)
+end
+
+# Wrap to record all evaluated α values
+osc_αs = Float64[]
+function φdφ_osc_traced(α)
+    push!(osc_αs, α)
+    φdφ_osc(α)
+end
+
+φ0_osc = φdφ_osc(0.0)
+empty!(osc_αs)
+c0 = 0.5
+α, fα, success = find_steplength(HZAW(), φdφ_osc_traced, φ0_osc..., c0)
+```
+
+```{julia}
+δ, σ, ϵk = 0.1, 0.9, 1e-6
+φ0, dφ0 = φ0_osc
+println("Evaluated α values ($(length(osc_αs)) calls):")
+println("  δ=$δ, σ=$σ, ϵk=$ϵk, φ0=$φ0, dφ0=$dφ0")
+println()
+for (i, a) in enumerate(osc_αs)
+    t = φdφ_osc(a)
+    φc, dφc = t.ϕ, t.dϕ
+    # Armijo: φ(α) ≤ φ0 + δ·dφ0·α  ⟺  (φc - φ0)/α ≤ δ·dφ0
+    armijo = φc ≤ φ0 + δ * dφ0 * a
+    # Curvature: dφ(α) ≥ σ·dφ0
+    curvature = dφc ≥ σ * dφ0
+    # Wolfe = Armijo + curvature
+    wolfe = armijo && curvature
+    # Approximate Wolfe: (2δ-1)·dφ0 ≥ dφ(α) ≥ σ·dφ0  and  φ(α) ≤ φ0 + ϵk
+    awolfe = (2δ - 1) * dφ0 ≥ dφc ≥ σ * dφ0 && φc ≤ φ0 + ϵk
+    println("  $i: α=$(round(a;digits=8)), φ=$(round(φc;digits=8)), dφ=$(round(dφc;digits=6))  armijo=$armijo curv=$curvature wolfe=$wolfe awolfe=$awolfe")
+end
+
+fig = test_linesearch(φdφ_osc, φ0_osc.ϕ, φ0_osc.dϕ, c0; αplot = 8.0, title = "Oscillatory: e^{-α}cos(5α)")
+
+fig
+```
+
+## Test 2
+
+$$\phi(\alpha) = (\alpha - 2)^2$$
+
+Minimum at $\alpha = 2$, $\phi_0 = 4$, $\phi'_0 = -4$.
+
+```{julia}
+φdφ_quad(α) = (ϕ = (α - 2)^2, dϕ = 2(α - 2))
+test_linesearch(φdφ_quad, 4.0, -4.0, 1.0; title = "Quadratic: (α-2)²")
+```
+
+## Test 3
+
+$$\phi(\alpha) = -2\alpha^3 + 9\alpha^2 - 12\alpha + 5$$
+
+$\phi(0) = 5$, $\phi'(\alpha) = -6\alpha^2 + 18\alpha - 12$, $\phi'(0) = -12$. Local min at $\alpha = 1$, local max at $\alpha = 3$.
+
+```{julia}
+φdφ_cubic(α) = (ϕ = -2α^3 + 9α^2 - 12α + 5, dϕ = -6α^2 + 18α - 12)
+test_linesearch(φdφ_cubic, 5.0, -12.0, 1.0; αplot = 4.0, title = "Cubic: -2α³+9α²-12α+5")
+```
+
+## Test 4
+
+The classic: $f(x) = (1-x_1)^2 + 100(x_2 - x_1^2)^2$. At $x = (0,0)$, $g = (-2, 0)$, search direction $d = (2, 0)$.
+
+```{julia}
+function rosenbrock_line(α)
+    x = [0.0, 0.0] .+ α .* [2.0, 0.0]
+    f = (1 - x[1])^2 + 100(x[2] - x[1]^2)^2
+    g = [-2(1 - x[1]) - 400x[1]*(x[2] - x[1]^2), 200(x[2] - x[1]^2)]
+    d = [2.0, 0.0]
+    (ϕ = f, dϕ = dot(g, d))
+end
+test_linesearch(rosenbrock_line, 1.0, -4.0, 1.0; αplot = 1.5, title = "Rosenbrock from (0,0), d=(2,0)")
+```
+
+## Test 5
+
+At $x = (-1, 1)$: $f = 4$, $g = (-4, 0)$, $d = -g = (4, 0)$.
+
+```{julia}
+function rosenbrock_line2(α)
+    x = [-1.0, 1.0] .+ α .* [4.0, 0.0]
+    f = (1 - x[1])^2 + 100(x[2] - x[1]^2)^2
+    g = [-2(1 - x[1]) - 400x[1]*(x[2] - x[1]^2), 200(x[2] - x[1]^2)]
+    d = [4.0, 0.0]
+    (ϕ = f, dϕ = dot(g, d))
+end
+φ0_r2 = rosenbrock_line2(0.0)
+test_linesearch(rosenbrock_line2, φ0_r2.ϕ, φ0_r2.dϕ, 1.0; αplot = 1.5, title = "Rosenbrock from (-1,1), d=(4,0)")
+```
+
+## Test 6
+
+$$\phi(\alpha) = \alpha^2 + 10000(\alpha - 0.5)^2$$
+
+Minimum at $\alpha = 10000 \cdot 0.5 / 10001 \approx 0.49995$.
+
+```{julia}
+φdφ_steep(α) = (ϕ = α^2 + 10000(α - 0.5)^2, dϕ = 2α + 20000(α - 0.5))
+φ0_s = φdφ_steep(0.0)
+test_linesearch(φdφ_steep, φ0_s.ϕ, φ0_s.dϕ, 1.0; αplot = 1.0, title = "Steep valley: α²+10000(α-0.5)²")
+```
+
+## Test 7
+
+$$\phi(\alpha) = \frac{1}{1 + e^{-20(\alpha - 3)}} - \alpha/10$$
+
+Sigmoid-like with a linear tilt. Nearly flat for small $\alpha$, then a sharp transition. It stops outsode pf ar,okp
+
+```{julia}
+function φdφ_sigmoid(α)
+    s = 1 / (1 + exp(-20(α - 3)))
+    ds = 20 * s * (1 - s)
+    (ϕ = s - α/10, dϕ = ds - 0.1)
+end
+φ0_sig = φdφ_sigmoid(0.0)
+test_linesearch(φdφ_sigmoid, φ0_sig.ϕ, φ0_sig.dϕ, 1.0; αplot = 6.0, title = "Sigmoid: 1/(1+e^{-20(α-3)}) - α/10")
+```
+
+## Test 8
+
+$$\phi(\alpha) = \frac{1}{\alpha + 1} + 0.01(\alpha - 10)^2 - 1$$
+
+Hyperbolic near origin, quadratic pull toward $\alpha = 10$.
+
+```{julia}
+function φdφ_flat(α)
+    (ϕ = 1/(α+1) + 0.01(α - 10)^2 - 1, dϕ = -1/(α+1)^2 + 0.02(α - 10))
+end
+φ0_fl = φdφ_flat(0.0)
+test_linesearch(φdφ_flat, φ0_fl.ϕ, φ0_fl.dϕ, 1.0; αplot = 15.0, title = "Hyperbolic + quadratic")
+```
+
+## Test 9
+
+Same quadratic as Test 2 but with a tiny initial step $c_0 = 10^{-6}$.
+
+```{julia}
+test_linesearch(φdφ_quad, 4.0, -4.0, 1e-6; title = "Quadratic with c₀ = 1e-6")
+```
+
+## Test 10
+
+Same quadratic but with $c_0 = 100$.
+
+```{julia}
+test_linesearch(φdφ_quad, 4.0, -4.0, 100.0; αplot = 5.0, title = "Quadratic with c₀ = 100")
+```
+
+## Test 11
+
+$$\phi(\alpha) = -\log(1 - \alpha) + \alpha$$
+
+Blows up at $\alpha = 1$. Minimum at $\alpha = 0$, but $\phi'(0) = 0$ so we start from a shifted point: $\phi(\alpha) = -\log(2 - \alpha) + \alpha$, $\phi(0) = -\log 2$, $\phi'(0) = 1/(2) + 1 = -0.5 + 1 = 0.5$. Instead, let's use a version with descent: $\phi(\alpha) = -\log(1 + \alpha) + 0.1\alpha^2$. Then $\phi'(\alpha) = -1/(1+\alpha) + 0.2\alpha$, $\phi'(0) = -1$. Minimum near $\alpha \approx 1.79$.
+
+```{julia}
+function φdφ_logbarrier(α)
+    (ϕ = -log(1 + α) + 0.1α^2, dϕ = -1/(1 + α) + 0.2α)
+end
+φ0_lb = φdφ_logbarrier(0.0)
+test_linesearch(φdφ_logbarrier, φ0_lb.ϕ, φ0_lb.dϕ, 1.0; αplot = 5.0, title = "Log barrier: -log(1+α) + 0.1α²")
+```
+
+## Test 12
+
+$$\phi(\alpha) = 1 - e^{-100(\alpha - 2)^2}$$
+
+Very localized minimum at $\alpha = 2$. A quadratic $-\alpha + 0.3\alpha^2$ provides descent at the origin, and the Gaussian dip adds a narrow well. $\phi(0) = -1$, $\phi'(0) = -1$.
+
+$$\phi(\alpha) = -\alpha + 0.3\alpha^2 - e^{-100(\alpha - 2)^2}$$
+
+```{julia}
+function φdφ_narrowwell(α)
+    g = exp(-100(α - 2)^2)
+    (ϕ = -α + 0.3α^2 - g, dϕ = -1 + 0.6α + 200(α - 2) * g)
+end
+φ0_nw = φdφ_narrowwell(0.0)
+test_linesearch(φdφ_narrowwell, φ0_nw.ϕ, φ0_nw.dϕ, 1.0; αplot = 4.0, title = "Narrow well: -α + 0.3α² - exp(-100(α-2)²)")
+```
+
+## Test 13
+
+$$\phi(\alpha) = (\alpha^2 - 4)^2 - 5\alpha$$
+
+Two minima with a linear tilt breaking symmetry. $\phi(0) = 16$, $\phi'(\alpha) = 4\alpha(\alpha^2 - 4) - 5$, $\phi'(0) = -5$.
+
+```{julia}
+function φdφ_doublewell(α)
+    (ϕ = (α^2 - 4)^2 - 5α, dϕ = 4α*(α^2 - 4) - 5)
+end
+test_linesearch(φdφ_doublewell, 16.0, -5.0, 1.0; αplot = 4.0, title = "Double well: (α²-4)² - 5α")
+```
+
+## Test 14
+
+$$\phi(\alpha) = (\alpha - 3)^2 + 0.1\sin(50\alpha)$$
+
+Quadratic trend with many local bumps. Tests whether the line search finds a point in the approximate Wolfe region despite oscillations.
+
+```{julia}
+function φdφ_noisy(α)
+    (ϕ = (α - 3)^2 + 0.1sin(50α), dϕ = 2(α - 3) + 5cos(50α))
+end
+φ0_n = φdφ_noisy(0.0)
+test_linesearch(φdφ_noisy, φ0_n.ϕ, φ0_n.dϕ, 1.0; αplot = 6.0, title = "Noisy quadratic: (α-3)² + 0.1sin(50α)")
+```
+
+## Test 15
+
+$$\phi(\alpha) = e^{-3\alpha} + \alpha^2$$
+
+Steep exponential decay near origin, quadratic growth for large $\alpha$. $\phi(0) = 1$, $\phi'(0) = -3$. Minimum near $\alpha \approx 0.52$.
+
+```{julia}
+function φdφ_expquad(α)
+    e = exp(-3α)
+    (ϕ = e + α^2, dϕ = -3e + 2α)
+end
+test_linesearch(φdφ_expquad, 1.0, -3.0, 1.0; αplot = 2.0, title = "Exp+quadratic: e^{-3α} + α²")
+```
+
+## Test 16
+
+$$\phi(\alpha) = -\tanh(10(\alpha - 1)) + 0.5(\alpha - 3)^2$$
+
+Flat descent through a tanh step, then quadratic rise. The transition region around $\alpha = 1$ creates a sharp kink in the landscape.
+
+```{julia}
+function φdφ_plateau(α)
+    t = tanh(10(α - 1))
+    dt = 10(1 - t^2)
+    (ϕ = -t + 0.5(α - 3)^2, dϕ = -dt + (α - 3))
+end
+φ0_pl = φdφ_plateau(0.0)
+test_linesearch(φdφ_plateau, φ0_pl.ϕ, φ0_pl.dϕ, 1.0; αplot = 5.0, title = "Plateau: -tanh(10(α-1)) + 0.5(α-3)²")
+```
