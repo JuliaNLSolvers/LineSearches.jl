@@ -128,7 +128,7 @@ res = (StrongWolfe())(ϕ, dϕ, ϕdϕ, α0, ϕ0, dϕ0)
         end
 
         res, res_cache = test_tc(tc1, true)
-        @test_broken minimum(res_cache.values) == res[2]
+        @test minimum(res_cache.values) == res[2]
 
         res2, res_cache2 = test_tc(tc1, false)
         @test minimum(res_cache2.values) == res2[2]
