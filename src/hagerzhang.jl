@@ -206,7 +206,11 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
                 error("c = ", c)
             end
             # ia, ib = bisect(phi, lsr, ia, ib, phi_lim) # TODO: Pass options
-            ia, ib = bisect!(ϕdϕ, alphas, values, slopes, ia, ib, phi_lim, display)
+            ia, ib, iswolfe = bisect!(ϕdϕ, alphas, values, slopes, ia, ib, phi_lim, phi_0, dphi_0, delta, sigma, display)
+            if iswolfe
+                mayterminate[] = false
+                return alphas[ib], values[ib]
+            end
             isbracketed = true
         else
             # We'll still going downhill, expand the interval and try again.
@@ -255,6 +259,13 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             push!(alphas, c)
             push!(values, phi_c)
             push!(slopes, dphi_c)
+            if satisfies_wolfe(c, phi_c, dphi_c, phi_0, dphi_0, phi_lim, delta, sigma)
+                if display & LINESEARCH > 0
+                    println("Wolfe condition satisfied during bracketing at alpha = ", c)
+                end
+                mayterminate[] = false
+                return c, phi_c
+            end
         end
         iter += 1
     end
@@ -310,7 +321,19 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             push!(values, phi_c)
             push!(slopes, dphi_c)
 
-            ia, ib = update!(ϕdϕ, alphas, values, slopes, iA, iB, length(alphas), phi_lim, display)
+            if satisfies_wolfe(c, phi_c, dphi_c, phi_0, dphi_0, phi_lim, delta, sigma)
+                if display & LINESEARCH > 0
+                    println("Wolfe condition satisfied during bisection at alpha = ", c)
+                end
+                mayterminate[] = false
+                return c, phi_c
+            end
+
+            ia, ib, iswolfe = update!(ϕdϕ, alphas, values, slopes, iA, iB, length(alphas), phi_lim, phi_0, dphi_0, delta, sigma, display)
+            if iswolfe
+                mayterminate[] = false
+                return alphas[ib], values[ib]
+            end
         end
         iter += 1
     end
@@ -388,7 +411,10 @@ function secant2!(ϕdϕ,
         return true, ic, ic
     end
 
-    iA, iB = update!(ϕdϕ, alphas, values, slopes, ia, ib, ic, phi_lim, display)
+    iA, iB, iswolfe_upd = update!(ϕdϕ, alphas, values, slopes, ia, ib, ic, phi_lim, phi_0, dphi_0, delta, sigma, display)
+    if iswolfe_upd
+        return true, iB, iB
+    end
     if display & SECANT2 > 0
         println("secant2: iA = ", iA, ", iB = ", iB, ", ic = ", ic)
     end
@@ -422,7 +448,10 @@ function secant2!(ϕdϕ,
             end
             return true, ic, ic
         end
-        iA, iB = update!(ϕdϕ, alphas, values, slopes, iA, iB, ic, phi_lim, display)
+        iA, iB, iswolfe_upd = update!(ϕdϕ, alphas, values, slopes, iA, iB, ic, phi_lim, phi_0, dphi_0, delta, sigma, display)
+        if iswolfe_upd
+            return true, iB, iB
+        end
     end
     if display & SECANT2 > 0
         println("secant2 output: a = ", alphas[iA], ", b = ", alphas[iB])
@@ -442,6 +471,10 @@ function update!(ϕdϕ,
                  ib::Integer,
                  ic::Integer,
                  phi_lim::Real,
+                 phi_0::Real,
+                 dphi_0::Real,
+                 delta::Real,
+                 sigma::Real,
                  display::Integer = 0)
     a = alphas[ia]
     b = alphas[ib]
@@ -465,10 +498,10 @@ function update!(ϕdϕ,
                 ", dphi_c = ", dphi_c)
     end
     if c < a || c > b
-        return ia, ib #, 0, 0  # it's out of the bracketing interval
+        return ia, ib, false  # it's out of the bracketing interval
     end
     if dphi_c >= zeroT
-        return ia, ic #, 0, 0  # replace b with a closer point
+        return ia, ic, false  # replace b with a closer point
     end
     # We know dphi_c < 0. However, phi may not be monotonic between a
     # and c, so check that the value is also smaller than phi_0.  (It's
@@ -476,11 +509,11 @@ function update!(ϕdϕ,
     # secure environment of alpha=0; that's why we didn't check this
     # above.)
     if phi_c <= phi_lim
-        return ic, ib#, 0, 0  # replace a
+        return ic, ib, false  # replace a
     end
     # phi_c is bigger than phi_0, which implies that the minimum
     # lies between a and c. Find it via bisection.
-    return bisect!(ϕdϕ, alphas, values, slopes, ia, ic, phi_lim, display)
+    return bisect!(ϕdϕ, alphas, values, slopes, ia, ic, phi_lim, phi_0, dphi_0, delta, sigma, display)
 end
 
 # HZ, stage U3 (with theta=0.5)
@@ -491,6 +524,10 @@ function bisect!(ϕdϕ,
                  ia::Integer,
                  ib::Integer,
                  phi_lim::Real,
+                 phi_0::Real,
+                 dphi_0::Real,
+                 delta::Real,
+                 sigma::Real,
                  display::Integer = 0) where T
     gphi = convert(T, NaN)
     a = alphas[ia]
@@ -515,8 +552,11 @@ function bisect!(ϕdϕ,
         push!(slopes, gphi)
 
         id = length(alphas)
+        if satisfies_wolfe(d, phi_d, gphi, phi_0, dphi_0, phi_lim, delta, sigma)
+            return ia, id, true
+        end
         if gphi >= zeroT
-            return ia, id # replace b, return
+            return ia, id, false # replace b, return
         end
         if phi_d <= phi_lim
             a = d # replace a, but keep bisecting until dphi_b > 0
@@ -526,5 +566,5 @@ function bisect!(ϕdϕ,
             ib = id
         end
     end
-    return ia, ib
+    return ia, ib, false
 end
