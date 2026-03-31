@@ -186,7 +186,10 @@ function find_steplength(hzl::HagerZhangLS, φ, φ0, dφ0, c::T) where {T}
     # Approximate Wolfe conditions
     is_approx_wolfe(wolfesetup, Σc) && return Σc.p, Σc.φ, true
     # Set up interval
-    Σaj, Σbj = bracket(hzl, Σ0, Σc, φ, ρ)
+    Σaj, Σbj, wolfe_in_bracket = bracket(hzl, Σ0, Σc, φ, ρ, wolfesetup)
+    if wolfe_in_bracket
+        return Σaj.p, Σaj.φ, true
+    end
 
     for j = 1:hzl.maxiter
         # === Step L1: Secant² update ===
@@ -302,7 +305,7 @@ end
 
 Find an interval satisfying the opposite slope condition starting from [0, c] [pp. 123-124, CG_DESCENT_851].
 """
-function bracket(hzl::HagerZhangLS, Σ0::TrialBundle{T}, Σc::TrialBundle{T}, φ, ρ) where {T}
+function bracket(hzl::HagerZhangLS, Σ0::TrialBundle{T}, Σc::TrialBundle{T}, φ, ρ, wolfesetup) where {T}
     # verified against paper description [pp. 123-124, CG_DESCENT_851]
     φ0 = Σ0.φ
     # === Step B0: Initialize bracket search ===
@@ -329,7 +332,7 @@ function bracket(hzl::HagerZhangLS, Σ0::TrialBundle{T}, Σc::TrialBundle{T}, φ
             # φ is decreasing at cj but function value is sufficiently larger than
             # φ0 so we must have passed a place with increasing φ, use U3 to update.
             Σa, Σb = update_U3_a_c(hzl, φ, φ0, Σ0, Σcj, hzl.ϵ)
-            return Σa, Σb
+            return Σa, Σb, false
         end
 
         # === Step B3: Decreasing derivative with sufficient decrease ===
@@ -338,6 +341,10 @@ function bracket(hzl::HagerZhangLS, Σ0::TrialBundle{T}, Σc::TrialBundle{T}, φ
 
         cj = ρ * Σcj.p
         Σcj = TrialBundle(cj, φ(cj))
+        # Check if the new point satisfies Wolfe before continuing expansion
+        if is_wolfe(wolfesetup, Σcj) || is_approx_wolfe(wolfesetup, Σcj)
+            return Σcj, Σcj, true
+        end
     end
     if j == maxj
         @warn("Failed to find a bracket satisfying the opposite slope condition after $maxj iterations.")
@@ -347,7 +354,7 @@ function bracket(hzl::HagerZhangLS, Σ0::TrialBundle{T}, Σc::TrialBundle{T}, φ
     # === Step B1: Positive derivative found (opposite slope condition) ===
     # φ is increasing at cj, set b to cj as this is an upper bound,
     # since φ is initially decreasing.
-    return Σci, Σcj
+    return Σci, Σcj, false
 end
 function secant(hzl::HagerZhangLS, Σa::TrialBundle{T}, Σb::TrialBundle{T}) where {T}
     # verified against paper description [p. 123, CG_DESCENT_851]
