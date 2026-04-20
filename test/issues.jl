@@ -170,4 +170,29 @@ res = (StrongWolfe())(ϕ, dϕ, ϕdϕ, α0, ϕ0, dϕ0)
         test_converges(ConjugateGradient(; linesearch=Optim.LineSearches.HagerZhang(check_flatness=false)))
     end
     =#
+
+    @testset "Interior NaN within finite bracket" begin
+        # φ is finite on [0, 1] ∪ [3, ∞) and non-finite on (1, 3). A standard
+        # expansion brackets with ia at α=1 (finite, dφ<0) and ib at α=5
+        # (finite, dφ>0); the interior of the bracket is infeasible. The line
+        # search must shrink the infeasible upper bound toward α=1 without
+        # throwing on non-finite interior evaluations.
+        function ϕdϕ_nan(α)
+            if α ≤ 1.0
+                return (4.0 - 3α, -3.0)
+            elseif α < 3.0
+                return (NaN, NaN)
+            else
+                return (α - 2.0, 1.0)
+            end
+        end
+        ϕ_nan(α) = ϕdϕ_nan(α)[1]
+        dϕ_nan(α) = ϕdϕ_nan(α)[2]
+
+        hz = HagerZhang()
+        α, val = hz(ϕ_nan, dϕ_nan, ϕdϕ_nan, 1.0, 4.0, -3.0)
+        @test isfinite(α)
+        @test isfinite(val)
+        @test val ≤ 4.0  # non-increase from φ(0)=4
+    end
 end
