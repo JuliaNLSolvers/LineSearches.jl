@@ -157,6 +157,26 @@ end
         phi_lim = ϕ0 + ϵ * abs(ϕ0)
         @test LineSearches.satisfies_wolfe(α, val, dϕ_steep(α), ϕ0, dϕ0, phi_lim, hz.delta, hz.sigma)
         @test val ≈ ϕ_steep(α)
+
+        # Verify preconditions: initial c=0.1 must NOT satisfy Wolfe
+        # (so we actually enter the bracket expansion loop)
+        phi_lim_strict = ϕ0 + 1e-6 * abs(ϕ0)
+        @test !LineSearches.satisfies_wolfe(0.1, ϕ_steep(0.1), dϕ_steep(0.1),
+            ϕ0, dϕ0, phi_lim_strict, 0.1, 0.9)
+
+        # Verify that the expanded point c=0.5 DOES satisfy Wolfe
+        @test LineSearches.satisfies_wolfe(0.5, ϕ_steep(0.5), dϕ_steep(0.5),
+            ϕ0, dϕ0, phi_lim_strict, 0.1, 0.9)
+
+        # Run and verify: should terminate with α=0.5
+        cache = LineSearchCache{Float64}()
+        hz = HagerZhang(; cache)
+        α, val = hz(ϕ_steep, ϕdϕ_steep, 0.1, ϕ0, dϕ0)
+        @test α == 0.5
+        @test val == ϕ_steep(0.5)
+        # Only 2 cached evals: initial c=0.1, then expansion to c=0.5
+        # (plus the implicit α=0 entry)
+        @test length(cache.alphas) == 3
     end
 
     @testset "Result value matches cache minimum" begin
@@ -171,29 +191,6 @@ end
         hz = HagerZhang(; cache, check_flatness=true)
         α, val = hz(fdf.f, fdf.fdf, 1.0, fdf.fdf(0.0)...)
         @test minimum(cache.values) == val
-
-        ϕ0 = ϕ_steep(0.0)
-        dϕ0 = dϕ_steep(0.0)
-
-        # Verify preconditions: initial c=0.1 must NOT satisfy Wolfe
-        # (so we actually enter the bracket expansion loop)
-        phi_lim = ϕ0 + 1e-6 * abs(ϕ0)
-        @test !LineSearches.satisfies_wolfe(0.1, ϕ_steep(0.1), dϕ_steep(0.1),
-            ϕ0, dϕ0, phi_lim, 0.1, 0.9)
-
-        # Verify that the expanded point c=0.5 DOES satisfy Wolfe
-        @test LineSearches.satisfies_wolfe(0.5, ϕ_steep(0.5), dϕ_steep(0.5),
-            ϕ0, dϕ0, phi_lim, 0.1, 0.9)
-
-        # Run and verify: should terminate with α=0.5
-        cache = LineSearchCache{Float64}()
-        hz = HagerZhang(; cache)
-        α, val = hz(ϕ_steep, ϕdϕ_steep, 0.1, ϕ0, dϕ0)
-        @test α == 0.5
-        @test val == ϕ_steep(0.5)
-        # Only 2 cached evals: initial c=0.1, then expansion to c=0.5
-        # (plus the implicit α=0 entry)
-        @test length(cache.alphas) == 3
     end
 end
 
