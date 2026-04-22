@@ -336,23 +336,6 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
                 return alphas[ib], values[ib]
             end
         end
-        # Check if either bracket endpoint satisfies Wolfe (matches HagerZhangLS behavior)
-        a_wolfe = satisfies_wolfe(alphas[ia], values[ia], slopes[ia], phi_0, dphi_0, phi_lim, delta, sigma)
-        b_wolfe = satisfies_wolfe(alphas[ib], values[ib], slopes[ib], phi_0, dphi_0, phi_lim, delta, sigma)
-        if a_wolfe && b_wolfe
-            mayterminate[] = false
-            if values[ia] < values[ib]
-                return alphas[ia], values[ia]
-            else
-                return alphas[ib], values[ib]
-            end
-        elseif a_wolfe
-            mayterminate[] = false
-            return alphas[ia], values[ia]
-        elseif b_wolfe
-            mayterminate[] = false
-            return alphas[ib], values[ib]
-        end
         iter += 1
     end
 
