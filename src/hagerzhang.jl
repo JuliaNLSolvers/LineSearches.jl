@@ -317,7 +317,6 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             c = (A + B) / convert(T, 2)
 
             phi_c, dphi_c = ϕdϕ(c)
-            @assert isfinite(phi_c) && isfinite(dphi_c)
             push!(alphas, c)
             push!(values, phi_c)
             push!(slopes, dphi_c)
@@ -386,19 +385,22 @@ function secant2!(ϕdϕ,
     dphi_b = slopes[ib]
     T = eltype(slopes)
     zeroT = convert(T, 0)
-    if !(dphi_a < zeroT && dphi_b >= zeroT)
+    # `ia` is a bracket invariant (descent side); `ib` may carry a non-finite
+    # slope after bisecting into an infeasible region, so only guard on `ia`.
+    if !(dphi_a < zeroT)
         error(string("Search direction is not a direction of descent; ",
                      "this error may indicate that user-provided derivatives are inaccurate. ",
                       @sprintf "(dphi_a = %f; dphi_b = %f)" dphi_a dphi_b))
     end
     c = secant(a, b, dphi_a, dphi_b)
+    if !isfinite(c)
+        c = (a + b) / convert(T, 2)
+    end
     if display & SECANT2 > 0
         println("secant2: a = ", a, ", b = ", b, ", c = ", c)
     end
-    @assert isfinite(c)
     # phi_c = phi(tmpc, c) # Replace
     phi_c, dphi_c = ϕdϕ(c)
-    @assert isfinite(phi_c) && isfinite(dphi_c)
 
     push!(alphas, c)
     push!(values, phi_c)
@@ -435,7 +437,6 @@ function secant2!(ϕdϕ,
         end
         # phi_c = phi(tmpc, c) # TODO: Replace
         phi_c, dphi_c = ϕdϕ(c)
-        @assert isfinite(phi_c) && isfinite(dphi_c)
 
         push!(alphas, c)
         push!(values, phi_c)
@@ -482,9 +483,10 @@ function update!(ϕdϕ,
     T = eltype(slopes)
     zeroT = convert(T, 0)
     # Debugging (HZ, eq. 4.4):
+    # `ib`'s slope is allowed to be non-finite: bisect! may return an upper
+    # bound whose evaluation landed in an infeasible region.
     @assert slopes[ia] < zeroT
     @assert values[ia] <= phi_lim
-    @assert slopes[ib] >= zeroT
     @assert b > a
     c = alphas[ic]
     phi_c = values[ic]
@@ -534,11 +536,11 @@ function bisect!(ϕdϕ,
     a = alphas[ia]
     b = alphas[ib]
     # Debugging (HZ, conditions shown following U3)
+    # `ib` may carry a non-finite evaluation if the caller bisected into an
+    # infeasible region; only `ia` invariants must hold here.
     zeroT = convert(T, 0)
     @assert slopes[ia] < zeroT
     @assert values[ia] <= phi_lim
-    @assert slopes[ib] < zeroT       # otherwise we wouldn't be here
-    @assert values[ib] > phi_lim
     @assert b > a
     while b - a > eps(b)
         if display & BISECT > 0
@@ -546,7 +548,6 @@ function bisect!(ϕdϕ,
         end
         d = (a + b) / convert(T, 2)
         phi_d, gphi = ϕdϕ(d)
-        @assert isfinite(phi_d) && isfinite(gphi)
 
         push!(alphas, d)
         push!(values, phi_d)
