@@ -141,9 +141,16 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
 
 
     phi_lim = phi_0 + epsilon * abs(phi_0)
-    @assert c >= 0
+    if c < 0
+        throw(LineSearchException("Initial step length must be non-negative.", T(0)))
+    end
     c <= eps(T) && return zeroT, phi_0
-    @assert isfinite(c) && c <= alphamax
+    if !isfinite(c)
+        throw(LineSearchException("Initial step length must be finite.", T(0)))
+    end
+    if c > alphamax
+        throw(LineSearchException("Initial step length exceeds alphamax.", T(0)))
+    end
     phi_c, dphi_c = ϕdϕ(c)
     iterfinite = 1
     while !(isfinite(phi_c) && isfinite(dphi_c)) && iterfinite < iterfinitemax
@@ -511,7 +518,10 @@ function update!(ϕdϕ,
     # more dangerous to replace a than b, since we're leaving the
     # secure environment of alpha=0; that's why we didn't check this
     # above.)
-    if phi_c <= phi_lim
+    # Require finite dphi_c too: a user function may legitimately return
+    # finite phi with non-finite gradient at some points, and we must keep
+    # `slopes[ia] < 0` as an invariant.
+    if phi_c <= phi_lim && isfinite(dphi_c)
         return ic, ib, false  # replace a
     end
     # phi_c is bigger than phi_0, which implies that the minimum
@@ -560,7 +570,9 @@ function bisect!(ϕdϕ,
         if gphi >= zeroT
             return ia, id, false # replace b, return
         end
-        if phi_d <= phi_lim
+        if phi_d <= phi_lim && isfinite(gphi)
+            # Require finite gphi too so `slopes[ia] < 0` stays invariant
+            # even if the user returns finite phi with non-finite gradient.
             a = d # replace a, but keep bisecting until dphi_b > 0
             ia = id
         else
