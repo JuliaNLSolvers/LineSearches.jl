@@ -7,8 +7,8 @@
     end
 
     @testset "Quadratic function" begin
-        lsalphas =     [1.0,   0.5, 0.5, 0.49995, 0.5,  0.5]  # types
-                        # Stat  #HZ  wolfe   mt    bt3   bt2
+        lsalphas =     [1.0,   0.5,  0.5, 0.5, 0.49995, 0.5,  0.5]  # types
+                        # Stat  #HZ  HZLS wolfe   mt    bt3   bt2
         x = [-1., -1.]
 
         for (i, linesearch!) in enumerate(lstypes)
@@ -80,6 +80,7 @@
 
         lsalphas =  [1.0,                  # Static
                      0.01375274240750926,  # HZ
+                     0.01375274240750926, # HZLS
                      0.020646100006834013, # Wolfe
                      0.0175892025844326,   # MT
                      0.020545340808876406, # BT(3)
