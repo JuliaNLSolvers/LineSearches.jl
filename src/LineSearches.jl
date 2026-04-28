@@ -7,7 +7,7 @@ using NLSolversBase: NLSolversBase, AbstractObjective
 
 export LineSearchException, LineSearchCache
 
-export AbstractLineSearch, BackTracking, HagerZhang, HagerZhangLS, Static, MoreThuente, StrongWolfe
+export AbstractLineSearch, BackTracking, HagerZhang, Static, MoreThuente, StrongWolfe
 
 export InitialHagerZhang, InitialStatic, InitialPrevious,
     InitialQuadratic, InitialConstantChange
