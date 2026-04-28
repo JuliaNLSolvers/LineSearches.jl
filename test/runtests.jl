@@ -7,11 +7,11 @@ import NLSolversBase
 
 debug_printing = false
 
-lstypes =  (Static(), HagerZhang(), HagerZhangLS(), StrongWolfe(), MoreThuente(),
+lstypes =  (Static(), HagerZhang(), LineSearches.HagerZhangLS(), StrongWolfe(), MoreThuente(),
             BackTracking(), BackTracking(order=2) )
 
 my_tests = [
-    "hagerzhangls.jl",
+    "LineSearches.HagerZhangLS.jl",
     "initial.jl",
     "alphacalc.jl",
     "arbitrary_precision.jl",

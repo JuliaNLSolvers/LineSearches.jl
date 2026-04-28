@@ -7,8 +7,8 @@ if !isdefined(@__MODULE__, :LineSearchTestCase)
     using .TestCases
 end
 
-@testset "HagerZhangLS" begin
-    ls = HagerZhangLS()
+@testset "LineSearches.HagerZhangLS" begin
+    ls = LineSearches.HagerZhangLS()
     ϕ(x) = (x - π)^4
     dϕ(x) = 4*(x-π)^3
     ϕdϕ(x) = (ϕ(x), dϕ(x))
