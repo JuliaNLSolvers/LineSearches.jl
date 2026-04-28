@@ -11,7 +11,7 @@ lstypes =  (Static(), HagerZhang(), LineSearches.HagerZhangLS(), StrongWolfe(), 
             BackTracking(), BackTracking(order=2) )
 
 my_tests = [
-    "LineSearches.HagerZhangLS.jl",
+    "hagerzhangls.jl",
     "initial.jl",
     "alphacalc.jl",
     "arbitrary_precision.jl",
