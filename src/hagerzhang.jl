@@ -232,6 +232,15 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             cold = c
             phi_cold = phi_c
             if nextfloat(cold) >= alphamax
+                # If the recovery loop below shrunk `alphamax` from the
+                # user-supplied cap, we're pinned at a NaN feasibility
+                # boundary; return alpha=0 so the caller stops cleanly
+                # instead of taking a microscopic step into a region where
+                # the gradient may be non-finite.
+                if alphamax < ls.alphamax
+                    mayterminate[] = false
+                    return zeroT, phi_0
+                end
                 mayterminate[] = false # reset in case another initial guess is used next
                 return cold, phi_cold
             end
@@ -261,6 +270,9 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
                             ", alphamax = ", alphamax,
                             ", phi_c = ", phi_c,
                             ", dphi_c = ", dphi_c)
+                end
+                if alphamax < ls.alphamax
+                    return zeroT, phi_0
                 end
                 return cold, phi_cold
             end

@@ -264,7 +264,6 @@ function update_U3_a_c(hzl::HagerZhangLS, φ, φ0, Σā::TrialBundle{T}, Σb̄::
             end
         end
     end
-    @show 123
     # TODO stop if interval is too small; why does ths happen? bad direction causing what?
     println("Failed to find a point of increasing objective after $(hzl.maxiter_U3) iterations in U3.")
     return Σā, Σb̄
@@ -295,7 +294,7 @@ function _update(hzl::HZ, Σa, Σb, Σc::TrialBundle{T}, φ, φ0, ϵ) where {HZ<
         end
         # === Step U3: Negative derivative without sufficient decrease ===
         Σā, Σb̄ = Σa, Σc
-        @show Σc
+
         Σa, Σb = update_U3_a_c(hzl, φ, φ0, Σā, Σb̄, ϵ)
         return Σa, Σb
     end
