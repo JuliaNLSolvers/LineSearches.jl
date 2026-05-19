@@ -113,8 +113,7 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
         i += 1
     end
 
-    # Quasi-error response TODO make this error instead
-    return a_max, ϕ(a_max)
+    throw(LineSearchException("StrongWolfe: bracketing reached a_max=$a_max without satisfying Wolfe conditions.", a_max))
 end
 
 function zoom(a_lo::T,
@@ -185,8 +184,7 @@ function zoom(a_lo::T,
         end
     end
 
-    # Quasi-error response
-    return a_j
+    throw(LineSearchException("StrongWolfe: zoom reached maximum iterations ($max_iterations) without satisfying Wolfe conditions.", a_j))
 end
 
 # a_lo = a_{i - 1}

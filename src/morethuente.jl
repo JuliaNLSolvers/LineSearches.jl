@@ -166,8 +166,6 @@ function (ls::MoreThuente)(ϕdϕ,
     emptycache!(cache)
 
     iterfinitemax = -log2(eps(T))
-    info = 0
-    info_cstep = 1 # Info from step
 
     zeroT = convert(T, 0)
     pushcache!(cache, zeroT, ϕ_0, dϕ_0)
@@ -176,28 +174,33 @@ function (ls::MoreThuente)(ϕdϕ,
     # Check the input parameters for errors.
     #
 
+    if !(isfinite(ϕ_0) && isfinite(dϕ_0))
+        throw(LineSearchException("Value and slope at step length = 0 must be finite.", T(0)))
+    end
+
     if  alpha <= zeroT || f_tol < zeroT || gtol < zeroT ||
         x_tol < zeroT || alphamin < zeroT || alphamax < alphamin || maxfev <= zeroT
-        throw(LineSearchException("Invalid parameters to MoreThuente.", 0))
+        throw(LineSearchException("Invalid parameters to MoreThuente.", T(0)))
     end
 
     if dϕ_0 >= zeroT
-        throw(LineSearchException("Search direction is not a direction of descent.", 0))
+        throw(LineSearchException("Search direction is not a direction of descent.", T(0)))
     end
 
     #
     # Initialize local variables.
     #
 
+    if !isfinite(alpha)
+        throw(LineSearchException("Initial step length must be finite.", alpha))
+    end
+
     bracketed = false
     stage1 = true
     nfev = 0
-    finit = ϕ_0
     dgtest = f_tol * dϕ_0
     width = alphamax - alphamin
     width1 = 2 * width
-
-    # Keep this across calls
 
     #
     # The variables stx, fx, dgx contain the values of the step,
@@ -210,38 +213,33 @@ function (ls::MoreThuente)(ϕdϕ,
     #
 
     stx = zeroT
-    fx = finit
+    fx = ϕ_0
     dgx = dϕ_0
     sty = zeroT
-    fy = finit
+    fy = ϕ_0
     dgy = dϕ_0
 
-    # START: Ensure that the initial step provides finite function values
-    # This is not part of the original FORTRAN code
-    if !isfinite(alpha)
-        alpha = one(T)
-    end
     stmin = stx
     stmax = alpha + 4 * (alpha - stx) # Why 4?
     alpha = max(alpha, alphamin)
     alpha = min(alpha, alphamax)
 
+    # Ensure the initial step yields finite function/gradient values
+    # (not part of the original FORTRAN). This is plain backtracking.
     f, dg = ϕdϕ(alpha)
-    nfev += 1 # This includes calls to f() and g!()
+    nfev += 1
     iterfinite = 0
     while (!isfinite(f) || !isfinite(dg)) && iterfinite < iterfinitemax
         iterfinite += 1
         alpha = alpha/2
 
         f, dg = ϕdϕ(alpha)
-        nfev += 1 # This includes calls to f() and g!()
-
-        # Make stmax = (3/2)*alpha < 2alpha in the first iteration below
-        stx = (convert(T, 7)/8)*alpha
+        nfev += 1
+    end
+    if !(isfinite(f) && isfinite(dg))
+        throw(LineSearchException("Failed to achieve finite new evaluation point.", alpha))
     end
     pushcache!(cache, alpha, f, dg)
-    # END: Ensure that the initial step provides finite function values
-    # TODO: check if value is finite (maybe iterfinite > iterfinitemax)
 
     while true
         #
@@ -277,7 +275,7 @@ function (ls::MoreThuente)(ϕdϕ,
         #
 
         if (bracketed && (alpha <= stmin || alpha >= stmax)) ||
-            nfev >= maxfev-1 || info_cstep == 0 ||
+            nfev >= maxfev-1 ||
             (bracketed && stmax - stmin <= x_tol * stmax)
             alpha = stx
         end
@@ -294,39 +292,32 @@ function (ls::MoreThuente)(ϕdϕ,
             return alpha, f
         end
 
-        ftest1 = finit + alpha * dgtest
+        ftest1 = ϕ_0 + alpha * dgtest
 
         #
-        # Test for convergence.
+        # Test for convergence. Checks run in priority order (Wolfe first); the
+        # original code set `info = N` in reverse-priority order so the last
+        # overwrite won. info codes: 1=Wolfe, 2=x_tol, 3=maxfev, 4=alphamin,
+        # 5=alphamax, 6=rounding.
         #
 
-        # What does info_cstep stand for?
-
-        if (bracketed && (alpha <= stmin || alpha >= stmax)) || info_cstep == 0
-            info = 6
-        end
-        if alpha == alphamax && f <= ftest1 && dg <= dgtest
-            info = 5
-        end
-        if alpha == alphamin && (f > ftest1 || dg >= dgtest)
-            info = 4
-        end
-        if nfev >= maxfev
-            info = 3
+        if f <= ftest1 && abs(dg) <= -gtol * dϕ_0
+            return alpha, f
         end
         if bracketed && stmax - stmin <= x_tol * stmax
-            info = 2
+            throw(LineSearchException("MoreThuente: bracket width fell below x_tol=$x_tol without satisfying Wolfe conditions.", alpha))
         end
-        if f <= ftest1 && abs(dg) <= -gtol * dϕ_0
-            info = 1
+        if nfev >= maxfev
+            throw(LineSearchException("MoreThuente: reached maximum function evaluations ($maxfev) without satisfying Wolfe conditions.", alpha))
         end
-
-        #
-        # Check for termination.
-        #
-
-        if info != 0
+        if alpha == alphamin && (f > ftest1 || dg >= dgtest)
+            throw(LineSearchException("MoreThuente: step pinned at alphamin without satisfying Wolfe conditions.", alpha))
+        end
+        if alpha == alphamax && f <= ftest1 && dg <= dgtest
             return alpha, f
+        end
+        if bracketed && (alpha <= stmin || alpha >= stmax)
+            throw(LineSearchException("MoreThuente: rounding errors prevent further progress; tolerances may be too small.", alpha))
         end
 
         #
@@ -363,7 +354,7 @@ function (ls::MoreThuente)(ϕdϕ,
             stx, fxm, dgxm,
             sty, fym, dgym,
             alpha, fm, dgm,
-            bracketed, info_cstep =
+            bracketed, _ =
                 cstep(stx, fxm, dgxm, sty, fym, dgym,
                       alpha, fm, dgm, bracketed, stmin, stmax)
             #
@@ -381,7 +372,7 @@ function (ls::MoreThuente)(ϕdϕ,
             stx, fx, dgx,
             sty, fy, dgy,
             alpha, f, dg,
-            bracketed, info_cstep =
+            bracketed, _ =
                 cstep(stx, fx, dgx, sty, fy, dgy,
                       alpha, f, dg, bracketed, stmin, stmax)
         end
@@ -519,7 +510,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    # the cubic step is taken, else the quadratic step is taken
    #
 
-elseif sgnd < zeroT
+   elseif sgnd < zeroT
       info = 2
       bound = false
       theta = 3 * (fx - f) / (alpha - stx) + dgx + dg
@@ -574,7 +565,7 @@ elseif sgnd < zeroT
       r = p / q
       if r < zeroT && gamma != zeroT
          alphac = alpha + r * (stx - alpha)
-     elseif alpha > stx
+      elseif alpha > stx
          alphac = alphamax
       else
          alphac = alphamin
@@ -618,7 +609,7 @@ elseif sgnd < zeroT
          r = p / q
          alphac = alpha + r * (sty - alpha)
          alphaf = alphac
-     elseif alpha > stx
+      elseif alpha > stx
          alphaf = alphamax
       else
          alphaf = alphamin
