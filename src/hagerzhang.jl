@@ -119,10 +119,8 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
     if !(isfinite(phi_0) && isfinite(dphi_0))
         throw(LineSearchException("Value and slope at step length = 0 must be finite.", T(0)))
     end
-    if dphi_0 >= eps(T) * abs(phi_0)
+    if dphi_0 >= 0
         throw(LineSearchException("Search direction is not a direction of descent.", T(0)))
-    elseif dphi_0 >= 0
-        return zeroT, phi_0
     end
 
     # Prevent values of x_new = x+αs that are likely to make
@@ -144,7 +142,9 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
     if c < 0
         throw(LineSearchException("Initial step length must be non-negative.", T(0)))
     end
-    c <= eps(T) && return zeroT, phi_0
+    if c <= eps(T)
+        throw(LineSearchException("Initial step length must exceed machine epsilon.", c))
+    end
     if !isfinite(c)
         throw(LineSearchException("Initial step length must be finite.", T(0)))
     end
@@ -160,9 +160,8 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
         phi_c, dphi_c = ϕdϕ(c)
     end
     if !(isfinite(phi_c) && isfinite(dphi_c))
-        @warn("Failed to achieve finite new evaluation point, using alpha=0")
         mayterminate[] = false # reset in case another initial guess is used next
-        return zeroT, phi_0
+        throw(LineSearchException("Failed to achieve finite new evaluation point.", c))
     end
     push!(alphas, c)
     push!(values, phi_c)
@@ -232,14 +231,12 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             cold = c
             phi_cold = phi_c
             if nextfloat(cold) >= alphamax
-                # If the recovery loop below shrunk `alphamax` from the
-                # user-supplied cap, we're pinned at a NaN feasibility
-                # boundary; return alpha=0 so the caller stops cleanly
-                # instead of taking a microscopic step into a region where
-                # the gradient may be non-finite.
                 if alphamax < ls.alphamax
+                    # The recovery loop below shrunk `alphamax` from the
+                    # user-supplied cap, so we're pinned at a non-finite
+                    # feasibility boundary and cannot make further progress.
                     mayterminate[] = false
-                    return zeroT, phi_0
+                    throw(LineSearchException("Failed to bracket: pinned at non-finite feasibility boundary.", cold))
                 end
                 mayterminate[] = false # reset in case another initial guess is used next
                 return cold, phi_cold
@@ -272,7 +269,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
                             ", dphi_c = ", dphi_c)
                 end
                 if alphamax < ls.alphamax
-                    return zeroT, phi_0
+                    throw(LineSearchException("Failed to expand bracket to finite values after alphamax was shrunk.", cold))
                 end
                 return cold, phi_cold
             end

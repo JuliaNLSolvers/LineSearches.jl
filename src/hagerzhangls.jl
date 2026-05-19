@@ -419,10 +419,7 @@ function (ls::HagerZhangLS)(ϕdϕ, α_0::T, ϕ_0::Real, dϕ_0::Real) where {T}
     α, fα, success = find_steplength(ls, ϕdϕ, T(ϕ_0), T(dϕ_0), α_0)
 
     if !success
-        # LineSearches.jl convention: return best effort (α=0, ϕ_0) or throw.
-        # We follow the non-throwing convention for compatibility with solvers
-        # that handle line search failure gracefully.
-        return zero(T), T(ϕ_0)
+        throw(LineSearchException("HagerZhangLS failed to converge.", α))
     end
 
     return α, fα
