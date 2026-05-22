@@ -288,6 +288,26 @@ function (ls::MoreThuente)(ϕdϕ,
         pushcache!(cache, alpha, f, dg)
         nfev += 1 # This includes calls to f() and g!()
 
+        # Recover from a non-finite evaluation by bisecting toward stx
+        # (the best finite step seen so far) and shrink the local alphamax
+        # to remember the infeasibility boundary so future iterations
+        # don't expand back over it.
+        iterfinite = 0
+        while !(isfinite(f) && isfinite(dg))
+            if nfev >= maxfev
+                throw(LineSearchException("MoreThuente: reached maximum function evaluations ($maxfev) while recovering from non-finite evaluation.", alpha))
+            end
+            if iterfinite >= iterfinitemax || alpha == stx
+                throw(LineSearchException("MoreThuente: failed to recover finite evaluation by bisecting toward stx.", alpha))
+            end
+            alphamax = min(alphamax, alpha)
+            iterfinite += 1
+            alpha = (alpha + stx) / 2
+            f, dg = ϕdϕ(alpha)
+            pushcache!(cache, alpha, f, dg)
+            nfev += 1
+        end
+
         if isapprox(dg, 0, atol=eps(T)) # Should add atol value to MoreThuente
             return alpha, f
         end
