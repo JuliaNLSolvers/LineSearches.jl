@@ -18,13 +18,13 @@ UP = MultivariateProblems.UnconstrainedProblems
 prob = UP.examples["Rosenbrock"]
 
 algo_hz = Newton(linesearch = HagerZhang())
-res_hz = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_hz)
+res_hz = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, algo_hz)
 
 # Now we can try `Newton` with the cubic backtracking line search,
 # which reduced the number of objective and gradient calls.
 
 algo_bt3 = Newton(linesearch = BackTracking(order=3))
-res_bt3 = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_bt3)
+res_bt3 = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, algo_bt3)
 
 
 ## Test the results                                  #src

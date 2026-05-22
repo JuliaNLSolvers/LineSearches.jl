@@ -6,7 +6,7 @@ Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 OptimTestProblems = "cec144fc-5a64-5bc6-99fb-dde8f63e154c"
 
 [compat]
-Documenter = "~0.19"
+Documenter = "1"
 
 [sources.LineSearches]
 path = ".."
