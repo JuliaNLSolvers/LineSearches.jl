@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Using LineSearches without Optim/NLsolve · LineSearches.jl</title><meta name="title" content="Using LineSearches without Optim/NLsolve · LineSearches.jl"/><meta property="og:title" content="Using LineSearches without Optim/NLsolve · LineSearches.jl"/><meta property="twitter:title" content="Using LineSearches without Optim/NLsolve · LineSearches.jl"/><meta name="description" content="Documentation for LineSearches.jl."/><meta property="og:description" content="Documentation for LineSearches.jl."/><meta property="twitter:description" content="Documentation for LineSearches.jl."/><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../search_index.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../../">LineSearches.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../../">Home</a></li><li><span class="tocitem">Examples</span><ul><li class="is-active"><a class="tocitem" href>Using LineSearches without Optim/NLsolve</a><ul class="internal"><li><a class="tocitem" href="#Optimizing-Rosenbrock"><span>Optimizing Rosenbrock</span></a></li><li><a class="tocitem" href="#customoptimizer-plain-program"><span>Plain Program</span></a></li></ul></li><li><a class="tocitem" href="../optim_linesearch/">Optim line search</a></li><li><a class="tocitem" href="../optim_initialstep/">Optim initial step length guess</a></li></ul></li><li><span class="tocitem">API Reference</span><ul><li><a class="tocitem" href="../../../reference/linesearch/">Line search routines</a></li><li><a class="tocitem" href="../../../reference/initialstep/">Initial step length guess</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Using LineSearches without Optim/NLsolve</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Using LineSearches without Optim/NLsolve</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaNLSolvers/LineSearches.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaNLSolvers/LineSearches.jl/blob/master/docs/src/examples/customoptimizer.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Using-LineSearches-without-Optim/NLsolve"><a class="docs-heading-anchor" href="#Using-LineSearches-without-Optim/NLsolve">Using LineSearches without Optim/NLsolve</a><a id="Using-LineSearches-without-Optim/NLsolve-1"></a><a class="docs-heading-anchor-permalink" href="#Using-LineSearches-without-Optim/NLsolve" title="Permalink"></a></h1><div class="admonition is-success" id="Tip-5456cd611c59f58f"><header class="admonition-header">Tip<a class="admonition-anchor" href="#Tip-5456cd611c59f58f" title="Permalink"></a></header><div class="admonition-body"><p>This example is also available as a Jupyter notebook: <a href="https://nbviewer.jupyter.org/github/JuliaNLSolvers/LineSearches.jl/blob/gh-pages/devexamples/generated/customoptimizer.ipynb"><code>customoptimizer.ipynb</code></a></p></div></div><p>This tutorial shows you how to use the line search algorithms in <code>LineSearches</code> for your own optimization algorithm that is not part of <code>Optim</code> or <code>NLsolve</code>.</p><p>Say we have written a gradient descent optimization algorithm but would like to experiment with different line search algorithms. The algorithm is implemented as follows.</p><pre><code class="language-julia hljs">using LinearAlgebra: norm, dot
+
+function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, linesearch,
+                    maxiter::Int = 10000,
+                    g_rtol::T = sqrt(eps(T)), g_atol::T = eps(T)) where T &lt;: Number
+    x = copy(x0)
+    gvec = similar(x)
+    g!(gvec, x)
+    fx = f(x)
+
+    gnorm = norm(gvec)
+    gtol = max(g_rtol*gnorm, g_atol)
+
+    # Univariate line search functions
+    ϕ(α) = f(x .+ α.*s)
+    function dϕ(α)
+        g!(gvec, x .+ α.*s)
+        return dot(gvec, s)
+    end
+    function ϕdϕ(α)
+        phi = fg!(gvec, x .+ α.*s)
+        dphi = dot(gvec, s)
+        return (phi, dphi)
+    end
+
+    s = similar(gvec) # Step direction
+
+    iter = 0
+    while iter &lt; maxiter &amp;&amp; gnorm &gt; gtol
+        iter += 1
+        s .= -gvec
+
+        dϕ_0 = dot(s, gvec)
+        α, fx = linesearch(ϕ, dϕ, ϕdϕ, 1.0, fx, dϕ_0)
+
+        @. x = x + α*s
+        g!(gvec, x)
+        gnorm = norm(gvec)
+    end
+
+    return (fx, x, iter)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">gdoptimize (generic function with 4 methods)</code></pre><p>Note that there are many optimization and line search algorithms that allow the user to evaluate both the objective and the gradient at the same time, for computational efficiency reasons. We have included this functionality in the algorithm as the input function <code>fg!</code>, and even if the Gradient Descent algorithm does not use it explicitly, many of the LineSearches algorithms do.</p><p>The Gradient Descent <code>gdoptimize</code> method selects a descent direction and calls the line search algorithm  <code>linesearch</code> which returns the step length <code>α</code> and the objective value <code>fx = f(x + α*s)</code>.</p><p>The functions ϕ and dϕ represent a univariate objective and its derivative, which is used by the line search algorithms. To utilize the <code>fg!</code> function call in the optimizer, some of the line searches require a function ϕdϕ which returns the univariate objective and the derivative at the same time.</p><h2 id="Optimizing-Rosenbrock"><a class="docs-heading-anchor" href="#Optimizing-Rosenbrock">Optimizing Rosenbrock</a><a id="Optimizing-Rosenbrock-1"></a><a class="docs-heading-anchor-permalink" href="#Optimizing-Rosenbrock" title="Permalink"></a></h2><p>Here is an example to show how we can combine <code>gdoptimize</code> and <code>LineSearches</code> to minimize the Rosenbrock function, which is defined by</p><pre><code class="language-julia hljs">f(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
+
+function g!(gvec, x)
+    gvec[1] = -2.0 * (1.0 - x[1]) - 400.0 * (x[2] - x[1]^2) * x[1]
+    gvec[2] = 200.0 * (x[2] - x[1]^2)
+    gvec
+end
+
+function fg!(gvec, x)
+    g!(gvec, x)
+    f(x)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">fg! (generic function with 1 method)</code></pre><p>We can now use <code>gdoptimize</code> with <code>BackTracking</code> to optimize the Rosenbrock function from a given initial condition <code>x0</code>.</p><pre><code class="language-julia hljs">x0 = [-1., 1.0]
+
+using LineSearches
+ls = BackTracking(order=3)
+fx_bt3, x_bt3, iter_bt3 = gdoptimize(f, g!, fg!, x0, ls)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(2.0620997768295942e-15, [0.9999999546240245, 0.9999999090713982], 5759)</code></pre><p>Interestingly, the <code>StrongWolfe</code> line search converges in one iteration, whilst all the other algorithms take thousands of iterations. This is just luck due to the particular choice of initial condition</p><pre><code class="language-julia hljs">ls = StrongWolfe()
+fx_sw, x_sw, iter_sw = gdoptimize(f, g!, fg!, x0, ls)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(0.0, [1.0, 1.0], 1)</code></pre><h2 id="customoptimizer-plain-program"><a class="docs-heading-anchor" href="#customoptimizer-plain-program">Plain Program</a><a id="customoptimizer-plain-program-1"></a><a class="docs-heading-anchor-permalink" href="#customoptimizer-plain-program" title="Permalink"></a></h2><p>Below follows a version of the program without any comments. The file is also available here: <a href="../customoptimizer.jl">customoptimizer.jl</a></p><pre><code class="language-julia hljs">using LinearAlgebra: norm, dot
+
+function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, linesearch,
+                    maxiter::Int = 10000,
+                    g_rtol::T = sqrt(eps(T)), g_atol::T = eps(T)) where T &lt;: Number
+    x = copy(x0)
+    gvec = similar(x)
+    g!(gvec, x)
+    fx = f(x)
+
+    gnorm = norm(gvec)
+    gtol = max(g_rtol*gnorm, g_atol)
+
+    # Univariate line search functions
+    ϕ(α) = f(x .+ α.*s)
+    function dϕ(α)
+        g!(gvec, x .+ α.*s)
+        return dot(gvec, s)
+    end
+    function ϕdϕ(α)
+        phi = fg!(gvec, x .+ α.*s)
+        dphi = dot(gvec, s)
+        return (phi, dphi)
+    end
+
+    s = similar(gvec) # Step direction
+
+    iter = 0
+    while iter &lt; maxiter &amp;&amp; gnorm &gt; gtol
+        iter += 1
+        s .= -gvec
+
+        dϕ_0 = dot(s, gvec)
+        α, fx = linesearch(ϕ, dϕ, ϕdϕ, 1.0, fx, dϕ_0)
+
+        @. x = x + α*s
+        g!(gvec, x)
+        gnorm = norm(gvec)
+    end
+
+    return (fx, x, iter)
+end
+
+f(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
+
+function g!(gvec, x)
+    gvec[1] = -2.0 * (1.0 - x[1]) - 400.0 * (x[2] - x[1]^2) * x[1]
+    gvec[2] = 200.0 * (x[2] - x[1]^2)
+    gvec
+end
+
+function fg!(gvec, x)
+    g!(gvec, x)
+    f(x)
+end
+
+x0 = [-1., 1.0]
+
+using LineSearches
+ls = BackTracking(order=3)
+fx_bt3, x_bt3, iter_bt3 = gdoptimize(f, g!, fg!, x0, ls)
+
+ls = StrongWolfe()
+fx_sw, x_sw, iter_sw = gdoptimize(f, g!, fg!, x0, ls)
+
+# This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../../">« Home</a><a class="docs-footer-nextpage" href="../optim_linesearch/">Optim line search »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Friday 22 May 2026 08:12">Friday 22 May 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
