@@ -171,6 +171,32 @@ res = (StrongWolfe())(ϕ, dϕ, ϕdϕ, α0, ϕ0, dϕ0)
     end
     =#
 
+    @testset "BackTracking cubic interpolation (PR #172)" begin
+        # Regression test for the cubic-interpolation branch of BackTracking:
+        #   1. degenerate (a ≈ 0) case used the wrong sign for α_tmp;
+        #   2. general case used (-b + √Δ)/(3a), which loses precision to
+        #      catastrophic cancellation when b > 0 and dϕ_0 < 0.
+        # Repro from @AlexandreMagueresse in PR #172.
+        ϕ(x) = -sin(x) / x
+        dϕ(x) = -(cos(x) * x - sin(x)) / x^2
+        ϕdϕ(x) = ϕ(x), dϕ(x)
+
+        α0 = 1.0f5
+        x0 = -3.0
+        ϕ0, dϕ0 = ϕ(x0), dϕ(x0)
+
+        α, val = BackTracking()(ϕ, dϕ, ϕdϕ, α0, ϕ0, dϕ0)
+
+        # Sufficient decrease must hold for any valid BackTracking result.
+        c_1 = 1e-4
+        @test val ≤ ϕ0 + c_1 * α * dϕ0
+
+        # The buggy code returned α ≈ 8.43 with ϕ ≈ -0.0993; the fixed cubic
+        # interpolation lands at α ≈ 2.18 with ϕ ≈ -0.374, a meaningfully
+        # better minimizer along the descent direction.
+        @test val < -0.2
+    end
+
     @testset "Interior NaN within finite bracket" begin
         # φ is finite on [0, 1] ∪ [3, ∞) and non-finite on (1, 3). A standard
         # expansion brackets with ia at α=1 (finite, dφ<0) and ib at α=5
