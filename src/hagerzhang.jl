@@ -75,7 +75,12 @@ const DEFAULTSIGMA = 0.9 # Values taken from HZ paper (Nocedal & Wright recommen
 
 
 """
+    HagerZhang(; delta=0.1, sigma=0.9, alphamax=Inf, rho=5.0, epsilon=1e-6,
+                 gamma=2/3, linesearchmax=50, psi3=0.1, display=0,
+                 mayterminate=Ref(false), cache=nothing, check_flatness=false)
+
 Conjugate gradient line search implementation from:
+
   W. W. Hager and H. Zhang (2006) Algorithm 851: CG_DESCENT, a
     conjugate gradient method with guaranteed descent. ACM
     Transactions on Mathematical Software 32: 113–137.

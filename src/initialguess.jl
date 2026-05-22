@@ -1,11 +1,13 @@
 # Provide functionality for initial guesses to the step length
 
 """
-Provide static initial step length.
+    InitialStatic(; alpha=1.0, scaled=false)
 
-Keyword `alpha` corresponds to static step length, default is 1.0.
-If keyword `scaled = true`, then the initial step length
-is scaled with the `l_2` norm of the step direction.
+Provide a static initial step length.
+
+Keyword `alpha` corresponds to the static step length (default `1.0`). If
+`scaled = true`, then the initial step length is scaled with the `l_2` norm of
+the step direction.
 """
 @kwdef struct InitialStatic{T}
     alpha::T = 1.0
@@ -25,11 +27,12 @@ function (is::InitialStatic{T})(ls, state, phi_0, dphi_0, df) where T
 end
 
 """
-Use previous step length as initial guess,
-within the bounds [alphamin, alphamax]
+    InitialPrevious(; alpha=1.0, alphamin=0.0, alphamax=Inf)
 
+Use the previous step length as the initial guess, clamped to the bounds
+`[alphamin, alphamax]`.
 
-If state.alpha is NaN, then return fallback value is.alpha
+If `state.alpha` is `NaN`, then the fallback value `alpha` is returned.
 """
 @kwdef struct InitialPrevious{T}
     alpha::T = 1.0
@@ -48,20 +51,22 @@ end
 
 
 """
-Quadratic interpolation for initial step length guess.
+    InitialQuadratic(; α0=1.0, αmin=1e-12, αmax=1.0, ρ=0.25, snap2one=(0.75, Inf))
+
+Quadratic interpolation for the initial step length guess.
 
 This is meant for methods that do not produce well-scaled search directions,
-such as Gradient Descent and (variations of) Conjugate Gradient methods.
-See the discussion around Nocedal and Wright, 2nd ed, (3.60).
+such as Gradient Descent and (variations of) Conjugate Gradient methods. See
+the discussion around Nocedal and Wright, 2nd ed, (3.60).
 
-This procedure have several arguments, with the following defaults.
+This procedure has several arguments, with the following defaults.
 - `α0       = 1.0`.         The initial step size at the first iteration.
-- `αmin     = 1e-12`.       The minimum initial step size. (Default arbitrary).
+- `αmin     = 1e-12`.       The minimum initial step size. (Default arbitrary.)
 - `αmax     = 1.0`.         The maximum initial step size.
-- `ρ        = 0.25`.        Maximum decrease from previous iteration, `αinit ≥ α_{k-1}`. (Default arbitrary).
-- `snap2one = (0.75, Inf)`. Set all values within this (closed) interval to 1.0. (Default arbitrary).
+- `ρ        = 0.25`.        Maximum decrease from previous iteration, `αinit ≥ α_{k-1}`. (Default arbitrary.)
+- `snap2one = (0.75, Inf)`. Set all values within this (closed) interval to `1.0`. (Default arbitrary.)
 
-If αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.
+If `αmax ≠ 1.0`, then consider ensuring that `snap2one[2] < αmax`.
 """
 @kwdef struct InitialQuadratic{T}
     αmin::T = 1e-12 # Minimum initial step size (value somewhat arbitrary)
@@ -90,23 +95,26 @@ function (is::InitialQuadratic{T})(ls, state, phi_0, dphi_0, df) where T
 end
 
 """
-Constant first-order change approximation to determine initial step length.
+    InitialConstantChange(; α0=1.0, αmin=1e-12, αmax=1.0, ρ=0.25, snap2one=(0.75, Inf))
 
-** This requires that the optimization algorithm stores dphi0 from the previous iteration **
-(dphi0_previous = real(dot(∇f_{k-1}, s_{k-1})), where s is the step direction.
+Constant first-order change approximation to determine the initial step length.
+
+**This requires that the optimization algorithm stores `dphi0` from the previous
+iteration** (`dphi0_previous = real(dot(∇f_{k-1}, s_{k-1}))`), where `s` is the
+step direction.
 
 This is meant for methods that do not produce well-scaled search directions,
-such as Gradient Descent and (variations of) Conjugate Gradient methods.
-See the discussion in Nocedal and Wright, 2nd ed, p. 59 on "Initial Step Length"
+such as Gradient Descent and (variations of) Conjugate Gradient methods. See
+the discussion in Nocedal and Wright, 2nd ed, p. 59 on "Initial Step Length".
 
-This procedure have several arguments, with the following defaults.
+This procedure has several arguments, with the following defaults.
 - `α0       = 1.0`.         The initial step size at the first iteration.
-- `αmin     = 1e-12`.       The minimum initial step size. (Default arbitrary).
+- `αmin     = 1e-12`.       The minimum initial step size. (Default arbitrary.)
 - `αmax     = 1.0`.         The maximum initial step size.
-- `ρ        = 0.25`.        Maximum decrease from previous iteration, `αinit ≥ α_{k-1}`. (Default arbitrary).
-- `snap2one = (0.75, Inf)`. Set all values within this (closed) interval to 1.0. (Default arbitrary).
+- `ρ        = 0.25`.        Maximum decrease from previous iteration, `αinit ≥ α_{k-1}`. (Default arbitrary.)
+- `snap2one = (0.75, Inf)`. Set all values within this (closed) interval to `1.0`. (Default arbitrary.)
 
-If αmax ≠ 1.0, then you should consider to ensure that snap2one[2] < αmax.
+If `αmax ≠ 1.0`, then consider ensuring that `snap2one[2] < αmax`.
 """
 struct InitialConstantChange{T}
     αmin::T # Minimum initial step size (value somewhat arbitrary)
@@ -161,13 +169,17 @@ end
 
 
 """
-Initial step size algorithm from
+    InitialHagerZhang(; ψ0=0.01, ψ1=0.2, ψ2=2.0, ψ3=0.1, αmax=Inf, α0=1.0,
+                        quadstep=true, verbose=false)
+
+Initial step size algorithm from:
+
   W. W. Hager and H. Zhang (2006) Algorithm 851: CG_DESCENT, a
     conjugate gradient method with guaranteed descent. ACM
     Transactions on Mathematical Software 32: 113–137.
 
-If α0 is NaN, then procedure I0 is called at the first iteration,
-otherwise, we select according to procedure I1-2, with starting value α0.
+If `α0` is `NaN`, then procedure I0 is called at the first iteration;
+otherwise we select according to procedure I1-2, with starting value `α0`.
 """
 @kwdef struct InitialHagerZhang{T}
     ψ0::T          = 0.01

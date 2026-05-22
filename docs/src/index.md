@@ -36,15 +36,19 @@ be used with Optim and NLsolve.
 
 ## Installation
 
-To install, simply run the following in the Julia REPL:
+To install, run the following in the Julia REPL:
 ```julia
+using Pkg
 Pkg.add("LineSearches")
 ```
-and then run
+or, equivalently, enter Pkg mode by pressing `]` and run:
+```
+add LineSearches
+```
+Then load the package with:
 ```julia
 using LineSearches
 ```
-to load the package.
 
 ## Debugging
 
