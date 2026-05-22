@@ -24,10 +24,10 @@ function (ls::BackTracking)(df::AbstractObjective, x::AbstractArray{T}, s::Abstr
     ϕ, dϕ = make_ϕ_dϕ(df, x_new, x, s)
 
     if isnothing(ϕ_0)
-        ϕ_0 = ϕ(Tα(0))
+        ϕ_0 = ϕ(zero(Tα))
     end
     if isnothing(dϕ_0)
-        dϕ_0 = dϕ(Tα(0))
+        dϕ_0 = dϕ(zero(Tα))
     end
 
     α_0 = min(α_0, min(alphamax, ls.maxstep / norm(s, Inf)))
@@ -101,12 +101,13 @@ function (ls::BackTracking)(ϕ, αinitial::Tα, ϕ_0, dϕ_0) where Tα
             b = (-α_1^3*(ϕx_1 - ϕ_0 - dϕ_0*α_2) + α_2^3*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
 
             if isapprox(a, zero(a), atol=eps(real(Tα)))
-                α_tmp = dϕ_0 / (2*b)
+                α_tmp = -dϕ_0 / (2*b)
             else
                 # discriminant
-                d = max(b^2 - 3*a*dϕ_0, Tα(0))
-                # quadratic equation root
-                α_tmp = (-b + sqrt(d)) / (3*a)
+                d = max(b^2 - 3*a*dϕ_0, zero(Tα))
+                # quadratic equation root, rewritten via the conjugate to avoid
+                # catastrophic cancellation when -b and sqrt(d) are close
+                α_tmp = -dϕ_0 / (b + sqrt(d))
             end
         end
 
