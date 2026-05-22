@@ -53,11 +53,10 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
     (; c_1, c_2, ρ, cache) = ls
     emptycache!(cache)
 
-    zeroT = convert(T, 0)
-    pushcache!(cache, zeroT, ϕ_0, dϕ_0)
+    pushcache!(cache, zero(T), ϕ_0, dϕ_0)
 
     # Step-sizes
-    a_0 = zeroT
+    a_0 = zero(T)
     a_iminus1 = a_0
     a_i = alpha0
     a_max = convert(T, 65536)
@@ -86,7 +85,7 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
         end
 
         dϕ_a_i = dϕ(a_i)
-        if cache !== nothing
+        if !isnothing(cache)
             push!(cache.slopes, dϕ_a_i)
         end
 
@@ -96,7 +95,7 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
         end
 
         # Check condition 3
-        if dϕ_a_i >= zeroT # FIXME untested!
+        if dϕ_a_i >= zero(T) # FIXME untested!
             a_star = zoom(a_i, a_iminus1,
                           dϕ_0, ϕ_0, ϕ, dϕ, ϕdϕ, cache)
             return a_star, ϕ(a_star)
@@ -127,7 +126,6 @@ function zoom(a_lo::T,
               c_1::Real = convert(T, 1)/10^4,
               c_2::Real = convert(T, 9)/10) where T
 
-    zeroT = convert(T, 0)
     # Step-size
     a_j = convert(T, NaN)
 
@@ -168,7 +166,7 @@ function zoom(a_lo::T,
         else
             # Evaluate ϕprime(a_j)
             ϕprime_a_j = dϕ(a_j)
-            if cache !== nothing
+            if !isnothing(cache)
                 push!(cache.slopes, ϕprime_a_j)
             end
 
@@ -176,7 +174,7 @@ function zoom(a_lo::T,
                 return a_j
             end
 
-            if ϕprime_a_j * (a_hi - a_lo) >= zeroT
+            if ϕprime_a_j * (a_hi - a_lo) >= zero(T)
                 a_hi = a_lo
             end
 

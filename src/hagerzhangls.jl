@@ -430,10 +430,10 @@ function (ls::HagerZhangLS)(df::AbstractObjective, x::AbstractArray{T},
                             x_new::AbstractArray{T} = similar(x),
                             ϕ_0 = nothing, dϕ_0 = nothing) where {T}
     ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, s)
-    if ϕ_0 === nothing
+    if isnothing(ϕ_0)
         ϕ_0 = ϕ(real(T)(0))
     end
-    if dϕ_0 === nothing
+    if isnothing(dϕ_0)
         dϕ_0 = dϕ(real(T)(0))
     end
     ls(ϕ, dϕ, ϕdϕ, α, ϕ_0, dϕ_0)
