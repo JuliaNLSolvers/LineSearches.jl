@@ -72,7 +72,9 @@ function (ls::BackTracking)(ϕ, αinitial::Tα, ϕ_0, dϕ_0) where Tα
         ϕx_1 = ϕ(α_2)
     end
     pushcache!(cache, αinitial, ϕx_1)
-    # TODO: check if value is finite (maybe iterfinite > iterfinitemax)
+    if !isfinite(ϕx_1)
+        throw(LineSearchException("Backtracking: failed to achieve finite new evaluation point.", α_2))
+    end
 
     # Backtrack until we satisfy sufficient decrease condition
     while ϕx_1 > ϕ_0 + c_1 * α_2 * dϕ_0
@@ -116,9 +118,22 @@ function (ls::BackTracking)(ϕ, αinitial::Tα, ϕ_0, dϕ_0) where Tα
         α_tmp = NaNMath.min(α_tmp, α_2*ρ_hi) # avoid too small reductions
         α_2 = NaNMath.max(α_tmp, α_2*ρ_lo) # avoid too big reductions
 
-        # Evaluate f(x) at proposed position
-        ϕx_0, ϕx_1 = ϕx_1, ϕ(α_2)
-        pushcache!(cache, α_2, ϕx_1)
+        # Evaluate f(x) at proposed position. If non-finite, halve α
+        # until we recover a finite value. This really shouldn't happen,
+        # but some objective functions with ODE solves etc inside can somehow
+        # unexpectedly fail next to fine candidates.
+        ϕx_new = ϕ(α_2)
+        pushcache!(cache, α_2, ϕx_new)
+        while !isfinite(ϕx_new) && iteration < iterations
+            iteration += 1
+            α_2 = α_2 / 2
+            ϕx_new = ϕ(α_2)
+            pushcache!(cache, α_2, ϕx_new)
+        end
+        if !isfinite(ϕx_new)
+            throw(LineSearchException("Backtracking: failed to achieve finite new evaluation point.", α_2))
+        end
+        ϕx_0, ϕx_1 = ϕx_1, ϕx_new
     end
 
     return α_2, ϕx_1
