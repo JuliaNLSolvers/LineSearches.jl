@@ -1,6 +1,6 @@
 # LineSearches
 
-[![Build Status](https://travis-ci.org/JuliaNLSolvers/LineSearches.jl.svg?branch=master)](https://travis-ci.org/JuliaNLSolvers/LineSearches.jl)
+[![Run tests](https://github.com/JuliaNLSolvers/LineSearches.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/JuliaNLSolvers/LineSearches.jl/actions/workflows/ci.yml)
 [![Codecov branch](https://img.shields.io/codecov/c/github/JuliaNLSolvers/LineSearches.jl/master.svg?maxAge=2592000)](https://codecov.io/gh/JuliaNLSolvers/LineSearches.jl)
 [![][docs-stable-img]][docs-stable-url]
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)

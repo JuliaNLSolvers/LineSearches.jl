@@ -133,7 +133,11 @@
 #       or just return step and nfev and let existing code do its job
 
 """
+    MoreThuente(; f_tol=1e-4, gtol=0.9, x_tol=1e-8, alphamin=1e-16,
+                  alphamax=65536.0, maxfev=100, cache=nothing)
+
 The line search implementation from:
+
   Moré, Jorge J., and David J. Thuente
     Line search algorithms with guaranteed sufficient decrease.
     ACM Transactions on Mathematical Software (TOMS) 20.3 (1994): 286-307.
