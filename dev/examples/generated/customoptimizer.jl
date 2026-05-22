@@ -11,6 +11,8 @@ function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, linesearch,
     gnorm = norm(gvec)
     gtol = max(g_rtol*gnorm, g_atol)
 
+    s = similar(gvec) # Step direction
+
     # Univariate line search functions
     ϕ(α) = f(x .+ α.*s)
     function dϕ(α)
@@ -22,8 +24,6 @@ function gdoptimize(f, g!, fg!, x0::AbstractArray{T}, linesearch,
         dphi = dot(gvec, s)
         return (phi, dphi)
     end
-
-    s = similar(gvec) # Step direction
 
     iter = 0
     while iter < maxiter && gnorm > gtol
