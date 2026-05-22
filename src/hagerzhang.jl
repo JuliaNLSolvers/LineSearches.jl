@@ -114,8 +114,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             linesearchmax, psi3, display, mayterminate, cache) = ls
     emptycache!(cache)
 
-    zeroT = convert(T, 0)
-    pushcache!(cache, zeroT, phi_0, dphi_0)
+    pushcache!(cache, zero(T), phi_0, dphi_0)
     if !(isfinite(phi_0) && isfinite(dphi_0))
         throw(LineSearchException("Value and slope at step length = 0 must be finite.", T(0)))
     end
@@ -129,7 +128,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
     if cache !== nothing
         (; alphas, values, slopes) = cache
     else
-        alphas = [zeroT] # for bisection
+        alphas = [zero(T)] # for bisection
         values = [phi_0]
         slopes = [dphi_0]
     end
@@ -193,7 +192,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
                     ", phi_c = ", phi_c,
                     ", dphi_c = ", dphi_c)
         end
-        if dphi_c >= zeroT
+        if dphi_c >= zero(T)
             # We've reached the upward slope, so we have b; examine
             # previous values to find a
             ib = length(alphas)
@@ -209,7 +208,7 @@ function (ls::HagerZhang)(ϕ, ϕdϕ,
             # have crested over the peak. Use bisection.
             ib = length(alphas)
             ia = 1
-            if c ≉  alphas[ib] || slopes[ib] >= zeroT
+            if c ≉  alphas[ib] || slopes[ib] >= zero(T)
                 error("c = ", c)
             end
             # ia, ib = bisect(phi, lsr, ia, ib, phi_lim) # TODO: Pass options
@@ -400,10 +399,10 @@ function secant2!(ϕdϕ,
     dphi_a = slopes[ia]
     dphi_b = slopes[ib]
     T = eltype(slopes)
-    zeroT = convert(T, 0)
+
     # `ia` is a bracket invariant (descent side); `ib` may carry a non-finite
     # slope after bisecting into an infeasible region, so only guard on `ia`.
-    if !(dphi_a < zeroT)
+    if !(dphi_a < zero(T))
         error(string("Search direction is not a direction of descent; ",
                      "this error may indicate that user-provided derivatives are inaccurate. ",
                       @sprintf "(dphi_a = %f; dphi_b = %f)" dphi_a dphi_b))
@@ -497,11 +496,11 @@ function update!(ϕdϕ,
     a = alphas[ia]
     b = alphas[ib]
     T = eltype(slopes)
-    zeroT = convert(T, 0)
+
     # Debugging (HZ, eq. 4.4):
     # `ib`'s slope is allowed to be non-finite: bisect! may return an upper
     # bound whose evaluation landed in an infeasible region.
-    @assert slopes[ia] < zeroT
+    @assert slopes[ia] < zero(T)
     @assert values[ia] <= phi_lim
     @assert b > a
     c = alphas[ic]
@@ -519,7 +518,7 @@ function update!(ϕdϕ,
     if c < a || c > b
         return ia, ib, false  # it's out of the bracketing interval
     end
-    if dphi_c >= zeroT
+    if dphi_c >= zero(T)
         return ia, ic, false  # replace b with a closer point
     end
     # We know dphi_c < 0. However, phi may not be monotonic between a
@@ -557,8 +556,8 @@ function bisect!(ϕdϕ,
     # Debugging (HZ, conditions shown following U3)
     # `ib` may carry a non-finite evaluation if the caller bisected into an
     # infeasible region; only `ia` invariants must hold here.
-    zeroT = convert(T, 0)
-    @assert slopes[ia] < zeroT
+
+    @assert slopes[ia] < zero(T)
     @assert values[ia] <= phi_lim
     @assert b > a
     while b - a > eps(b)
@@ -576,7 +575,7 @@ function bisect!(ϕdϕ,
         if satisfies_wolfe(d, phi_d, gphi, phi_0, dphi_0, phi_lim, delta, sigma)
             return ia, id, true
         end
-        if gphi >= zeroT
+        if gphi >= zero(T)
             return ia, id, false # replace b, return
         end
         if phi_d <= phi_lim && isfinite(gphi)
