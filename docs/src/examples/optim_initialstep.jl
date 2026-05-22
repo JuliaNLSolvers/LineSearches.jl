@@ -17,12 +17,12 @@ UP = MultivariateProblems.UnconstrainedProblems
 prob = UP.examples["Rosenbrock"]
 
 algo_st = Newton(alphaguess = InitialStatic(), linesearch = HagerZhang())
-res_st = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_st)
+res_st = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, algo_st)
 
 
 # We can now try with the initial step length guess from Hager and Zhang.
 algo_hz = Newton(alphaguess = InitialHagerZhang(α0=1.0), linesearch = HagerZhang())
-res_hz = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, method=algo_hz)
+res_hz = Optim.optimize(prob.f, prob.g!, prob.h!, prob.initial_x, algo_hz)
 
 
 # From the result we see that this has reduced the number of function and gradient calls, but increased the number of iterations.
