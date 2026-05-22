@@ -167,8 +167,7 @@ function (ls::MoreThuente)(ϕdϕ,
 
     iterfinitemax = -log2(eps(T))
 
-    zeroT = convert(T, 0)
-    pushcache!(cache, zeroT, ϕ_0, dϕ_0)
+    pushcache!(cache, zero(T), ϕ_0, dϕ_0)
 
     #
     # Check the input parameters for errors.
@@ -178,12 +177,12 @@ function (ls::MoreThuente)(ϕdϕ,
         throw(LineSearchException("Value and slope at step length = 0 must be finite.", T(0)))
     end
 
-    if  alpha <= zeroT || f_tol < zeroT || gtol < zeroT ||
-        x_tol < zeroT || alphamin < zeroT || alphamax < alphamin || maxfev <= zeroT
+    if  alpha <= zero(T) || f_tol < zero(T) || gtol < zero(T) ||
+        x_tol < zero(T) || alphamin < zero(T) || alphamax < alphamin || maxfev <= zero(T)
         throw(LineSearchException("Invalid parameters to MoreThuente.", T(0)))
     end
 
-    if dϕ_0 >= zeroT
+    if dϕ_0 >= zero(T)
         throw(LineSearchException("Search direction is not a direction of descent.", T(0)))
     end
 
@@ -212,10 +211,10 @@ function (ls::MoreThuente)(ϕdϕ,
     # function, and derivative at the current step.
     #
 
-    stx = zeroT
+    stx = zero(T)
     fx = ϕ_0
     dgx = dϕ_0
-    sty = zeroT
+    sty = zero(T)
     fy = ϕ_0
     dgy = dϕ_0
 
@@ -456,7 +455,7 @@ end # function
 #
 # bracketed is a logical variable which specifies if a minimizer
 #   has been bracketed. If the minimizer has not been bracketed
-#   then on input bracketed must be set false. If the minimizer
+#   then onzero(T)ted must be set false. If the minimizer
 #   is bracketed then on output bracketed is set true
 #
 # alphamin and alphamax are input variables which specify lower
@@ -476,7 +475,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
                bracketed::Bool, alphamin::Real, alphamax::Real)
 
    T = promote_type(typeof(stx), typeof(fx), typeof(dgx), typeof(sty), typeof(fy), typeof(dgy), typeof(alpha), typeof(f), typeof(dg), typeof(alphamin), typeof(alphamax))
-   zeroT = convert(T, 0)
+   
    info = 0
 
    #
@@ -484,7 +483,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    #
 
    if (bracketed && (alpha <= min(stx, sty) || alpha >= max(stx, sty))) ||
-     dgx * (alpha - stx) >= zeroT || alphamax < alphamin
+     dgx * (alpha - stx) >= zero(T) || alphamax < alphamin
        throw(ArgumentError("Minimizer not bracketed"))
    end
 
@@ -530,7 +529,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    # the cubic step is taken, else the quadratic step is taken
    #
 
-   elseif sgnd < zeroT
+   elseif sgnd < zero(T)
       info = 2
       bound = false
       theta = 3 * (fx - f) / (alpha - stx) + dgx + dg
@@ -583,7 +582,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       p = gamma - dg + theta
       q = gamma + dgx - dg + gamma
       r = p / q
-      if r < zeroT && gamma != zeroT
+      if r < zero(T) && gamma != zero(T)
          alphac = alpha + r * (stx - alpha)
       elseif alpha > stx
          alphac = alphamax
@@ -646,7 +645,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       fy = f
       dgy = dg
    else
-      if sgnd < zeroT
+      if sgnd < zero(T)
          sty = stx
          fy = fx
          dgy = dgx

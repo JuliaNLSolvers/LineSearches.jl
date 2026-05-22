@@ -20,13 +20,13 @@ end
 BackTracking{TF}(args...; kwargs...) where TF = BackTracking{TF,Int}(args...; kwargs...)
 
 function (ls::BackTracking)(df::AbstractObjective, x::AbstractArray{T}, s::AbstractArray{T},
-                            α_0::Tα = real(T)(1), x_new::AbstractArray{T} = similar(x), ϕ_0 = nothing, dϕ_0 = nothing, alphamax = convert(real(T), Inf)) where {T, Tα}
+                            α_0::Tα = real(T)(1), x_new::AbstractArray{T} = similar(x), ϕ_0 = nothing, dϕ_0 = nothing, alphamax = typemax(real(T))) where {T, Tα}
     ϕ, dϕ = make_ϕ_dϕ(df, x_new, x, s)
 
-    if ϕ_0 == nothing
+    if isnothing(ϕ_0)
         ϕ_0 = ϕ(zero(Tα))
     end
-    if dϕ_0 == nothing
+    if isnothing(dϕ_0)
         dϕ_0 = dϕ(zero(Tα))
     end
 
