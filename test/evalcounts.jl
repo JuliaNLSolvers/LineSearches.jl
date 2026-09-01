@@ -47,14 +47,16 @@
     ψ(α) = -α / (1 + 10α^2) + 0.02α^2
     dψ(α) = -(1 - 10α^2) / (1 + 10α^2)^2 + 0.04α
 
-    # zoom reassigns its endpoints only to already-evaluated points, so it costs 2
-    # evaluations to seed the bracket plus 1 per iteration (was ~4 per iteration).
+    # The caller supplies both endpoints and zoom only ever reassigns them to
+    # already-evaluated points, so it costs exactly 1 evaluation per iteration.
     @testset "zoom, c_2=$c_2" for (c_2, entries, expected) in
-            ((0.5, 3, 0.412201859), (0.1, 4, 0.3461435202), (0.01, 7, 0.312411912))
+            ((0.5, 1, 0.412201859), (0.1, 2, 0.3461435202), (0.01, 5, 0.312411912))
         n = Ref(0)
         ϕdϕ = α -> (n[] += 1; (ψ(α), dψ(α)))
-        a = LineSearches.zoom(0.0, 1.0, dψ(0.0), ψ(0.0), ϕdϕ, nothing, 1e-4, c_2)
+        a, val = LineSearches.zoom(0.0, ψ(0.0), dψ(0.0), 1.0, ψ(1.0), dψ(1.0),
+                                   dψ(0.0), ψ(0.0), ϕdϕ, nothing, 1e-4, c_2)
         @test a ≈ expected
+        @test val == ψ(a)
         @test n[] == entries
     end
 

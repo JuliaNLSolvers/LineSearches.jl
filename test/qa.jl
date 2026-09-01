@@ -27,6 +27,7 @@ import JET
             LineSearches;
             ignore = (
                 :RefValue, # Base
+                :findmin, # NaNMath
                 :max, # NaNMath
                 :min, # NaNMath
             ),

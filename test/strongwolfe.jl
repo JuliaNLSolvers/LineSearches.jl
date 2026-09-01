@@ -17,7 +17,9 @@ end
     ϕ(x) = (x - π)^4
     dϕ(x) = 4 * (x - π)^3
 
-    a = LineSearches.zoom(0.0, 1.0, dϕ(0.0), ϕ(0.0), x -> (ϕ(x), dϕ(x)), nothing, 1e-4, 0.9)
+    a, val = LineSearches.zoom(0.0, ϕ(0.0), dϕ(0.0), 1.0, ϕ(1.0), dϕ(1.0),
+                               dϕ(0.0), ϕ(0.0), x -> (ϕ(x), dϕ(x)), nothing, 1e-4, 0.9)
     @test 0 < a < 1
+    @test val == ϕ(a)
     @test abs(dϕ(a)) <= 0.9 * abs(dϕ(0.0))
 end

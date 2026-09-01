@@ -82,37 +82,28 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
     end
 
     # Step-sizes
-    a_0 = zero(T)
-    a_iminus1 = a_0
+    a_iminus1 = zero(T)
     a_i = alpha0
     a_max = convert(T, 65536)
 
-    # ϕ(alpha) = df.f(x + alpha * p)
-    ϕ_a_iminus1 = ϕ_0
-    ϕ_a_i = convert(T, NaN)
-
-    # ϕ'(alpha) = dot(g(x + alpha * p), p)
-    dϕ_a_i = convert(T, NaN)
+    # ϕ(alpha) = df.f(x + alpha * p) and ϕ'(alpha) = dot(g(x + alpha * p), p) at
+    # a_{i - 1}, which is the endpoint zoom brackets against
+    ϕ_a_iminus1, dϕ_a_iminus1 = ϕ_0, dϕ_0
 
     # Iteration counter
     i = 1
 
     while a_i < a_max
-        ϕ_a_i = ϕ(a_i)
-        pushcache!(cache, a_i, ϕ_a_i)
+        # Both zoom and the curvature test below need the slope, so fuse the two
+        ϕ_a_i, dϕ_a_i = ϕdϕ(a_i)
+        pushcache!(cache, a_i, ϕ_a_i, dϕ_a_i)
 
         # Test Wolfe conditions
         if (ϕ_a_i > ϕ_0 + c_1 * a_i * dϕ_0) ||
             (ϕ_a_i >= ϕ_a_iminus1 && i > 1)
-            a_star = zoom(a_iminus1, a_i,
-                          dϕ_0, ϕ_0,
-                          ϕdϕ, cache, c_1, c_2)
-            return a_star, ϕ(a_star)
-        end
-
-        dϕ_a_i = dϕ(a_i)
-        if !isnothing(cache)
-            push!(cache.slopes, dϕ_a_i)
+            return zoom(a_iminus1, ϕ_a_iminus1, dϕ_a_iminus1,
+                        a_i, ϕ_a_i, dϕ_a_i,
+                        dϕ_0, ϕ_0, ϕdϕ, cache, c_1, c_2)
         end
 
         # Check condition 2
@@ -121,18 +112,15 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
         end
 
         # Check condition 3
-        if dϕ_a_i >= zero(T) # FIXME untested!
-            a_star = zoom(a_i, a_iminus1,
-                          dϕ_0, ϕ_0, ϕdϕ, cache, c_1, c_2)
-            return a_star, ϕ(a_star)
+        if dϕ_a_i >= zero(T)
+            return zoom(a_i, ϕ_a_i, dϕ_a_i,
+                        a_iminus1, ϕ_a_iminus1, dϕ_a_iminus1,
+                        dϕ_0, ϕ_0, ϕdϕ, cache, c_1, c_2)
         end
 
         # Choose a_iplus1 from the interval (a_i, a_max)
-        a_iminus1 = a_i
+        a_iminus1, ϕ_a_iminus1, dϕ_a_iminus1 = a_i, ϕ_a_i, dϕ_a_i
         a_i *= ρ
-
-        # Update ϕ_a_iminus1
-        ϕ_a_iminus1 = ϕ_a_i
 
         # Update iteration count
         i += 1
@@ -141,8 +129,10 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
     throw(LineSearchException("StrongWolfe: bracketing reached a_max=$a_max without satisfying Wolfe conditions.", a_max))
 end
 
-function zoom(a_lo::T,
-              a_hi::T,
+# The caller has evaluated both endpoints, and they are only ever reassigned to
+# already-evaluated points, so no endpoint is ever recomputed here.
+function zoom(a_lo::T, ϕ_a_lo::Real, ϕprime_a_lo::Real,
+              a_hi::T, ϕ_a_hi::Real, ϕprime_a_hi::Real,
               dϕ_0::Real,
               ϕ_0::Real,
               ϕdϕ,
@@ -152,14 +142,6 @@ function zoom(a_lo::T,
 
     # Step-size
     a_j = convert(T, NaN)
-
-    # The endpoints are only ever reassigned to already-evaluated points, so their
-    # values and slopes are carried through the loop rather than recomputed.
-    ϕ_a_lo, ϕprime_a_lo = ϕdϕ(a_lo)
-    pushcache!(cache, a_lo, ϕ_a_lo, ϕprime_a_lo)
-
-    ϕ_a_hi, ϕprime_a_hi = ϕdϕ(a_hi)
-    pushcache!(cache, a_hi, ϕ_a_hi, ϕprime_a_hi)
 
     # Count iterations
     iteration = 0
@@ -191,7 +173,7 @@ function zoom(a_lo::T,
             a_hi, ϕ_a_hi, ϕprime_a_hi = a_j, ϕ_a_j, ϕprime_a_j
         else
             if abs(ϕprime_a_j) <= -c_2 * dϕ_0
-                return a_j
+                return a_j, ϕ_a_j
             end
 
             # Reads the bracket width before a_lo moves below
