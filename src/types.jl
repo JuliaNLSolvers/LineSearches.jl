@@ -3,6 +3,9 @@ struct LineSearchException{T<:Real} <: Exception
     alpha::T
 end
 
+Base.showerror(io::IO, e::LineSearchException) =
+    print(io, "LineSearchException: ", e.message, " Step length: ", e.alpha)
+
 abstract type AbstractLineSearch end
 
 # For debugging

@@ -21,7 +21,23 @@ This algorithm is mostly of theoretical interest; users should most likely use
     c_2::T = 0.9
     ρ::T = 2.0
     cache::Union{Nothing,LineSearchCache{T}} = nothing
+
+    function StrongWolfe{T}(c_1, c_2, ρ, cache) where T
+        if !(0 < c_1 < c_2 < 1)
+            throw(ArgumentError(
+                LazyString("The Wolfe constants must satisfy 0 < c_1 < c_2 < 1. Got c_1 = ", c_1, " and c_2 = ", c_2),
+            ))
+        end
+        if !(ρ > 1)
+            throw(ArgumentError(
+                LazyString("The bracket growth factor must be larger than one, otherwise bracketing never terminates. Got ρ = ", ρ),
+            ))
+        end
+        return new{T}(c_1, c_2, ρ, cache)
+    end
 end
+StrongWolfe(c_1::T, c_2::T, ρ::T, cache::Union{Nothing,LineSearchCache{T}}) where T =
+    StrongWolfe{T}(c_1, c_2, ρ, cache)
 
 """
     (ls::StrongWolfe)(df, x::AbstractArray, p::AbstractArray, alpha0::Real, x_new, ϕ_0, dϕ_0) -> alpha, ϕalpha
@@ -56,6 +72,14 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
     emptycache!(cache)
 
     pushcache!(cache, zero(T), ϕ_0, dϕ_0)
+
+    if !(isfinite(ϕ_0) && isfinite(dϕ_0))
+        throw(LineSearchException("Value and slope at step length = 0 must be finite.", zero(T)))
+    end
+    # dϕ_0 == 0 is accepted: Armijo then reduces to a plain decrease test
+    if dϕ_0 > zero(T)
+        throw(LineSearchException("Search direction is not a direction of descent.", zero(T)))
+    end
 
     # Step-sizes
     a_0 = zero(T)

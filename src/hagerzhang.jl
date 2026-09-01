@@ -358,7 +358,8 @@ function (ls::HagerZhang)(ϕdϕ,
         iter += 1
     end
 
-    best_alpha = alphas[argmin(values)]
+    # bisect! stores every point it evaluates, so `values` may contain NaN
+    best_alpha = alphas[last(NaNMath.findmin(values))]
     throw(LineSearchException("Linesearch failed to converge, reached maximum iterations $(linesearchmax).",
                               best_alpha))
 end

@@ -66,8 +66,8 @@
         @test val ≈ ψ(α)
     end
 
-    # Each carries the points it has already seen, so none should ask for the same α twice.
-    # `dg` stays uncounted: splitting a point into ϕ and dϕ is by design, recomputing it is not.
+    # Each carries the points it has seen, so none should ask for the same α twice.
+    # `dg` is uncounted: splitting a point into ϕ and dϕ is by design, repeating it is not.
     problems = ((ψ, dψ),
                 (α -> (α^2 - 11)^2 + (α - 7)^2, α -> 4α * (α^2 - 11) + 2(α - 7)),
                 (α -> 1 - 1 / (1 + (α - 2)^2), α -> 2(α - 2) / (1 + (α - 2)^2)^2))

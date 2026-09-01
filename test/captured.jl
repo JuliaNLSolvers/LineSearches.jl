@@ -1,4 +1,5 @@
 using LineSearches
+using NaNMath
 using NLSolversBase
 using Test
 
@@ -153,6 +154,15 @@ end
             phi_lim, phi_0, dphi_0, delta, sigma,
         )
         @test !wolfe  # normal exit, not Wolfe
+    end
+
+    @testset "bisect! stores non-finite values" begin
+        # `argmin` ranks NaN below every float, so the failure path cannot use it
+        alphas, values, slopes = [0.0, 1.0], [0.0, 5.0], [-2.0, -0.5]
+        LineSearches.bisect!(d -> (NaN, NaN), alphas, values, slopes, 1, 2,
+                             1e-6, 0.0, -2.0, 0.1, 0.9)
+        @test isnan(values[argmin(values)])
+        @test alphas[last(NaNMath.findmin(values))] == 0.0
     end
 
     @testset "Wolfe during bracket expansion" begin
