@@ -31,6 +31,25 @@ end
     end
 end
 
+# Each cached value must belong to the α stored beside it
+@testset "Cached α and value agree" begin
+    ϕ(x) = (x - π)^4
+    dϕ(x) = 4*(x-π)^3
+    ϕdϕ(x) = (ϕ(x), dϕ(x))
+
+    @testset "$(nameof(LS))" for LS in (HagerZhang, StrongWolfe, MoreThuente, BackTracking)
+        cache = LineSearchCache{Float64}()
+        LS(; cache)(ϕ, dϕ, ϕdϕ, 10.0, ϕ(0), dϕ(0))
+        @test all(v == ϕ(α) for (α, v) in zip(cache.alphas, cache.values))
+    end
+
+    # ψ is NaN above 4, so BackTracking leaves the initial step before caching a value
+    ψ(x) = x > 4 ? NaN : (x - 1.0)^2
+    cache = LineSearchCache{Float64}()
+    BackTracking(; cache)(ψ, 8.0, ψ(0.0), -2.0)
+    @test all(v === ψ(α) for (α, v) in zip(cache.alphas, cache.values))
+end
+
 # From PR#174
 @testset "PR#174" begin
     tc = LineSearchTestCase(

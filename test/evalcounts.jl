@@ -66,14 +66,17 @@
         @test val ≈ ψ(α)
     end
 
-    # HagerZhang stores every evaluated point, so it should never ask for the same α twice
+    # Each carries the points it has already seen, so none should ask for the same α twice.
+    # `dg` stays uncounted: splitting a point into ϕ and dϕ is by design, recomputing it is not.
     problems = ((ψ, dψ),
                 (α -> (α^2 - 11)^2 + (α - 7)^2, α -> 4α * (α^2 - 11) + 2(α - 7)),
                 (α -> 1 - 1 / (1 + (α - 2)^2), α -> 2(α - 2) / (1 + (α - 2)^2)^2))
-    @testset "HagerZhang evaluates each α once" for (g, dg) in problems,
-                                                    α0 in (0.1, 1.0, 5.0)
+    @testset "$(nameof(typeof(ls))) evaluates each α once" for
+            ls in (HagerZhang(), MoreThuente(), StrongWolfe()),
+            (g, dg) in problems, α0 in (0.1, 1.0, 5.0)
         seen = Float64[]
-        α, val = HagerZhang()(α -> (push!(seen, α); (g(α), dg(α))), α0, g(0.0), dg(0.0))
+        α, val = ls(α -> (push!(seen, α); g(α)), dg,
+                    α -> (push!(seen, α); (g(α), dg(α))), α0, g(0.0), dg(0.0))
         @test allunique(seen)
         @test val ≈ g(α)
     end
