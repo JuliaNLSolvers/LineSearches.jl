@@ -26,8 +26,7 @@ function (ls::Static)(ϕ, α::Tα) where Tα
     iterfinitemax = -log2(eps(real(Tα)))
     while !isfinite(ϕα) && iterfinite < iterfinitemax
         iterfinite += 1
-        αold = α
-        α    = αold/2
+        α /= 2
 
         ϕα = ϕ(α)
     end

@@ -33,6 +33,12 @@ end
     @test BackTracking()(ϕ, dϕ, ϕdϕ, 1.0, ϕ(0.0), 0.0) == (1.0, ϕ(1.0))
 end
 
+@testset "cstep outside its bracket" begin
+    # An internal invariant, so it reports like the rest of the package
+    @test_throws "LineSearchException: MoreThuente: cstep called with alpha = 3.0 outside the bracket [0.0, 2.0]. Step length: 3.0" LineSearches.cstep(
+        0.0, 1.0, -1.0, 2.0, 0.5, 0.2, 3.0, 0.4, 0.1, true, 0.0, 10.0)
+end
+
 # The step length these report is whatever the halving loop reached, so match a prefix
 @testset "No finite value" begin
     @test_throws r"^LineSearchException: Static: failed to achieve finite new evaluation point\." Static()(α -> NaN, 1.0)

@@ -79,7 +79,7 @@ end
 function (is::InitialQuadratic{T})(ls, state, phi_0, dphi_0, df) where T
     # phi_0 is (or should be) equal to NLSolversBase.value(df, state.x) and `state.f_x`
     @assert !hasproperty(state, :f_x) || phi_0 == state.f_x
-    if !isfinite(state.f_x_previous) || isapprox(dphi_0, zero(T), atol=eps(T)) # Need to add a tolerance
+    if !isfinite(state.f_x_previous) || iszero(dphi_0)
         # If we're at the first iteration
         αguess = is.α0
     else
@@ -149,8 +149,7 @@ end
 function (is::InitialConstantChange{T})(ls, state, phi_0, dphi_0, df) where T
     # phi_0 is (or should be) equal to NLSolversBase.value(df, state.x) and `state.f_x`
     @assert !hasproperty(state, :f_x) || phi_0 == state.f_x
-    if !isfinite(is.dϕ_0_previous[]) || !isfinite(state.alpha) ||
-        isapprox(dphi_0, zero(T), atol=eps(T))
+    if !isfinite(is.dϕ_0_previous[]) || !isfinite(state.alpha) || iszero(dphi_0)
         # If we're at the first iteration
         αguess = is.α0
     else

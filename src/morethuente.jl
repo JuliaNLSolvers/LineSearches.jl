@@ -166,8 +166,10 @@ function (ls::MoreThuente)(ϕdϕ,
                            alpha::T,
                            ϕ_0,
                            dϕ_0) where T
-    (; f_tol, gtol, x_tol, alphamin, alphamax, maxfev, cache) = ls
+    (; f_tol, gtol, x_tol, alphamin, maxfev, cache) = ls
     emptycache!(cache)
+    # Shrinks below ls.alphamax once a non-finite evaluation marks a feasibility bound
+    alphamax = ls.alphamax
 
     iterfinitemax = -log2(eps(T))
 
@@ -319,10 +321,6 @@ function (ls::MoreThuente)(ϕdϕ,
             nfev += 1
         end
 
-        if isapprox(dg, 0, atol=eps(T)) # Should add atol value to MoreThuente
-            return alpha, f
-        end
-
         ftest1 = ϕ_0 + alpha * dgtest
 
         #
@@ -385,7 +383,7 @@ function (ls::MoreThuente)(ϕdϕ,
             stx, fxm, dgxm,
             sty, fym, dgym,
             alpha, fm, dgm,
-            bracketed, _ =
+            bracketed =
                 cstep(stx, fxm, dgxm, sty, fym, dgym,
                       alpha, fm, dgm, bracketed, stmin, stmax)
             #
@@ -403,7 +401,7 @@ function (ls::MoreThuente)(ϕdϕ,
             stx, fx, dgx,
             sty, fy, dgy,
             alpha, f, dg,
-            bracketed, _ =
+            bracketed =
                 cstep(stx, fx, dgx, sty, fy, dgy,
                       alpha, f, dg, bracketed, stmin, stmax)
         end
@@ -473,11 +471,6 @@ end # function
 # alphamin and alphamax are input variables which specify lower
 #   and upper bounds for the step
 #
-# info is an integer output variable set as follows:
-#   If info = 1,2,3,4,5, then the step has been computed
-#   according to one of the five cases below. Otherwise
-#   info = 0, and this indicates improper input parameters
-#
 # Argonne National Laboratory. MINPACK Project. June 1983
 # Jorge J. More', David J. Thuente
 
@@ -488,15 +481,15 @@ function cstep(stx::Real, fx::Real, dgx::Real,
 
    T = promote_type(typeof(stx), typeof(fx), typeof(dgx), typeof(sty), typeof(fy), typeof(dgy), typeof(alpha), typeof(f), typeof(dg), typeof(alphamin), typeof(alphamax))
    
-   info = 0
-
    #
    # Check the input parameters for error
    #
 
    if (bracketed && (alpha <= min(stx, sty) || alpha >= max(stx, sty))) ||
      dgx * (alpha - stx) >= zero(T) || alphamax < alphamin
-       throw(ArgumentError("Minimizer not bracketed"))
+       throw(LineSearchException(
+           LazyString("MoreThuente: cstep called with alpha = ", alpha, " outside the bracket [",
+                      min(stx, sty), ", ", max(stx, sty), "]."), alpha))
    end
 
    #
@@ -513,7 +506,6 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    #
 
    if f > fx
-      info = 1
       bound = true
       theta, gamma = cubic_d1_d2(stx, fx, dgx, alpha, f, dg)
       if alpha < stx
@@ -539,7 +531,6 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    #
 
    elseif sgnd < zero(T)
-      info = 2
       bound = false
       theta, gamma = cubic_d1_d2(stx, fx, dgx, alpha, f, dg)
 
@@ -570,7 +561,6 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    #
 
    elseif abs(dg) < abs(dgx)
-      info = 3
       bound = true
       # gamma = 0 only arises if the cubic does not tend to infinity along the step
       theta, gamma = cubic_d1_d2(stx, fx, dgx, alpha, f, dg)
@@ -611,7 +601,6 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    #
 
    else
-      info = 4
       bound = false
       if bracketed
          theta, gamma = cubic_d1_d2(sty, fy, dgy, alpha, f, dg)
@@ -666,5 +655,5 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       end
    end
 
-   return stx, fx, dgx, sty, fy, dgy, alpha, f, dg, bracketed, info
+   return stx, fx, dgx, sty, fy, dgy, alpha, f, dg, bracketed
 end

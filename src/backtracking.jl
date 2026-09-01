@@ -85,18 +85,18 @@ function (ls::BackTracking)(ϕ, αinitial::Tα, ϕ_0, dϕ_0) where Tα
     # Count the total number of iterations
     iteration = 0
 
-    ϕx_0, ϕx_1 = ϕ_0, ϕ_0
+    # The cubic branch pairs (α_1, ϕx_0) with (α_2, ϕx_1); α_1 is reassigned in the
+    # loop below before that branch can first run
+    ϕx_0 = ϕ_0
+    α_1 = α_2 = αinitial
 
-    α_1, α_2 = αinitial, αinitial
-
-    ϕx_1 = ϕ(α_1)
+    ϕx_1 = ϕ(α_2)
 
     # Hard-coded backtrack until we find a finite function value
     iterfinite = 0
     while !isfinite(ϕx_1) && iterfinite < iterfinitemax
         iterfinite += 1
-        α_1 = α_2
-        α_2 = α_1/2
+        α_2 /= 2
 
         ϕx_1 = ϕ(α_2)
     end
@@ -131,7 +131,7 @@ function (ls::BackTracking)(ϕ, αinitial::Tα, ϕ_0, dϕ_0) where Tα
             a = (α_1^2*(ϕx_1 - ϕ_0 - dϕ_0*α_2) - α_2^2*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
             b = (-α_1^3*(ϕx_1 - ϕ_0 - dϕ_0*α_2) + α_2^3*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
 
-            if isapprox(a, zero(a), atol=eps(real(Tα)))
+            if iszero(a)
                 α_tmp = -dϕ_0 / (2*b)
             else
                 # discriminant
