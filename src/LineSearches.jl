@@ -68,6 +68,25 @@ end
 pushcache!(::Nothing, α, val, slope) = nothing
 pushcache!(::Nothing, α, val) = nothing
 
+"""
+    cubic_d1_d2(a1, ϕ1, dϕ1, a2, ϕ2, dϕ2)
+
+The terms `d1` and `d2` of the Hermite cubic through both points, Nocedal and Wright,
+2nd ed, (3.59), whose minimiser is
+
+    a2 - (a2 - a1) * (dϕ2 + d2 - d1) / (dϕ2 - dϕ1 + 2 * d2)
+
+Scaling by `s` keeps `d1^2` from overflowing and the product of the slopes from
+underflowing. The radicand can go negative when the two slopes share a sign, and is
+clamped at zero; `NaNMath` also covers `s == 0`, where the ratios are `NaN`.
+"""
+function cubic_d1_d2(a1::Real, ϕ1::Real, dϕ1::Real, a2::Real, ϕ2::Real, dϕ2::Real)
+    d1 = 3 * (ϕ1 - ϕ2) / (a2 - a1) + dϕ1 + dϕ2
+    s = max(abs(d1), abs(dϕ1), abs(dϕ2))
+    d2 = s * sqrt(NaNMath.max(zero(s), (d1 / s)^2 - (dϕ1 / s) * (dϕ2 / s)))
+    return d1, d2
+end
+
 # Line Search Methods
 include("backtracking.jl")
 include("strongwolfe.jl")

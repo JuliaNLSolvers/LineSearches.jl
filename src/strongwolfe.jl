@@ -211,10 +211,13 @@ end
 function interpolate(a_i1::Real, a_i::Real,
                      ϕ_a_i1::Real, ϕ_a_i::Real,
                      dϕ_a_i1::Real, dϕ_a_i::Real)
-    d1 = dϕ_a_i1 + dϕ_a_i -
-        3 * (ϕ_a_i1 - ϕ_a_i) / (a_i1 - a_i)
-    d2 = sqrt(d1 * d1 - dϕ_a_i1 * dϕ_a_i)
-    return a_i - (a_i - a_i1) *
+    d1, d2 = cubic_d1_d2(a_i1, ϕ_a_i1, dϕ_a_i1, a_i, ϕ_a_i, dϕ_a_i)
+    # Unlike the cubic in backtracking.jl, this numerator does not cancel, so
+    # rewriting it through its conjugate would cost accuracy rather than gain it
+    a_j = a_i - (a_i - a_i1) *
         ((dϕ_a_i + d2 - d1) /
          (dϕ_a_i - dϕ_a_i1 + 2 * d2))
+    # A vanishing denominator or a degenerate cubic can leave the bracket
+    lo, hi = minmax(a_i1, a_i)
+    return lo < a_j < hi ? a_j : (a_i1 + a_i) / 2
 end

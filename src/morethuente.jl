@@ -507,10 +507,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    if f > fx
       info = 1
       bound = true
-      theta = 3 * (fx - f) / (alpha - stx) + dgx + dg
-      # Use s to prevent overflow/underflow of theta^2 and dgx * dg
-      s = max(abs(theta), abs(dgx), abs(dg))
-      gamma = s * sqrt((theta / s)^2 - (dgx / s) * (dg / s))
+      theta, gamma = cubic_d1_d2(stx, fx, dgx, alpha, f, dg)
       if alpha < stx
           gamma = -gamma
       end
@@ -536,10 +533,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    elseif sgnd < zero(T)
       info = 2
       bound = false
-      theta = 3 * (fx - f) / (alpha - stx) + dgx + dg
-      # Use s to prevent overflow/underflow of theta^2 and dgx * dg
-      s = max(abs(theta), abs(dgx), abs(dg))
-      gamma = s * sqrt((theta / s)^2 - (dgx / s) * (dg / s))
+      theta, gamma = cubic_d1_d2(stx, fx, dgx, alpha, f, dg)
 
       if alpha > stx
          gamma = -gamma
@@ -570,15 +564,8 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    elseif abs(dg) < abs(dgx)
       info = 3
       bound = true
-      theta = 3 * (fx - f) / (alpha - stx) + dgx + dg
-      # Use s to prevent overflow/underflow of theta^2 and dgx * dg
-      s = max(abs(theta), abs(dgx), abs(dg))
-      #
-      # The case gamma = 0 only arises if the cubic does not tend
-      # to infinity in the direction of the step
-      #
-      # # Use NaNMath in case s == zero(s)
-      gamma = s * sqrt(NaNMath.max(zero(s), (theta / s)^2 - (dgx / s) * (dg / s)))
+      # gamma = 0 only arises if the cubic does not tend to infinity along the step
+      theta, gamma = cubic_d1_d2(stx, fx, dgx, alpha, f, dg)
 
       if alpha > stx
           gamma = -gamma
@@ -619,10 +606,7 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       info = 4
       bound = false
       if bracketed
-         theta = 3 * (f - fy) / (sty - alpha) + dgy + dg
-         # Use s to prevent overflow/underflow of theta^2 and dgy * dg
-         s = max(abs(theta), abs(dgy), abs(dg))
-         gamma = s * sqrt((theta / s)^2 - (dgy / s) * (dg / s))
+         theta, gamma = cubic_d1_d2(sty, fy, dgy, alpha, f, dg)
 
          if alpha > sty
              gamma = -gamma
