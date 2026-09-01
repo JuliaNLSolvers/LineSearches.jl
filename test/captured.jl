@@ -40,7 +40,7 @@ end
     )
     fdf = OnceDifferentiable(tc)
     hz = HagerZhang()
-    α, val = hz(fdf.f, fdf.fdf, 1.0, fdf.fdf(0.0)...)
+    α, val = hz(fdf.fdf, 1.0, fdf.fdf(0.0)...)
     @test val <= minimum(tc)
 end
 
@@ -69,7 +69,7 @@ end
         cache = LineSearchCache{Float64}()
         hz = HagerZhang(; cache)
         ϕdϕ_counted, count = counting_ϕdϕ(ϕdϕ_quad)
-        α, val = hz(ϕ_quad, ϕdϕ_counted, 10.0, ϕ_quad(0.0), dϕ_quad(0.0))
+        α, val = hz(ϕdϕ_counted, 10.0, ϕ_quad(0.0), dϕ_quad(0.0))
         # The result must satisfy Wolfe conditions
         ϕ0 = ϕ_quad(0.0)
         dϕ0 = dϕ_quad(0.0)
@@ -151,7 +151,7 @@ end
         ϕ0 = ϕ_steep(0.0)
         dϕ0 = dϕ_steep(0.0)
         ϕdϕ_counted, count = counting_ϕdϕ(ϕdϕ_steep)
-        α, val = hz(ϕ_steep, ϕdϕ_counted, 0.1, ϕ0, dϕ0)
+        α, val = hz(ϕdϕ_counted, 0.1, ϕ0, dϕ0)
 
         ϵ = hz.epsilon
         phi_lim = ϕ0 + ϵ * abs(ϕ0)
@@ -171,7 +171,7 @@ end
         # Run and verify: should terminate with α=0.5
         cache = LineSearchCache{Float64}()
         hz = HagerZhang(; cache)
-        α, val = hz(ϕ_steep, ϕdϕ_steep, 0.1, ϕ0, dϕ0)
+        α, val = hz(ϕdϕ_steep, 0.1, ϕ0, dϕ0)
         @test α == 0.5
         @test val == ϕ_steep(0.5)
         # Only 2 cached evals: initial c=0.1, then expansion to c=0.5
@@ -189,7 +189,7 @@ end
         fdf = OnceDifferentiable(tc)
         cache = LineSearchCache{Float64}()
         hz = HagerZhang(; cache, check_flatness=true)
-        α, val = hz(fdf.f, fdf.fdf, 1.0, fdf.fdf(0.0)...)
+        α, val = hz(fdf.fdf, 1.0, fdf.fdf(0.0)...)
         @test minimum(cache.values) == val
     end
 end

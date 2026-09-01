@@ -104,14 +104,14 @@ HagerZhang{T}(args...; kwargs...) where T = HagerZhang{T, Base.RefValue{Bool}}(a
 function (ls::HagerZhang)(df::AbstractObjective, x::AbstractArray{T},
                           s::AbstractArray{T}, α::Real,
                           x_new::AbstractArray{T}, phi_0::Real, dphi_0::Real) where T
-    ϕ, ϕdϕ = make_ϕ_ϕdϕ(df, x_new, x, s)
-    ls(ϕ, ϕdϕ, α::Real, phi_0, dphi_0)
+    ϕdϕ = make_ϕdϕ(df, x_new, x, s)
+    ls(ϕdϕ, α, phi_0, dphi_0)
 end
 
-(ls::HagerZhang)(ϕ, dϕ, ϕdϕ, c, phi_0, dphi_0) = ls(ϕ, ϕdϕ, c, phi_0, dphi_0)
+(ls::HagerZhang)(ϕ, dϕ, ϕdϕ, c, phi_0, dphi_0) = ls(ϕdϕ, c, phi_0, dphi_0)
 
-# TODO: Should we deprecate the interface that only uses the ϕ and ϕd\phi arguments?
-function (ls::HagerZhang)(ϕ, ϕdϕ,
+# we really just need ϕdϕ
+function (ls::HagerZhang)(ϕdϕ,
                           c::T,
                           phi_0::Real,
                           dphi_0::Real) where T # Should c and phi_0 be same type?
