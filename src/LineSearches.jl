@@ -33,14 +33,17 @@ function make_ϕdϕ(df, x_new, x, s)
     end
     ϕdϕ
 end
-function make_ϕ_dϕ(df, x_new, x, s)
+function make_dϕ(df, x_new, x, s)
     function dϕ(α)
         # Move a distance of alpha in the direction of s
         x_new .= muladd.(α, s, x)
         # Calculate ϕ'(a_i)
         return real(NLSolversBase.jvp!(df, x_new, s))
     end
-    make_ϕ(df, x_new, x, s), dϕ
+    dϕ
+end
+function make_ϕ_dϕ(df, x_new, x, s)
+    make_ϕ(df, x_new, x, s), make_dϕ(df, x_new, x, s)
 end
 function make_ϕ_dϕ_ϕdϕ(df, x_new, x, s)
     make_ϕ_dϕ(df, x_new, x, s)..., make_ϕdϕ(df, x_new, x, s)

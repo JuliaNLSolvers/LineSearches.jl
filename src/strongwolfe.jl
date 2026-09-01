@@ -51,23 +51,24 @@ See the one-dimensional method for additional details.
 function (ls::StrongWolfe)(df, x::AbstractArray{T},
                            p::AbstractArray{T}, α::Real, x_new::AbstractArray{T},
                            ϕ_0, dϕ_0) where T
-    ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, p)
-    ls(ϕ, dϕ, ϕdϕ, α, ϕ_0, dϕ_0)
+    ϕdϕ = make_ϕdϕ(df, x_new, x, p)
+    ls(ϕdϕ, α, ϕ_0, dϕ_0)
 end
 
-"""
-    (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ, alpha0, ϕ_0, dϕ_0) -> alpha, ϕalpha
+(ls::StrongWolfe)(ϕ, dϕ, ϕdϕ, alpha0, ϕ_0, dϕ_0) = ls(ϕdϕ, alpha0, ϕ_0, dϕ_0)
 
-Given `ϕ(alpha::Real)`, its derivative `dϕ`, a combined-evaluation function
-`ϕdϕ(alpha) -> (ϕ(alpha), dϕ(alpha))`, and an initial guess `alpha0`,
-identify a value of `alpha > 0` satisfying the strong Wolfe conditions.
+"""
+    (ls::StrongWolfe)(ϕdϕ, alpha0, ϕ_0, dϕ_0) -> alpha, ϕalpha
+
+Given a combined-evaluation function `ϕdϕ(alpha) -> (ϕ(alpha), dϕ(alpha))` and an
+initial guess `alpha0`, identify a value of `alpha > 0` satisfying the strong Wolfe
+conditions.
 
 `ϕ_0` and `dϕ_0` are the value and derivative, respectively, of `ϕ` at `alpha = 0.`
 
 Both `alpha` and `ϕ(alpha)` are returned.
 """
-function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
-                           alpha0::T, ϕ_0, dϕ_0) where T<:Real
+function (ls::StrongWolfe)(ϕdϕ, alpha0::T, ϕ_0, dϕ_0) where T<:Real
     (; c_1, c_2, ρ, cache) = ls
     emptycache!(cache)
 
