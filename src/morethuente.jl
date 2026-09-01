@@ -244,6 +244,11 @@ function (ls::MoreThuente)(ϕdϕ,
     end
     pushcache!(cache, alpha, f, dg)
 
+    # `f` and `dg` are the evaluation at `alpha_checked`, which the first pass below
+    # reuses unless the bound clamping moves the step away from it
+    alpha_checked = alpha
+    firstpass = true
+
     while true
         #
         # Set the minimum and maximum steps to correspond
@@ -287,9 +292,12 @@ function (ls::MoreThuente)(ϕdϕ,
         # Evaluate the function and gradient at alpha
         # and compute the directional derivative.
         #
-        f, dg = ϕdϕ(alpha)
-        pushcache!(cache, alpha, f, dg)
-        nfev += 1 # This includes calls to f() and g!()
+        if !(firstpass && alpha == alpha_checked)
+            f, dg = ϕdϕ(alpha)
+            pushcache!(cache, alpha, f, dg)
+            nfev += 1 # This includes calls to f() and g!()
+        end
+        firstpass = false
 
         # Recover from a non-finite evaluation by bisecting toward stx
         # (the best finite step seen so far) and shrink the local alphamax
