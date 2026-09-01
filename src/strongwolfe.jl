@@ -82,7 +82,7 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
             (ϕ_a_i >= ϕ_a_iminus1 && i > 1)
             a_star = zoom(a_iminus1, a_i,
                           dϕ_0, ϕ_0,
-                          ϕ, dϕ, ϕdϕ, cache)
+                          ϕdϕ, cache, c_1, c_2)
             return a_star, ϕ(a_star)
         end
 
@@ -99,7 +99,7 @@ function (ls::StrongWolfe)(ϕ, dϕ, ϕdϕ,
         # Check condition 3
         if dϕ_a_i >= zero(T) # FIXME untested!
             a_star = zoom(a_i, a_iminus1,
-                          dϕ_0, ϕ_0, ϕ, dϕ, ϕdϕ, cache)
+                          dϕ_0, ϕ_0, ϕdϕ, cache, c_1, c_2)
             return a_star, ϕ(a_star)
         end
 
@@ -121,15 +121,21 @@ function zoom(a_lo::T,
               a_hi::T,
               dϕ_0::Real,
               ϕ_0::Real,
-              ϕ,
-              dϕ,
               ϕdϕ,
               cache,
-              c_1::Real = convert(T, 1)/10^4,
-              c_2::Real = convert(T, 9)/10) where T
+              c_1::Real,
+              c_2::Real) where T
 
     # Step-size
     a_j = convert(T, NaN)
+
+    # The endpoints are only ever reassigned to already-evaluated points, so their
+    # values and slopes are carried through the loop rather than recomputed.
+    ϕ_a_lo, ϕprime_a_lo = ϕdϕ(a_lo)
+    pushcache!(cache, a_lo, ϕ_a_lo, ϕprime_a_lo)
+
+    ϕ_a_hi, ϕprime_a_hi = ϕdϕ(a_hi)
+    pushcache!(cache, a_hi, ϕ_a_hi, ϕprime_a_hi)
 
     # Count iterations
     iteration = 0
@@ -138,12 +144,6 @@ function zoom(a_lo::T,
     # Shrink bracket
     while iteration < max_iterations
         iteration += 1
-
-        ϕ_a_lo, ϕprime_a_lo = ϕdϕ(a_lo)
-        pushcache!(cache, a_lo, ϕ_a_lo, ϕprime_a_lo)
-
-        ϕ_a_hi, ϕprime_a_hi = ϕdϕ(a_hi)
-        pushcache!(cache, a_hi, ϕ_a_hi, ϕprime_a_hi)
 
         # Interpolate a_j
         if a_lo < a_hi
@@ -157,30 +157,25 @@ function zoom(a_lo::T,
                               ϕprime_a_hi, ϕprime_a_lo)
         end
 
-        # Evaluate ϕ(a_j)
-        ϕ_a_j = ϕ(a_j)
-        pushcache!(cache, a_j, ϕ_a_j)
+        # a_j becomes an endpoint in every branch below, so its slope is needed either way
+        ϕ_a_j, ϕprime_a_j = ϕdϕ(a_j)
+        pushcache!(cache, a_j, ϕ_a_j, ϕprime_a_j)
 
         # Check Armijo
         if (ϕ_a_j > ϕ_0 + c_1 * a_j * dϕ_0) ||
             (ϕ_a_j > ϕ_a_lo)
-            a_hi = a_j
+            a_hi, ϕ_a_hi, ϕprime_a_hi = a_j, ϕ_a_j, ϕprime_a_j
         else
-            # Evaluate ϕprime(a_j)
-            ϕprime_a_j = dϕ(a_j)
-            if !isnothing(cache)
-                push!(cache.slopes, ϕprime_a_j)
-            end
-
             if abs(ϕprime_a_j) <= -c_2 * dϕ_0
                 return a_j
             end
 
+            # Reads the bracket width before a_lo moves below
             if ϕprime_a_j * (a_hi - a_lo) >= zero(T)
-                a_hi = a_lo
+                a_hi, ϕ_a_hi, ϕprime_a_hi = a_lo, ϕ_a_lo, ϕprime_a_lo
             end
 
-            a_lo = a_j
+            a_lo, ϕ_a_lo, ϕprime_a_lo = a_j, ϕ_a_j, ϕprime_a_j
         end
     end
 
