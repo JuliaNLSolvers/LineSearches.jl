@@ -514,8 +514,10 @@ function update!(ϕdϕ,
                 ", phi_c = ", phi_c,
                 ", dphi_c = ", dphi_c)
     end
-    if c < a || c > b
-        return ia, ib, false  # it's out of the bracketing interval
+    # Only a `c` strictly inside can narrow the bracket. On an endpoint, or non-finite,
+    # the returns below would give back a zero-width interval.
+    if !(a < c < b)
+        return ia, ib, false
     end
     if dphi_c >= zero(T)
         return ia, ic, false  # replace b with a closer point
