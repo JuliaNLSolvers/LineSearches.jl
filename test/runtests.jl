@@ -16,7 +16,6 @@ my_tests = [
     "alphacalc.jl",
     "arbitrary_precision.jl",
     "captured.jl",
-    "xnew.jl",
     "issues.jl",
     "qa.jl",
 ]

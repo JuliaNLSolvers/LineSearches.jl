@@ -3,19 +3,6 @@ struct LineSearchException{T<:Real} <: Exception
     alpha::T
 end
 
-"""
-    AbstractLineSearch
-
-Supertype of the line search algorithms.
-
-Every algorithm can be called as
-
-    (ls::AbstractLineSearch)(df, x, s, α_0, x_new, ϕ_0, dϕ_0) -> (α, ϕ(α))
-
-where `df` is an `NLSolversBase.AbstractObjective`. On return, `x_new` holds
-`x + α*s` for the returned `α`. Callers should use it instead of recomputing the
-step, which would round differently and discard the cached evaluations there.
-"""
 abstract type AbstractLineSearch end
 
 # For debugging
