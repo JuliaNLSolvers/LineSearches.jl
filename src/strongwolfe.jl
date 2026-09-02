@@ -36,7 +36,9 @@ function (ls::StrongWolfe)(df, x::AbstractArray{T},
                            p::AbstractArray{T}, α::Real, x_new::AbstractArray{T},
                            ϕ_0, dϕ_0) where T
     ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, p)
-    ls(ϕ, dϕ, ϕdϕ, α, ϕ_0, dϕ_0)
+    α_star, ϕα = ls(ϕ, dϕ, ϕdϕ, α, ϕ_0, dϕ_0)
+    set_x_new!(x_new, x, p, α_star)
+    return α_star, ϕα
 end
 
 """
