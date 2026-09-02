@@ -156,7 +156,9 @@ function (ls::MoreThuente)(df::AbstractObjective, x::AbstractArray{T},
                            s::AbstractArray{T}, alpha::Real, x_new::AbstractArray{T},
                            ϕ_0, dϕ_0) where T
     ϕdϕ = make_ϕdϕ(df, x_new, x, s)
-    ls(ϕdϕ, alpha, ϕ_0, dϕ_0)
+    α, ϕα = ls(ϕdϕ, alpha, ϕ_0, dϕ_0)
+    set_x_new!(x_new, x, s, α)
+    return α, ϕα
 end
 
 (ls::MoreThuente)(ϕ, dϕ, ϕdϕ, alpha, ϕ_0, dϕ_0) = ls(ϕdϕ, alpha, ϕ_0, dϕ_0)

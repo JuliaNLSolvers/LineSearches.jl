@@ -437,5 +437,7 @@ function (ls::HagerZhangLS)(df::AbstractObjective, x::AbstractArray{T},
     elseif isnothing(dϕ_0)
         dϕ_0 = dϕ(real(T)(0))
     end
-    ls(ϕdϕ, α, ϕ_0, dϕ_0)
+    α_star, ϕ_star = ls(ϕdϕ, α, ϕ_0, dϕ_0)
+    set_x_new!(x_new, x, s, α_star)
+    return α_star, ϕ_star
 end
