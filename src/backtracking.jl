@@ -18,19 +18,46 @@ Sec. 3.5.
     order::TI = 3
     maxstep::TF = Inf
     cache::Union{Nothing,LineSearchCache{TF}} = nothing
+
+    function BackTracking{TF,TI}(c_1, ρ_hi, ρ_lo, iterations, order, maxstep, cache) where {TF,TI}
+        if !(0 < c_1 < 1)
+            throw(ArgumentError(
+                LazyString("The Armijo constant must satisfy 0 < c_1 < 1. Got c_1 = ", c_1),
+            ))
+        end
+        if !(0 < ρ_lo <= ρ_hi < 1)
+            throw(ArgumentError(
+                LazyString("The backtracking factors must satisfy 0 < ρ_lo <= ρ_hi < 1. Got ρ_lo = ", ρ_lo, " and ρ_hi = ", ρ_hi),
+            ))
+        end
+        if !(order in (2, 3))
+            throw(ArgumentError(LazyString("The interpolation order must be 2 or 3. Got order = ", order)))
+        end
+        if !(iterations > 0)
+            throw(ArgumentError(LazyString("The iteration limit must be positive. Got iterations = ", iterations)))
+        end
+        if !(maxstep > 0)
+            throw(ArgumentError(LazyString("The maximum step length must be positive. Got maxstep = ", maxstep)))
+        end
+        return new{TF,TI}(c_1, ρ_hi, ρ_lo, iterations, order, maxstep, cache)
+    end
 end
+BackTracking(c_1::TF, ρ_hi::TF, ρ_lo::TF, iterations::TI, order::TI, maxstep::TF,
+             cache::Union{Nothing,LineSearchCache{TF}}) where {TF,TI} =
+    BackTracking{TF,TI}(c_1, ρ_hi, ρ_lo, iterations, order, maxstep, cache)
 BackTracking{TF}(args...; kwargs...) where TF = BackTracking{TF,Int}(args...; kwargs...)
 
 function (ls::BackTracking)(df::AbstractObjective, x::AbstractArray{T}, s::AbstractArray{T},
                             α_0::Tα = real(T)(1), x_new::AbstractArray{T} = similar(x), ϕ_0 = nothing, dϕ_0 = nothing, alphamax = typemax(real(T))) where {T, Tα}
-    ϕ, dϕ, ϕdϕ = make_ϕ_dϕ_ϕdϕ(df, x_new, x, s)
+    # The search itself only ever needs ϕ; the others fill in a missing endpoint
+    ϕ = make_ϕ(df, x_new, x, s)
 
     if isnothing(ϕ_0) && isnothing(dϕ_0)
-        ϕ_0, dϕ_0 = ϕdϕ(zero(Tα))
+        ϕ_0, dϕ_0 = make_ϕdϕ(df, x_new, x, s)(zero(Tα))
     elseif isnothing(ϕ_0)
         ϕ_0 = ϕ(zero(Tα))
     elseif isnothing(dϕ_0)
-        dϕ_0 = dϕ(zero(Tα))
+        dϕ_0 = make_dϕ(df, x_new, x, s)(zero(Tα))
     end
 
     α_0 = min(α_0, min(alphamax, ls.maxstep / norm(s, Inf)))
@@ -45,36 +72,35 @@ function (ls::BackTracking)(ϕ, αinitial::Tα, ϕ_0, dϕ_0) where Tα
     emptycache!(cache)
     pushcache!(cache, 0, ϕ_0, dϕ_0)  # backtracking doesn't use the slope except here
 
-    iterfinitemax = -log2(eps(real(Tα)))
+    if !(isfinite(ϕ_0) && isfinite(dϕ_0))
+        throw(LineSearchException("Value and slope at step length = 0 must be finite.", zero(Tα)))
+    end
+    # dϕ_0 == 0 is accepted: Armijo then reduces to a plain decrease test
+    if dϕ_0 > 0
+        throw(LineSearchException("Search direction is not a direction of descent.", zero(Tα)))
+    end
 
-    @assert order in (2,3)
-    # Check the input is valid, and modify otherwise
-    #backtrack_condition = 1.0 - 1.0/(2*ρ) # want guaranteed backtrack factor
-    #if c_1 >= backtrack_condition
-    #    warn("""The Armijo constant c_1 is too large; replacing it with
-    #                   $(backtrack_condition)""")
-    #   c_1 = backtrack_condition
-    #end
+    iterfinitemax = -log2(eps(real(Tα)))
 
     # Count the total number of iterations
     iteration = 0
 
-    ϕx_0, ϕx_1 = ϕ_0, ϕ_0
+    # The cubic branch pairs (α_1, ϕx_0) with (α_2, ϕx_1); α_1 is reassigned in the
+    # loop below before that branch can first run
+    ϕx_0 = ϕ_0
+    α_1 = α_2 = αinitial
 
-    α_1, α_2 = αinitial, αinitial
-
-    ϕx_1 = ϕ(α_1)
+    ϕx_1 = ϕ(α_2)
 
     # Hard-coded backtrack until we find a finite function value
     iterfinite = 0
     while !isfinite(ϕx_1) && iterfinite < iterfinitemax
         iterfinite += 1
-        α_1 = α_2
-        α_2 = α_1/2
+        α_2 /= 2
 
         ϕx_1 = ϕ(α_2)
     end
-    pushcache!(cache, αinitial, ϕx_1)
+    pushcache!(cache, α_2, ϕx_1)
     if !isfinite(ϕx_1)
         throw(LineSearchException("Backtracking: failed to achieve finite new evaluation point.", α_2))
     end
@@ -105,7 +131,7 @@ function (ls::BackTracking)(ϕ, αinitial::Tα, ϕ_0, dϕ_0) where Tα
             a = (α_1^2*(ϕx_1 - ϕ_0 - dϕ_0*α_2) - α_2^2*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
             b = (-α_1^3*(ϕx_1 - ϕ_0 - dϕ_0*α_2) + α_2^3*(ϕx_0 - ϕ_0 - dϕ_0*α_1))*div
 
-            if isapprox(a, zero(a), atol=eps(real(Tα)))
+            if iszero(a)
                 α_tmp = -dϕ_0 / (2*b)
             else
                 # discriminant

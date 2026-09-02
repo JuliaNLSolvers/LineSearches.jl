@@ -47,14 +47,16 @@
     ψ(α) = -α / (1 + 10α^2) + 0.02α^2
     dψ(α) = -(1 - 10α^2) / (1 + 10α^2)^2 + 0.04α
 
-    # zoom reassigns its endpoints only to already-evaluated points, so it costs 2
-    # evaluations to seed the bracket plus 1 per iteration (was ~4 per iteration).
+    # The caller supplies both endpoints and zoom only ever reassigns them to
+    # already-evaluated points, so it costs exactly 1 evaluation per iteration.
     @testset "zoom, c_2=$c_2" for (c_2, entries, expected) in
-            ((0.5, 3, 0.412201859), (0.1, 4, 0.3461435202), (0.01, 7, 0.312411912))
+            ((0.5, 1, 0.412201859), (0.1, 2, 0.3461435202), (0.01, 5, 0.312411912))
         n = Ref(0)
         ϕdϕ = α -> (n[] += 1; (ψ(α), dψ(α)))
-        a = LineSearches.zoom(0.0, 1.0, dψ(0.0), ψ(0.0), ϕdϕ, nothing, 1e-4, c_2)
+        a, val = LineSearches.zoom(0.0, ψ(0.0), dψ(0.0), 1.0, ψ(1.0), dψ(1.0),
+                                   dψ(0.0), ψ(0.0), ϕdϕ, nothing, 1e-4, c_2)
         @test a ≈ expected
+        @test val == ψ(a)
         @test n[] == entries
     end
 
@@ -66,14 +68,17 @@
         @test val ≈ ψ(α)
     end
 
-    # HagerZhang stores every evaluated point, so it should never ask for the same α twice
+    # Each carries the points it has seen, so none should ask for the same α twice.
+    # `dg` is uncounted: splitting a point into ϕ and dϕ is by design, repeating it is not.
     problems = ((ψ, dψ),
                 (α -> (α^2 - 11)^2 + (α - 7)^2, α -> 4α * (α^2 - 11) + 2(α - 7)),
                 (α -> 1 - 1 / (1 + (α - 2)^2), α -> 2(α - 2) / (1 + (α - 2)^2)^2))
-    @testset "HagerZhang evaluates each α once" for (g, dg) in problems,
-                                                    α0 in (0.1, 1.0, 5.0)
+    @testset "$(nameof(typeof(ls))) evaluates each α once" for
+            ls in (HagerZhang(), MoreThuente(), StrongWolfe()),
+            (g, dg) in problems, α0 in (0.1, 1.0, 5.0)
         seen = Float64[]
-        α, val = HagerZhang()(α -> (push!(seen, α); (g(α), dg(α))), α0, g(0.0), dg(0.0))
+        α, val = ls(α -> (push!(seen, α); g(α)), dg,
+                    α -> (push!(seen, α); (g(α), dg(α))), α0, g(0.0), dg(0.0))
         @test allunique(seen)
         @test val ≈ g(α)
     end

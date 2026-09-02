@@ -166,8 +166,10 @@ function (ls::MoreThuente)(ϕdϕ,
                            alpha::T,
                            ϕ_0,
                            dϕ_0) where T
-    (; f_tol, gtol, x_tol, alphamin, alphamax, maxfev, cache) = ls
+    (; f_tol, gtol, x_tol, alphamin, maxfev, cache) = ls
     emptycache!(cache)
+    # Shrinks below ls.alphamax once a non-finite evaluation marks a feasibility bound
+    alphamax = ls.alphamax
 
     iterfinitemax = -log2(eps(T))
 
@@ -244,6 +246,11 @@ function (ls::MoreThuente)(ϕdϕ,
     end
     pushcache!(cache, alpha, f, dg)
 
+    # `f` and `dg` are the evaluation at `alpha_checked`, which the first pass below
+    # reuses unless the bound clamping moves the step away from it
+    alpha_checked = alpha
+    firstpass = true
+
     while true
         #
         # Set the minimum and maximum steps to correspond
@@ -287,9 +294,12 @@ function (ls::MoreThuente)(ϕdϕ,
         # Evaluate the function and gradient at alpha
         # and compute the directional derivative.
         #
-        f, dg = ϕdϕ(alpha)
-        pushcache!(cache, alpha, f, dg)
-        nfev += 1 # This includes calls to f() and g!()
+        if !(firstpass && alpha == alpha_checked)
+            f, dg = ϕdϕ(alpha)
+            pushcache!(cache, alpha, f, dg)
+            nfev += 1 # This includes calls to f() and g!()
+        end
+        firstpass = false
 
         # Recover from a non-finite evaluation by bisecting toward stx
         # (the best finite step seen so far) and shrink the local alphamax
@@ -309,10 +319,6 @@ function (ls::MoreThuente)(ϕdϕ,
             f, dg = ϕdϕ(alpha)
             pushcache!(cache, alpha, f, dg)
             nfev += 1
-        end
-
-        if isapprox(dg, 0, atol=eps(T)) # Should add atol value to MoreThuente
-            return alpha, f
         end
 
         ftest1 = ϕ_0 + alpha * dgtest
@@ -377,7 +383,7 @@ function (ls::MoreThuente)(ϕdϕ,
             stx, fxm, dgxm,
             sty, fym, dgym,
             alpha, fm, dgm,
-            bracketed, _ =
+            bracketed =
                 cstep(stx, fxm, dgxm, sty, fym, dgym,
                       alpha, fm, dgm, bracketed, stmin, stmax)
             #
@@ -395,7 +401,7 @@ function (ls::MoreThuente)(ϕdϕ,
             stx, fx, dgx,
             sty, fy, dgy,
             alpha, f, dg,
-            bracketed, _ =
+            bracketed =
                 cstep(stx, fx, dgx, sty, fy, dgy,
                       alpha, f, dg, bracketed, stmin, stmax)
         end
@@ -465,11 +471,6 @@ end # function
 # alphamin and alphamax are input variables which specify lower
 #   and upper bounds for the step
 #
-# info is an integer output variable set as follows:
-#   If info = 1,2,3,4,5, then the step has been computed
-#   according to one of the five cases below. Otherwise
-#   info = 0, and this indicates improper input parameters
-#
 # Argonne National Laboratory. MINPACK Project. June 1983
 # Jorge J. More', David J. Thuente
 
@@ -480,15 +481,15 @@ function cstep(stx::Real, fx::Real, dgx::Real,
 
    T = promote_type(typeof(stx), typeof(fx), typeof(dgx), typeof(sty), typeof(fy), typeof(dgy), typeof(alpha), typeof(f), typeof(dg), typeof(alphamin), typeof(alphamax))
    
-   info = 0
-
    #
    # Check the input parameters for error
    #
 
    if (bracketed && (alpha <= min(stx, sty) || alpha >= max(stx, sty))) ||
      dgx * (alpha - stx) >= zero(T) || alphamax < alphamin
-       throw(ArgumentError("Minimizer not bracketed"))
+       throw(LineSearchException(
+           LazyString("MoreThuente: cstep called with alpha = ", alpha, " outside the bracket [",
+                      min(stx, sty), ", ", max(stx, sty), "]."), alpha))
    end
 
    #
@@ -505,12 +506,8 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    #
 
    if f > fx
-      info = 1
       bound = true
-      theta = 3 * (fx - f) / (alpha - stx) + dgx + dg
-      # Use s to prevent overflow/underflow of theta^2 and dgx * dg
-      s = max(abs(theta), abs(dgx), abs(dg))
-      gamma = s * sqrt((theta / s)^2 - (dgx / s) * (dg / s))
+      theta, gamma = cubic_d1_d2(stx, fx, dgx, alpha, f, dg)
       if alpha < stx
           gamma = -gamma
       end
@@ -534,12 +531,8 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    #
 
    elseif sgnd < zero(T)
-      info = 2
       bound = false
-      theta = 3 * (fx - f) / (alpha - stx) + dgx + dg
-      # Use s to prevent overflow/underflow of theta^2 and dgx * dg
-      s = max(abs(theta), abs(dgx), abs(dg))
-      gamma = s * sqrt((theta / s)^2 - (dgx / s) * (dg / s))
+      theta, gamma = cubic_d1_d2(stx, fx, dgx, alpha, f, dg)
 
       if alpha > stx
          gamma = -gamma
@@ -568,17 +561,9 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    #
 
    elseif abs(dg) < abs(dgx)
-      info = 3
       bound = true
-      theta = 3 * (fx - f) / (alpha - stx) + dgx + dg
-      # Use s to prevent overflow/underflow of theta^2 and dgx * dg
-      s = max(abs(theta), abs(dgx), abs(dg))
-      #
-      # The case gamma = 0 only arises if the cubic does not tend
-      # to infinity in the direction of the step
-      #
-      # # Use NaNMath in case s == zero(s)
-      gamma = s * sqrt(NaNMath.max(zero(s), (theta / s)^2 - (dgx / s) * (dg / s)))
+      # gamma = 0 only arises if the cubic does not tend to infinity along the step
+      theta, gamma = cubic_d1_d2(stx, fx, dgx, alpha, f, dg)
 
       if alpha > stx
           gamma = -gamma
@@ -616,13 +601,9 @@ function cstep(stx::Real, fx::Real, dgx::Real,
    #
 
    else
-      info = 4
       bound = false
       if bracketed
-         theta = 3 * (f - fy) / (sty - alpha) + dgy + dg
-         # Use s to prevent overflow/underflow of theta^2 and dgy * dg
-         s = max(abs(theta), abs(dgy), abs(dg))
-         gamma = s * sqrt((theta / s)^2 - (dgy / s) * (dg / s))
+         theta, gamma = cubic_d1_d2(sty, fy, dgy, alpha, f, dg)
 
          if alpha > sty
              gamma = -gamma
@@ -674,5 +655,5 @@ function cstep(stx::Real, fx::Real, dgx::Real,
       end
    end
 
-   return stx, fx, dgx, sty, fy, dgy, alpha, f, dg, bracketed, info
+   return stx, fx, dgx, sty, fy, dgy, alpha, f, dg, bracketed
 end

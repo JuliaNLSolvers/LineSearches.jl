@@ -115,9 +115,15 @@ function (ls::HagerZhang)(ϕdϕ,
                           c::T,
                           phi_0::Real,
                           dphi_0::Real) where T # Should c and phi_0 be same type?
-    (; delta, sigma, alphamax, rho, epsilon, gamma,
+    (; delta, sigma, rho, epsilon, gamma,
             linesearchmax, psi3, display, mayterminate, cache) = ls
+    # Shrinks below ls.alphamax once a non-finite evaluation marks a feasibility bound
+    alphamax = ls.alphamax
     emptycache!(cache)
+
+    # InitialHagerZhang sets this to flag a quadratic-interpolation guess. The early
+    # Wolfe check below now runs either way, so consuming it is all that is left.
+    mayterminate[] = false
 
     pushcache!(cache, zero(T), phi_0, dphi_0)
     if !(isfinite(phi_0) && isfinite(dphi_0))
@@ -158,13 +164,11 @@ function (ls::HagerZhang)(ϕdϕ,
     phi_c, dphi_c = ϕdϕ(c)
     iterfinite = 1
     while !(isfinite(phi_c) && isfinite(dphi_c)) && iterfinite < iterfinitemax
-        mayterminate[] = false
         iterfinite += 1
         c *= psi3
         phi_c, dphi_c = ϕdϕ(c)
     end
     if !(isfinite(phi_c) && isfinite(dphi_c))
-        mayterminate[] = false # reset in case another initial guess is used next
         throw(LineSearchException("Failed to achieve finite new evaluation point.", c))
     end
     push!(alphas, c)
@@ -176,9 +180,6 @@ function (ls::HagerZhang)(ϕdϕ,
     if satisfies_wolfe(c, phi_c, dphi_c, phi_0, dphi_0, phi_lim, delta, sigma)
         if display & LINESEARCH > 0
             println("Wolfe condition satisfied on point alpha = ", c)
-        end
-        if mayterminate[] # this previously was in front of satisfies_wolfe but it should be fine to always check initial convergence
-            mayterminate[] = false # reset in case another initial guess is used next
         end
         return c, phi_c # phi_c
     end
@@ -219,7 +220,6 @@ function (ls::HagerZhang)(ϕdϕ,
             # ia, ib = bisect(phi, lsr, ia, ib, phi_lim) # TODO: Pass options
             ia, ib, iswolfe = bisect!(ϕdϕ, alphas, values, slopes, ia, ib, phi_lim, phi_0, dphi_0, delta, sigma, display)
             if iswolfe
-                mayterminate[] = false
                 return alphas[ib], values[ib]
             end
             isbracketed = true
@@ -239,10 +239,8 @@ function (ls::HagerZhang)(ϕdϕ,
                     # The recovery loop below shrunk `alphamax` from the
                     # user-supplied cap, so we're pinned at a non-finite
                     # feasibility boundary and cannot make further progress.
-                    mayterminate[] = false
                     throw(LineSearchException("Failed to bracket: pinned at non-finite feasibility boundary.", cold))
                 end
-                mayterminate[] = false # reset in case another initial guess is used next
                 return cold, phi_cold
             end
             c *= rho
@@ -284,7 +282,6 @@ function (ls::HagerZhang)(ϕdϕ,
                 if display & LINESEARCH > 0
                     println("Wolfe condition satisfied during bracketing at alpha = ", c)
                 end
-                mayterminate[] = false
                 return c, phi_c
             end
         end
@@ -303,12 +300,10 @@ function (ls::HagerZhang)(ϕdϕ,
                     ", phi(b) = ", values[ib])
         end
         if b - a <= eps(b)
-            mayterminate[] = false # reset in case another initial guess is used next
             return a, values[ia] # lsr.value[ia]
         end
-        iswolfe, iA, iB = secant2!(ϕdϕ, alphas, values, slopes, ia, ib, phi_lim, delta, sigma, display)
+        iswolfe, iA, iB = secant2!(ϕdϕ, alphas, values, slopes, ia, ib, phi_lim, phi_0, dphi_0, delta, sigma, display)
         if iswolfe
-            mayterminate[] = false # reset in case another initial guess is used next
             return alphas[iA], values[iA] # lsr.value[iA]
         end
         A = alphas[iA]
@@ -323,7 +318,6 @@ function (ls::HagerZhang)(ϕdϕ,
                 if display & LINESEARCH > 0
                     println("Linesearch: secant suggests it's flat")
                 end
-                mayterminate[] = false # reset in case another initial guess is used next
 
                 return A, values[iA]
             end
@@ -345,20 +339,19 @@ function (ls::HagerZhang)(ϕdϕ,
                 if display & LINESEARCH > 0
                     println("Wolfe condition satisfied during bisection at alpha = ", c)
                 end
-                mayterminate[] = false
                 return c, phi_c
             end
 
             ia, ib, iswolfe = update!(ϕdϕ, alphas, values, slopes, iA, iB, length(alphas), phi_lim, phi_0, dphi_0, delta, sigma, display)
             if iswolfe
-                mayterminate[] = false
                 return alphas[ib], values[ib]
             end
         end
         iter += 1
     end
 
-    best_alpha = alphas[argmin(values)]
+    # bisect! stores every point it evaluates, so `values` may contain NaN
+    best_alpha = alphas[last(NaNMath.findmin(values))]
     throw(LineSearchException("Linesearch failed to converge, reached maximum iterations $(linesearchmax).",
                               best_alpha))
 end
@@ -383,7 +376,7 @@ end
 function secant(a::Real, b::Real, dphi_a::Real, dphi_b::Real)
     return (a * dphi_b - b * dphi_a) / (dphi_b - dphi_a)
 end
-function secant(alphas, values, slopes, ia::Integer, ib::Integer)
+function secant(alphas::AbstractArray, slopes::AbstractArray, ia::Integer, ib::Integer)
     return secant(alphas[ia], alphas[ib], slopes[ia], slopes[ib])
 end
 # phi
@@ -394,11 +387,11 @@ function secant2!(ϕdϕ,
                   ia::Integer,
                   ib::Integer,
                   phi_lim::Real,
+                  phi_0::Real,
+                  dphi_0::Real,
                   delta::Real = DEFAULTDELTA,
                   sigma::Real = DEFAULTSIGMA,
                   display::Integer = 0)
-    phi_0 = values[1]
-    dphi_0 = slopes[1]
     a = alphas[ia]
     b = alphas[ib]
     dphi_a = slopes[ia]
@@ -443,13 +436,12 @@ function secant2!(ϕdϕ,
     end
     a = alphas[iA]
     b = alphas[iB]
-    doupdate = false
     if iB == ic
         # we updated b, make sure we also update a
-        c = secant(alphas, values, slopes, ib, iB)
+        c = secant(alphas, slopes, ib, iB)
     elseif iA == ic
         # we updated a, do it for b too
-        c = secant(alphas, values, slopes, ia, iA)
+        c = secant(alphas, slopes, ia, iA)
     end
     if (iA == ic || iB == ic) && a <= c <= b
         if display & SECANT2 > 0
@@ -555,7 +547,6 @@ function bisect!(ϕdϕ,
                  delta::Real,
                  sigma::Real,
                  display::Integer = 0) where T
-    gphi = convert(T, NaN)
     a = alphas[ia]
     b = alphas[ib]
     # Debugging (HZ, conditions shown following U3)

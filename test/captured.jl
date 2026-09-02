@@ -1,4 +1,5 @@
 using LineSearches
+using NaNMath
 using NLSolversBase
 using Test
 
@@ -29,6 +30,25 @@ end
         @test α < 10
         @test length(cache.alphas) == length(cache.values) && length(cache.alphas) > 1
     end
+end
+
+# Each cached value must belong to the α stored beside it
+@testset "Cached α and value agree" begin
+    ϕ(x) = (x - π)^4
+    dϕ(x) = 4*(x-π)^3
+    ϕdϕ(x) = (ϕ(x), dϕ(x))
+
+    @testset "$(nameof(LS))" for LS in (HagerZhang, StrongWolfe, MoreThuente, BackTracking)
+        cache = LineSearchCache{Float64}()
+        LS(; cache)(ϕ, dϕ, ϕdϕ, 10.0, ϕ(0), dϕ(0))
+        @test all(v == ϕ(α) for (α, v) in zip(cache.alphas, cache.values))
+    end
+
+    # ψ is NaN above 4, so BackTracking leaves the initial step before caching a value
+    ψ(x) = x > 4 ? NaN : (x - 1.0)^2
+    cache = LineSearchCache{Float64}()
+    BackTracking(; cache)(ψ, 8.0, ψ(0.0), -2.0)
+    @test all(v === ψ(α) for (α, v) in zip(cache.alphas, cache.values))
 end
 
 # From PR#174
@@ -134,6 +154,15 @@ end
             phi_lim, phi_0, dphi_0, delta, sigma,
         )
         @test !wolfe  # normal exit, not Wolfe
+    end
+
+    @testset "bisect! stores non-finite values" begin
+        # `argmin` ranks NaN below every float, so the failure path cannot use it
+        alphas, values, slopes = [0.0, 1.0], [0.0, 5.0], [-2.0, -0.5]
+        LineSearches.bisect!(d -> (NaN, NaN), alphas, values, slopes, 1, 2,
+                             1e-6, 0.0, -2.0, 0.1, 0.9)
+        @test isnan(values[argmin(values)])
+        @test alphas[last(NaNMath.findmin(values))] == 0.0
     end
 
     @testset "Wolfe during bracket expansion" begin

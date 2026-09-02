@@ -2,7 +2,7 @@
     Static()
 
 A static linesearch that accepts the initial step length unchanged (no parameters
-to configure).
+to configure), except that it halves the step until the objective is finite.
 
 `Static` is intended for methods with well-scaled updates; i.e. Newton, on
 well-behaved problems.
@@ -26,10 +26,12 @@ function (ls::Static)(ϕ, α::Tα) where Tα
     iterfinitemax = -log2(eps(real(Tα)))
     while !isfinite(ϕα) && iterfinite < iterfinitemax
         iterfinite += 1
-        αold = α
-        α    = αold/2
+        α /= 2
 
         ϕα = ϕ(α)
+    end
+    if !isfinite(ϕα)
+        throw(LineSearchException("Static: failed to achieve finite new evaluation point.", α))
     end
 
     return α, ϕα
