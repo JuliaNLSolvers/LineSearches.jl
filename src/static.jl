@@ -11,7 +11,9 @@ struct Static <: AbstractLineSearch end
 
 function (ls::Static)(df::AbstractObjective, x, s, α, x_new = similar(x), ϕ_0 = nothing, dϕ_0 = nothing)
     ϕ = make_ϕ(df, x_new, x, s)
-    ls(ϕ, α)
+    α_star, ϕα = ls(ϕ, α)
+    set_x_new!(x_new, x, s, α_star)
+    return α_star, ϕα
 end
 
 (ls::Static)(ϕ, dϕ, ϕdϕ, α, ϕ_0, dϕ_0) = ls(ϕ, α)

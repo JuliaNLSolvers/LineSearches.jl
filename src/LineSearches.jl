@@ -13,10 +13,15 @@ export InitialHagerZhang, InitialStatic, InitialPrevious,
     InitialQuadratic, InitialConstantChange
 
 
+# Move a distance of alpha in the direction of s
+function set_x_new!(x_new, x, s, α)
+    x_new .= muladd.(α, s, x)
+    return x_new
+end
+
 function make_ϕ(df, x_new, x, s)
     function ϕ(α)
-        # Move a distance of alpha in the direction of s
-        x_new .= muladd.(α, s, x)
+        set_x_new!(x_new, x, s, α)
 
         # Evaluate f(x+α*s)
         return NLSolversBase.value!(df, x_new)
@@ -25,8 +30,7 @@ function make_ϕ(df, x_new, x, s)
 end
 function make_ϕdϕ(df, x_new, x, s)
     function ϕdϕ(α)
-        # Move a distance of alpha in the direction of s
-        x_new .= muladd.(α, s, x)
+        set_x_new!(x_new, x, s, α)
         # Calculate ϕ(a_i), ϕ'(a_i)
         ϕ, dϕ = NLSolversBase.value_jvp!(df, x_new, s)
         return ϕ, real(dϕ)
@@ -35,8 +39,7 @@ function make_ϕdϕ(df, x_new, x, s)
 end
 function make_dϕ(df, x_new, x, s)
     function dϕ(α)
-        # Move a distance of alpha in the direction of s
-        x_new .= muladd.(α, s, x)
+        set_x_new!(x_new, x, s, α)
         # Calculate ϕ'(a_i)
         return real(NLSolversBase.jvp!(df, x_new, s))
     end

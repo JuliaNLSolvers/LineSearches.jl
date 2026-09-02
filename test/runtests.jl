@@ -19,6 +19,7 @@ my_tests = [
     "errors.jl",
     "strongwolfe.jl",
     "evalcounts.jl",
+    "xnew.jl",
     "issues.jl",
     "qa.jl",
 ]
