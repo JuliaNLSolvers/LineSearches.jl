@@ -39,6 +39,24 @@ end
         0.0, 1.0, -1.0, 2.0, 0.5, 0.2, 3.0, 0.4, 0.1, true, 0.0, 10.0)
 end
 
+# HagerZhang asserts alphas[iB] > alphas[iA] on what secant2! returns, so update! must
+# not narrow a bracket onto one of its own endpoints. It picks between narrowing to c
+# and keeping the bracket using a fresh evaluation at c, which can disagree with the
+# stored slope or value there.
+@testset "update! keeps a bracket of positive width" begin
+    unused(α) = error("ϕdϕ must not be called on these branches")
+    @testset "c = $(alphas[3])" for (alphas, values, slopes) in (
+        ([0.0, 1.0, 0.0], [0.0, 0.5, 0.0], [-1.0, 0.5, 0.25]),      # on the lower end
+        ([0.0, 1.0, 1.0], [0.0, 2.0, -0.5], [-1.0, -0.25, -0.25]),  # on the upper end
+        ([0.0, 1.0, NaN], [0.0, 2.0, -0.5], [-1.0, -0.25, -0.25]),  # not finite
+    )
+        iA, iB, _ = LineSearches.update!(unused, alphas, values, slopes, 1, 2, 3, 0.0,
+                                         0.0, -1.0, LineSearches.DEFAULTDELTA,
+                                         LineSearches.DEFAULTSIGMA)
+        @test (alphas[iA], alphas[iB]) == (0.0, 1.0)
+    end
+end
+
 # The step length these report is whatever the halving loop reached, so match a prefix
 @testset "No finite value" begin
     @test_throws r"^LineSearchException: Static: failed to achieve finite new evaluation point\." Static()(α -> NaN, 1.0)
