@@ -45,9 +45,6 @@ end
 function make_ϕ_dϕ_ϕdϕ(df, x_new, x, s)
     make_ϕ_dϕ(df, x_new, x, s)..., make_ϕdϕ(df, x_new, x, s)
 end
-function make_ϕ_ϕdϕ(df, x_new, x, s)
-    make_ϕ(df, x_new, x, s), make_ϕdϕ(df, x_new, x, s)
-end
 
 include("types.jl")
 

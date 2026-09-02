@@ -124,7 +124,7 @@ res = (StrongWolfe())(ϕ, dϕ, ϕdϕ, α0, ϕ0, dϕ0)
             hz = HagerZhang(; cache, check_flatness)
             f = tc_to_f(tc)
             fdf = tc_to_fdf(tc)
-            hz(f, fdf, 1.0, fdf(0.0)...), cache
+            hz(fdf, 1.0, fdf(0.0)...), cache
         end
 
         res, res_cache = test_tc(tc1, true)
