@@ -33,9 +33,7 @@ function (ls::BackTracking)(df::AbstractObjective, x::AbstractArray{T}, s::Abstr
     end
 
     α_0 = min(α_0, min(alphamax, ls.maxstep / norm(s, Inf)))
-    α, ϕα = ls(ϕ, α_0, ϕ_0, dϕ_0)
-    set_x_new!(x_new, x, s, α)
-    return α, ϕα
+    ls(ϕ, α_0, ϕ_0, dϕ_0)
 end
 
 (ls::BackTracking)(ϕ, dϕ, ϕdϕ, αinitial, ϕ_0, dϕ_0) = ls(ϕ, αinitial, ϕ_0, dϕ_0)
