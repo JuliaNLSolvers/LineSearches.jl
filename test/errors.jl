@@ -57,6 +57,26 @@ end
     end
 end
 
+# The secant root rounds onto an endpoint when the bracket is a few ulps wide or one slope
+# is negligible against the other. The value and slope there are already stored, so
+# secant2! must not spend an objective evaluation on it; it bisects instead.
+@testset "secant2! does not evaluate at an endpoint" begin
+    a = 1.0
+    b = nextfloat(a, 2)
+    @testset "secant rounds onto $end_" for (end_, slopes) in (("a", [-1e-20, 1.0]),
+                                                                ("b", [-1.0, 1e-20]))
+        @test LineSearches.secant(a, b, slopes...) == (end_ == "a" ? a : b)
+        alphas = [a, b]
+        values = [0.0, 0.0]
+        evaluated = Float64[]
+        ϕdϕ(α) = (push!(evaluated, α); (0.0, 0.0))
+        LineSearches.secant2!(ϕdϕ, alphas, values, slopes, 1, 2, 0.0, 0.0, -1.0,
+                              LineSearches.DEFAULTDELTA, LineSearches.DEFAULTSIGMA)
+        @test !isempty(evaluated)
+        @test all(α -> a < α < b, evaluated)
+    end
+end
+
 # The step length these report is whatever the halving loop reached, so match a prefix
 @testset "No finite value" begin
     @test_throws r"^LineSearchException: Static: failed to achieve finite new evaluation point\." Static()(α -> NaN, 1.0)

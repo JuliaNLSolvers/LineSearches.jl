@@ -408,7 +408,12 @@ function secant2!(ϕdϕ,
                       @sprintf "(dphi_a = %f; dphi_b = %f)" dphi_a dphi_b))
     end
     c = secant(a, b, dphi_a, dphi_b)
-    if !isfinite(c)
+    # The secant root is only useful strictly inside the bracket. It is not finite when
+    # the slopes coincide, and it rounds onto an endpoint when the bracket is a few ulps
+    # wide or one slope is negligible against the other. The value and slope at an
+    # endpoint are already stored, so evaluating there is a wasted objective call whose
+    # result `update!` cannot use; bisect instead.
+    if !(a < c < b)
         c = (a + b) / convert(T, 2)
     end
     if display & SECANT2 > 0
@@ -445,7 +450,8 @@ function secant2!(ϕdϕ,
         # we updated a, do it for b too
         c = secant(alphas, slopes, ia, iA)
     end
-    if (iA == ic || iB == ic) && a <= c <= b
+    # Only an interior second secant point is worth an evaluation, for the same reason as the first secant call above
+    if (iA == ic || iB == ic) && a < c < b
         if display & SECANT2 > 0
             println("secant2: second c = ", c)
         end
